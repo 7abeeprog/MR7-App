@@ -69,6 +69,35 @@ st.markdown(f"""
         font-weight: 900;
     }}
 
+    /* تصميم خريطة الشجرة */
+    .tree-container {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+    }}
+    .tree-node {{
+        background: {t['card']};
+        border: 2px solid {t['accent']};
+        padding: 10px 20px;
+        border-radius: 50px;
+        text-align: center;
+        min-width: 150px;
+        position: relative;
+    }}
+    .tree-line {{
+        width: 2px;
+        height: 20px;
+        background: {t['accent']};
+    }}
+    .tree-branch {{
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }}
+
     .stButton>button {{
         background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
@@ -77,7 +106,6 @@ st.markdown(f"""
         height: 55px;
     }}
 
-    /* حل مشكلة الكتابة باللون الأسود */
     .stTextInput input, .stNumberInput input {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -103,7 +131,7 @@ st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem
 
 st.divider()
 
-tabs = st.tabs(["📊 أرباح المستويات", "🔗 روابط الإحالة", "📈 حاسبة التضاعف العشري"])
+tabs = st.tabs(["📊 أرباح المستويات", "🔗 روابط الإحالة", "📈 حاسبة التضاعف العشري", "🌳 الخريطة الشجرية"])
 
 # --- Tab 1: أرباح المستويات (7 Levels) ---
 with tabs[0]:
@@ -186,6 +214,51 @@ with tabs[2]:
         
     st.table(results)
     st.warning("⚠️ هذه الأرقام هي محاكاة رياضية لنسبة نجاح 100% في التضاعف العشري.")
+
+# --- Tab 4: الخريطة الشجرية المرئية (Visual Tree Map) ---
+with tabs[3]:
+    st.subheader("🌳 خريطة الانتشار الهيكلية")
+    st.markdown("رؤية بصرية لأهم القادة في شجرتك القيادية وتوزيع الأجيال.")
+    
+    # محاكاة الشجرة باستخدام HTML و CSS المخصص
+    st.markdown(f"""
+    <div class="tree-container">
+        <!-- عقدة الجذر (أنت) -->
+        <div class="tree-node" style="background: {t['accent']}; color: black; font-weight: 900;">
+            👑 القائد (أنت)
+        </div>
+        <div class="tree-line"></div>
+        
+        <!-- الجيل الأول -->
+        <div class="tree-branch">
+            <div class="tree-node">👤 جيل 1: أحمد</div>
+            <div class="tree-node">👤 جيل 1: سارة</div>
+            <div class="tree-node">👤 جيل 1: ياسين</div>
+            <div class="tree-node">👤 جيل 1: ليلى</div>
+        </div>
+        
+        <div style="display: flex; gap: 100px;">
+            <div class="tree-line"></div>
+            <div class="tree-line"></div>
+        </div>
+
+        <!-- الجيل الثاني (مثال لفرع واحد) -->
+        <div class="tree-branch">
+            <div class="tree-node" style="border-color: #00FF88; font-size: 0.8rem;">👥 جيل 2: فريق أحمد (15)</div>
+            <div class="tree-node" style="border-color: #00FF88; font-size: 0.8rem;">👥 جيل 2: فريق سارة (8)</div>
+        </div>
+        
+        <div class="tree-line"></div>
+        
+        <!-- ملخص الأجيال البعيدة -->
+        <div class="tree-node" style="border-style: dashed; opacity: 0.7;">
+            🌐 بقية الأجيال (3-7)
+            <br><small>+4,500 عضو نشط</small>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.info("💡 نصيحة القيادة: ركز دعمك على الجيل الأول لضمان تماسك هيكل الشجرة وتضاعف الأرباح في الأجيال العميقة.")
 
 st.divider()
 
