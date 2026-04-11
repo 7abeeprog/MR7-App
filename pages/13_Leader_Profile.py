@@ -4,6 +4,7 @@ import uuid
 import json
 import requests
 from datetime import datetime
+import base64
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -66,12 +67,13 @@ st.markdown(f"""
     }}
 
     .avatar-glow {{
-        width: 150px;
-        height: 150px;
+        width: 180px;
+        height: 180px;
         border-radius: 50%;
         border: 4px solid {t['accent']};
         box-shadow: 0 0 30px {t['accent']};
         margin-bottom: 20px;
+        object-fit: cover;
     }}
 
     .stat-box {{
@@ -106,6 +108,12 @@ st.markdown(f"""
         color: #000000 !important;
         font-weight: bold !important;
     }}
+    
+    /* تنسيق زر رفع الملفات */
+    section[data-testid="stFileUploadDropzone"] {{
+        background: rgba(255,255,255,0.05);
+        border: 2px dashed {t['accent']};
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -116,8 +124,10 @@ if 'leader_name' not in st.session_state:
     st.session_state.leader_name = "القائد المجهول"
 if 'user_rank' not in st.session_state:
     st.session_state.user_rank = "قائد ناشئ 🌱"
+if 'profile_pic_base64' not in st.session_state:
+    st.session_state.profile_pic_base64 = None
 
-# --- 3. القائمة الجانبية ---
+# --- 3. القائمة الجانبية (الإعدادات) ---
 with st.sidebar:
     st.markdown(f"### 🎨 تخصيص المظهر")
     theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
@@ -125,18 +135,34 @@ with st.sidebar:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
-    st.markdown("### ⚙️ إعدادات الحساب")
+    
+    st.markdown("### ⚙️ إعدادات الهوية")
     st.session_state.leader_name = st.text_input("اسم الشهرة القيادي:", st.session_state.leader_name)
-    if st.button("💾 حفظ التغييرات"):
-        st.success("تم تحديث هويتك في السجل الإمبراطوري")
+    
+    # ميزة رفع الصورة الشخصية
+    uploaded_file = st.file_uploader("رفع صورة البروفايل:", type=["jpg", "jpeg", "png"])
+    if uploaded_file is not None:
+        # تحويل الصورة إلى Base64 لعرضها في الـ HTML
+        bytes_data = uploaded_file.getvalue()
+        base64_img = base64.b64encode(bytes_data).decode()
+        st.session_state.profile_pic_base64 = f"data:image/png;base64,{base64_img}"
+        st.success("تم تجهيز الصورة!")
+
+    if st.button("💾 حفظ البيانات"):
+        st.success("تم تحديث السجل الإمبراطوري بنجاح ✅")
+        time.sleep(1)
+        st.rerun()
 
 # --- 4. واجهة ملف القائد ---
 st.title("👤 الملف الشخصي للقائد")
 
+# اختيار مصدر الصورة (المرفوعة أو الافتراضية)
+display_avatar = st.session_state.profile_pic_base64 if st.session_state.profile_pic_base64 else f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
+
 # القسم العلوي: الهوية والبصمة
 st.markdown(f"""
 <div class="profile-header">
-    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}" class="avatar-glow">
+    <img src="{display_avatar}" class="avatar-glow">
     <h2 style="color: {t['accent']}; font-size: 2.5rem; margin-bottom: 5px;">{st.session_state.leader_name}</h2>
     <p style="font-size: 1.2rem; opacity: 0.8;">معرف القائد الفريد: <code>{st.session_state.user_id[:13]}</code></p>
     <div class="badge-wall">
