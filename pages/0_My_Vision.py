@@ -1,145 +1,156 @@
 import streamlit as st
 import time
 
-# --- 1. إعدادات التصميم الإبداعي (Ultra-High Contrast Elite UI) ---
+# --- 1. إعدادات التصميم الإبداعي الفائق (Ultra-Elite UI Customization) ---
 st.markdown("""
     <style>
-    /* تحسين الخلفية العامة وجعلها سوداء عميقة */
+    /* تحسين الخلفية العامة للتطبيق */
     .stApp {
         background-color: #000000 !important;
     }
     
-    /* ضبط ألوان القائمة الجانبية (Sidebar) */
+    /* هندسة القائمة الجانبية (Sidebar) لتكون ذهبية ملكية */
     [data-testid="stSidebar"] {
-        background-color: #0a0a0a !important;
-        border-right: 1px solid #333 !important;
+        background-color: #050505 !important;
+        border-right: 2px solid #FFD700 !important;
+        box-shadow: 5px 0 15px rgba(255, 215, 0, 0.1);
     }
     [data-testid="stSidebar"] * {
         color: #ffffff !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    [data-testid="stSidebarNav"] {
-        background-color: #0a0a0a !important;
+    [data-testid="stSidebarNav"] li {
+        border-radius: 10px;
+        margin: 5px;
+        transition: all 0.3s ease;
+    }
+    [data-testid="stSidebarNav"] li:hover {
+        background-color: rgba(255, 215, 0, 0.15) !important;
+        transform: translateX(5px);
     }
 
-    /* تحسين الخطوط العامة لتكون بيضاء ناصعة */
+    /* توحيد ألوان النصوص العامة لتكون بيضاء ناصعة */
     div[data-testid="stMarkdownContainer"] p, h2, h3, span, label {
         color: #FFFFFF !important;
+        font-weight: 600;
     }
 
-    /* تصميم العنوان الرئيسي (st.title) - ذهبي ملكي متوهج وواضح جداً */
+    /* العنوان الرئيسي (st.title) - توهج ذهبي ثلاثي الأبعاد */
     h1 {
         background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 950 !important;
         text-align: center;
-        filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
-        padding-top: 10px;
+        filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.9));
+        padding-top: 20px;
         padding-bottom: 10px;
-        font-size: 3rem !important;
+        font-size: 3.5rem !important;
     }
 
-    /* تصميم الوصف الفرعي تحت العنوان */
+    /* الوصف الفرعي الذهبي */
     .subtitle-text {
         text-align: center;
-        font-size: 1.5rem !important;
+        font-size: 1.7rem !important;
         color: #FFD700 !important;
-        font-weight: bold;
-        text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        font-weight: 800;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
         margin-top: -20px;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
     }
 
-    /* بطاقة الرؤية - تصميم زجاجي */
+    /* بطاقة الرؤية الزجاجية */
     .vision-card {
-        background: rgba(30, 30, 30, 0.9);
-        backdrop-filter: blur(25px);
-        padding: 50px;
-        border-radius: 40px;
+        background: rgba(20, 20, 20, 0.95);
+        backdrop-filter: blur(30px);
+        padding: 55px;
+        border-radius: 45px;
         border: 2px solid #FFD700;
-        box-shadow: 0 0 50px rgba(255, 215, 0, 0.25);
+        box-shadow: 0 0 60px rgba(255, 215, 0, 0.3);
         margin-bottom: 30px;
         text-align: center;
     }
     
-    /* نصوص براقة عالية التباين */
+    /* نصوص براقة للنتيجة النهائية */
     .glitter-text {
         background: linear-gradient(90deg, #FFFFFF, #FFD700, #FFFFFF);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 900;
-        font-size: 40px;
-        text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        font-size: 42px;
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
     }
 
-    /* إصلاح ألوان الاختيارات (Radio Buttons) لتعمل فوق الخلفية السوداء */
+    /* تصميم أزرار الاختيار (Radio Buttons) بتباين عالٍ جداً */
     .stRadio > div {
-        gap: 20px;
+        gap: 22px;
         padding: 10px;
     }
     .stRadio label {
-        background: #111111 !important;
-        border: 2px solid #444 !important;
-        padding: 25px 35px !important;
-        border-radius: 20px !important;
-        transition: all 0.3s ease !important;
+        background: #0a0a0a !important;
+        border: 2px solid #333 !important;
+        padding: 28px 40px !important;
+        border-radius: 22px !important;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         width: 100%;
         color: #FFFFFF !important; 
         font-weight: 900 !important;
-        font-size: 20px !important;
+        font-size: 22px !important;
         display: flex !important;
         align-items: center !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.8) !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.9) !important;
     }
     
     .stRadio label:hover {
         border-color: #00FF88 !important;
-        background: #1A1A1A !important;
-        transform: scale(1.02);
+        background: #111111 !important;
+        transform: scale(1.025) translateX(8px);
         color: #00FF88 !important;
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3) !important;
     }
     
     .stRadio div[role="radiogroup"] input:checked + label {
         border-color: #FFD700 !important;
-        background: #222222 !important;
+        background: #1a1a1a !important;
         color: #FFD700 !important;
-        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3) !important;
+        box-shadow: 0 0 40px rgba(255, 215, 0, 0.4) !important;
     }
 
-    /* زر التثبيت العملاق */
+    /* زر التثبيت الإمبراطوري */
     .stButton>button {
         background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
         color: #000000 !important;
         border: none !important;
-        height: 80px !important;
-        font-size: 26px !important;
+        height: 85px !important;
+        font-size: 28px !important;
         font-weight: 900 !important;
-        border-radius: 20px !important;
-        box-shadow: 0 15px 40px rgba(184, 134, 11, 0.5) !important;
+        border-radius: 25px !important;
+        box-shadow: 0 15px 45px rgba(184, 134, 11, 0.6) !important;
         text-transform: uppercase;
     }
     .stButton>button:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 25px 60px rgba(255, 215, 0, 0.7) !important;
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 25px 65px rgba(255, 215, 0, 0.8) !important;
     }
 
-    /* شريط التقدم */
+    /* شريط التقدم الذهبي */
     .stProgress > div > div > div > div {
         background-color: #FFD700;
-        box-shadow: 0 0 20px #FFD700;
+        box-shadow: 0 0 25px #FFD700;
     }
     </style>
 
     <script>
+    // نظام المؤثرات الصوتية المتطور
     function playSfx(url) {
         const audio = new Audio(url);
-        audio.volume = 0.5;
-        audio.play().catch(e => console.log('Audio Blocked:', e));
+        audio.volume = 0.4;
+        audio.play().catch(e => console.log('Audio Autoplay Blocked'));
     }
 
     document.addEventListener('mouseover', function(e) {
-        const isTarget = e.target.tagName === 'LABEL' || e.target.tagName === 'BUTTON' || e.target.closest('label');
-        if (isTarget) {
+        const target = e.target.closest('label') || e.target.closest('button');
+        if (target) {
             playSfx('https://www.soundjay.com/buttons/sounds/button-37a.mp3');
         }
     });
