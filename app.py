@@ -1,22 +1,41 @@
 import streamlit as st
 import hashlib
 
-# 1. دالة التشفير
 def hash_password(password):
-    # نستخدم خوارزمية SHA-256 القوية للتشفير
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-st.title("مرحباً بك في MR7 🚀")
+# 1. إعداد "ذاكرة الجلسة" (التأكد من وجود مفتاح حالة الدخول)
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
 
-email = st.text_input("أدخل بريدك الإلكتروني:")
-password = st.text_input("أدخل كلمة المرور:", type="password")
+# 2. إذا لم يكن المستخدم يملك بطاقة الدخول (False)، نعرض شاشة تسجيل الدخول
+if st.session_state['logged_in'] == False:
+    st.title("مرحباً بك في MR7 🚀")
+    email = st.text_input("أدخل بريدك الإلكتروني:")
+    password = st.text_input("أدخل كلمة المرور:", type="password")
+    
+    if st.button("تسجيل الدخول"):
+        if password:
+            hashed_pw = hash_password(password)
+            
+            # منح المستخدم بطاقة الدخول!
+            st.session_state['logged_in'] = True
+            
+            # تحديث الشاشة فوراً لتطبيق التغيير
+            st.rerun() 
+        else:
+            st.warning("الرجاء إدخال كلمة المرور أولاً.")
 
-if st.button("تسجيل الدخول"):
-    if password:
-        # 2. تشفير كلمة المرور قبل أي شيء
-        hashed_pw = hash_password(password)
-        
-        st.success("تم التقاط البيانات بنجاح!")
-        st.info(f"شكل كلمة المرور المشفرة التي سنحفظها لاحقاً في قاعدة البيانات:\n {hashed_pw}")
-    else:
-        st.warning("الرجاء إدخال كلمة المرور أولاً.")
+# 3. إذا كان المستخدم يملك البطاقة (True)، نعرض الشاشة الرئيسية (لوحة التحكم)
+else:
+    st.title("لوحة تحكم MR7 📊")
+    st.write("مرحباً! ماذا ترغب في تعلمه اليوم؟")
+    st.write("استكشف التوصيات المخصصة لك.")
+    
+    # محاكاة لإحصائيات من توثيق تطبيقك
+    st.info("إحصائيات الأداء: عدد المستخدمين المسجلين في فريقك: 10")
+    
+    # زر لسحب البطاقة والعودة للبداية
+    if st.button("تسجيل الخروج"):
+        st.session_state['logged_in'] = False
+        st.rerun()
