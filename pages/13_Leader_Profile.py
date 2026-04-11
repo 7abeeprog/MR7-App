@@ -37,7 +37,7 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
-    /* الفلسفة التصميمية الاحترافية */
+    /* التنسيق العام بمستوى Enterprise */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
@@ -56,52 +56,67 @@ st.markdown(f"""
         font-size: 3.5rem !important; 
     }}
 
-    /* غلاف البروفايل (Cover Photo) */
+    /* غلاف البروفايل (Cover Photo) الفاخر */
     .profile-cover {{
-        height: 250px;
-        background: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=2070') center/cover;
+        height: 280px;
+        background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=2070') center/cover;
         border-radius: 40px 40px 0 0;
         border: 2px solid {t['accent']};
         border-bottom: none;
+        position: relative;
     }}
 
+    /* حاوية رأس البروفايل */
     .elite-header {{
         background: {t['card']};
         border: 2px solid {t['border']};
         border-radius: 0 0 50px 50px;
-        padding: 0 50px 50px 50px;
+        padding: 0 50px 40px 50px;
         text-align: center;
-        margin-top: -80px;
+        margin-top: -100px;
         position: relative;
         box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+        z-index: 10;
     }}
 
     .avatar-glow {{
-        width: 180px;
-        height: 180px;
+        width: 190px;
+        height: 190px;
         border-radius: 50%;
-        border: 5px solid {t['accent']};
-        box-shadow: 0 0 40px {t['accent']};
+        border: 6px solid {t['accent']};
+        box-shadow: 0 0 45px {t['accent']};
         margin-bottom: 20px;
-        background: {t['bg']};
+        background: #111;
         object-fit: cover;
     }}
 
-    /* بطاقات الميزات الجديدة */
+    /* بطاقات الميزات (Merchant Style) */
     .feature-card {{
-        background: rgba(255,255,255,0.03);
-        border: 1px solid {t['accent']};
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255, 215, 0, 0.2);
         border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }}
+    .feature-card:hover {{ border-color: {t['accent']}; transform: translateY(-5px); background: rgba(255,215,0,0.05); }}
+
+    /* إحصائيات بنظام علي بابا */
+    .dashboard-stat {{
+        text-align: center;
         padding: 20px;
-        margin-bottom: 15px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 15px;
+        border-bottom: 4px solid {t['accent']};
     }}
 
-    /* حل مشكلة الكتابة باللون الأسود */
+    /* حل مشكلة الكتابة باللون الأسود صراحةً */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
-        font-weight: bold !important;
+        border: 2px solid {t['border']} !important;
         border-radius: 12px !important;
+        font-weight: bold !important;
     }}
 
     .stButton>button {{
@@ -109,158 +124,184 @@ st.markdown(f"""
         color: #000000 !important;
         font-weight: 950 !important;
         border-radius: 20px !important;
-        height: 55px;
+        height: 60px;
+        font-size: 1.1rem;
     }}
+    
+    /* تنسيق التبويبات */
+    .stTabs [data-baseweb="tab-list"] {{ gap: 15px; }}
+    .stTabs [data-baseweb="tab"] {{ font-weight: 900; font-size: 1.1rem; }}
     </style>
     """, unsafe_allow_html=True)
 
 # --- 2. إدارة البيانات والهوية ---
 if 'user_id' not in st.session_state: st.session_state.user_id = str(uuid.uuid4())
-if 'leader_name' not in st.session_state: st.session_state.leader_name = "إمبراطور النخبة"
-if 'discount_points' not in st.session_state: st.session_state.discount_points = 2450
-if 'reward_balance' not in st.session_state: st.session_state.reward_balance = 125.50
+if 'leader_name' not in st.session_state: st.session_state.leader_name = "إمبراطور السيادة"
+if 'discount_points' not in st.session_state: st.session_state.discount_points = 12500
+if 'profile_pic_b64' not in st.session_state: st.session_state.profile_pic_b64 = None
 
-# --- 3. القائمة الجانبية (تخصيص متقدم) ---
+# --- 3. القائمة الجانبية (إعدادات متقدمة) ---
 with st.sidebar:
-    st.markdown(f"### 🎨 تخصيص المنظومة")
-    theme_choice = st.selectbox("النمط:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
+    st.markdown(f"### 🎨 تخصيص الواجهة")
+    theme_choice = st.selectbox("نمط المنظومة:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
     if theme_choice != st.session_state.app_theme:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
     
-    with st.expander("🌐 إعدادات SEO و GEO"):
-        st.text_input("موقع قاعدة العمليات (City/Country):", "Cairo, Egypt")
-        st.text_area("الكلمات المفتاحية للبحث (SEO Keywords):", "Leadership, Wealth Engineering, MR7 Mentor")
-        st.caption("هذه الإعدادات تساعد في أرشفة بروفايلك عالمياً.")
+    with st.expander("👤 تحديث الهوية البصرية"):
+        st.session_state.leader_name = st.text_input("اسم الشهرة:", st.session_state.leader_name)
+        up_file = st.file_uploader("رفع ختم الصورة:", type=["png", "jpg", "jpeg"])
+        if up_file:
+            st.session_state.profile_pic_b64 = f"data:image/png;base64,{base64.b64encode(up_file.getvalue()).decode()}"
+        if st.button("حفظ الهوية"): st.success("تم التحديث!")
 
 # --- 4. واجهة ملف القائد الاحترافية ---
 # غلاف احترافي
 st.markdown('<div class="profile-cover"></div>', unsafe_allow_html=True)
 
-# رأس البروفايل
-avatar_url = f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
+# رأس البروفايل (The Elite Hub)
+avatar = st.session_state.profile_pic_b64 or f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
 st.markdown(f"""
 <div class="elite-header">
-    <img src="{avatar_url}" class="avatar-glow">
-    <h2 style="color: {t['accent']}; font-size: 2.8rem; margin-bottom: 5px;">{st.session_state.leader_name}</h2>
-    <p style="font-size: 1.1rem; opacity: 0.8; font-family: monospace;">قائد عمليات معتمد: {st.session_state.user_id[:13]}</p>
-    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
-        <span style="background: {t['accent']}; color: black; padding: 4px 15px; border-radius: 50px; font-weight: 900;">الرتبة: ماسي 💎</span>
-        <span style="background: #00FF88; color: black; padding: 4px 15px; border-radius: 50px; font-weight: 900;">نقاط الخصم: {st.session_state.discount_points} 🎟️</span>
+    <img src="{avatar}" class="avatar-glow">
+    <h2 style="color: {t['accent']}; font-size: 3rem; margin-bottom: 5px;">{st.session_state.leader_name}</h2>
+    <p style="font-size: 1.1rem; opacity: 0.8; font-family: monospace;">Global Leader ID: {st.session_state.user_id[:13]}</p>
+    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+        <span style="background: {t['accent']}; color: black; padding: 6px 20px; border-radius: 50px; font-weight: 950; font-size: 0.9rem;">VIP LEVEL 7 👑</span>
+        <span style="background: #00FF88; color: black; padding: 6px 20px; border-radius: 50px; font-weight: 950; font-size: 0.9rem;">TRUST SCORE: 98% ✅</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# تبويبات الوظائف المتقدمة
-tabs = st.tabs(["🔗 الانتشار والنمو", "💰 المحفظة والمكافآت", "📩 بريد القادة", "🛠️ إدارة الظهور (SEO)"])
+# لوحة المؤشرات (Merchant Dashboard Style)
+col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+with col_m1:
+    st.markdown(f'<div class="dashboard-stat"><small>إجمالي الأرباح</small><br><span style="font-size:1.8rem; color:#00FF88;">$1.2M</span></div>', unsafe_allow_html=True)
+with col_m2:
+    st.markdown(f'<div class="dashboard-stat"><small>نقاط المكافآت</small><br><span style="font-size:1.8rem; color:{t["accent"]};">{st.session_state.discount_points:,}</span></div>', unsafe_allow_html=True)
+with col_m3:
+    st.markdown(f'<div class="dashboard-stat"><small>حجم الفريق</small><br><span style="font-size:1.8rem; color:#FFFFFF;">8.5K</span></div>', unsafe_allow_html=True)
+with col_m4:
+    st.markdown(f'<div class="dashboard-stat"><small>قوة التأثير</small><br><span style="font-size:1.8rem; color:#FF4B4B;">A+++</span></div>', unsafe_allow_html=True)
 
-# --- Tab 1: رابط الإحالة والانتشار ---
+st.divider()
+
+# تبويبات الأنظمة الاحترافية
+tabs = st.tabs(["🚀 النمو والانتشار", "💎 الخزنة والولاء", "✉️ مركز المراسلات", "⚙️ مهندس الظهور (SEO)"])
+
+# --- Tab 1: النمو والانتشار (Affiliate Center) ---
 with tabs[0]:
-    st.subheader("🔗 مركز الانتشار العالمي (Affiliate Hub)")
-    st.markdown("""
-    استخدم الرابط أدناه لبناء جيشك الخاص. كل مسجل عن طريقك يضاف لجيلك الأول وتكسب نقاط استحقاق ومكافآت تضاعفية.
-    """)
-    aff_link = f"https://mr7-empire.com/join?ref={st.session_state.user_id[:8]}"
+    st.subheader("🔗 محرك التوسع العالمي (Affiliate Engine)")
+    st.info("رابط الإحالة الموثق الخاص بك لبناء أجيال السيادة السبعة.")
+    
+    aff_code = st.session_state.user_id[:8].upper()
+    aff_link = f"https://mr7-empire.com/invite?ref={aff_code}"
+    
     st.code(aff_link, language="text")
-    if st.button("نسخ الرابط ونشره في الساحة 🚀"):
-        st.toast("تم نسخ الرابط! انطلق لغزو الأسواق.")
+    if st.button("نسخ الرابط الملكي 📋"): st.toast("تم النسخ! انطلق لبناء إمبراطوريتك.")
     
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
+    col_gr1, col_gr2 = st.columns(2)
+    with col_gr1:
         st.markdown(f"""
         <div class="feature-card">
-            <h4>إجمالي المحالين</h4>
-            <div style="font-size: 2rem; color: {t['accent']};">852 قائد</div>
+            <h4>تحليل الجيل الأول</h4>
+            <p>عدد المسجلين: <b>852 قائد</b></p>
+            <p>معدل النشاط: <span style="color:#00FF88;">92%</span></p>
         </div>
         """, unsafe_allow_html=True)
-    with col_p2:
+    with col_gr2:
         st.markdown(f"""
         <div class="feature-card">
-            <h4>عمولات الجيل المباشر</h4>
-            <div style="font-size: 2rem; color: #00FF88;">$12,450</div>
+            <h4>عمولات الأجيال السبعة</h4>
+            <p>أرباح الشهر الحالي: <b>$24,500</b></p>
+            <p>توقعات النمو: <span style="color:{t['accent']};">+15%</span></p>
         </div>
         """, unsafe_allow_html=True)
 
-# --- Tab 2: المحفظة ونقاط الخصم ---
+# --- Tab 2: الخزنة ونظام الولاء (Loyalty Hub) ---
 with tabs[1]:
-    st.subheader("💰 نظام الولاء والمكافآت (AliBaba Style)")
-    c1, c2, c3 = st.columns(3)
+    st.subheader("💎 نظام المكافآت الذكي (Points & Vouchers)")
     
-    with c1:
-        st.metric("نقاط الخصم (Store Credit)", f"{st.session_state.discount_points} PTS", "+150 اليوم")
-    with c2:
-        st.metric("رصيد المكافآت المباشرة", f"${st.session_balance if 'session_balance' in st.session_state else 125.50}", "متاح للسحب")
-    with c3:
-        st.metric("قسائم الشراء (Vouchers)", "3 قسائم", "خصم 20%")
+    c_p1, c_p2 = st.columns([2, 1])
+    with c_p1:
+        st.markdown("#### 🎫 قسائم الخصم المتاحة (Vouchers)")
+        st.table([
+            {"القسيمة": "WELCOME_TR7", "الخصم": "15%", "الانتهاء": "30 يوم"},
+            {"القسيمة": "ELITE_LEADER", "الخصم": "50$", "الانتهاء": "دائم"}
+        ])
+    with c_p2:
+        st.markdown(f"""
+        <div class="feature-card" style="text-align:center; background:rgba(0,255,136,0.05);">
+            <p>رصيد الكاش باك</p>
+            <h2 style="color:#00FF88;">$1,250.00</h2>
+            <button style="width:100%; height:35px; background:#00FF88; border:none; border-radius:10px; font-weight:bold;">سحب الآن 💸</button>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.markdown("### 🏆 قائمة المكافآت المحققة")
-    st.table([
-        {"المكافأة": "بونص بناء الفريق (الجيل الثاني)", "المبلغ": "$50.00", "التاريخ": "اليوم"},
-        {"المكافأة": "نقاط ولاء - إتمام كورس المليار", "المبلغ": "500 PTS", "التاريخ": "أمس"},
-        {"المكافأة": "خصم ترويجي للمتجر", "المبلغ": "قسيمة $10", "التاريخ": "منذ يومين"}
-    ])
-
-# --- Tab 3: البريد الإمبراطوري ---
+# --- Tab 3: مركز المراسلات (Imperial Mail) ---
 with tabs[2]:
-    st.subheader("📩 مركز المراسلات الاستراتيجية")
-    st.info("أرسل تعليماتك مباشرة لأعضاء فريقك أو تواصل مع الدعم الفني العالمي.")
+    st.subheader("📩 مركز قيادة التواصل الجماعي")
+    st.write("أرسل تحديثاتك الاستراتيجية مباشرة لبريد فريقك أو للإدارة.")
     
     with st.container():
-        st.markdown("<div class='feature-card'>", unsafe_allow_html=True)
-        to_who = st.selectbox("إلى:", ["الفريق بالكامل (Bulk Email)", "قادة الجيل الأول فقط", "الإدارة العليا (MR7 Admin)"])
-        subject = st.text_input("موضوع البرقية:")
-        body = st.text_area("نص الرسالة القيادية:", height=150)
-        if st.button("إرسال البريد الآن ⚡"):
-            if body:
-                with st.spinner("جاري بث الرسالة عبر السيرفرات العالمية..."):
+        st.markdown('<div class="feature-card">', unsafe_allow_html=True)
+        target_group = st.selectbox("المستهدفين:", ["الجيل الأول (Directs)", "الفريق بالكامل (8.5K)", "قادة النخبة فقط", "أدمن MR7"])
+        subject = st.text_input("عنوان البرقية الاستراتيجية:", placeholder="مثلاً: خطة الربع الثاني للنمو...")
+        mail_body = st.text_area("نص الرسالة:", height=150)
+        
+        if st.button("بث الرسالة عبر السيرفرات ⚡"):
+            if mail_body:
+                with st.spinner("جاري التشفير والبث عالمياً..."):
                     time.sleep(2)
-                    st.success("تم إرسال البرقية بنجاح لكافة المستهدفين!")
-            else:
-                st.warning("الرسالة فارغة!")
-        st.markdown("</div>", unsafe_allow_html=True)
+                    st.success("تم إرسال الرسالة بنجاح لجميع الأطراف.")
+            else: st.warning("الرسالة فارغة!")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# --- Tab 4: SEO و GEO ---
+# --- Tab 4: SEO & GEO (Global Visibility) ---
 with tabs[3]:
-    st.subheader("🛠️ هندسة الظهور العالمي")
-    col_seo1, col_seo2 = st.columns([1, 1])
+    st.subheader("⚙️ هندسة الظهور الرقمي")
     
+    col_seo1, col_seo2 = st.columns(2)
     with col_seo1:
         st.markdown("#### 🌍 التواجد الجغرافي (GEO)")
-        st.write("يظهر بروفايلك حالياً في نطاق:")
-        st.info("الشرق الأوسط، شمال أفريقيا، والخليج العربي")
-        if st.button("توسيع النطاق لأوروبا"):
-            st.toast("تحتاج لـ 5000 XP لتوسيع نطاق ظهورك!")
+        ops_base = st.text_input("قاعدة العمليات الأساسية:", "Dubai, UAE")
+        region = st.multiselect("نطاق الظهور العالمي:", ["الشرق الأوسط", "أوروبا", "أمريكا الشمالية", "آسيا"], default=["الشرق الأوسط"])
+        st.caption("تحديد النطاق يساعد في جلب قادة من نفس المناطق الجغرافية.")
 
     with col_seo2:
-        st.markdown("#### 🔍 تحسين البحث (SEO)")
-        st.write("ترتيب بروفايلك في نتائج البحث الداخلية:")
-        st.progress(0.75)
-        st.caption("قوة الظهور: 75% (ممتاز)")
-        st.checkbox("السماح لمحركات البحث (Google/Bing) بأرشفة بروفايلي", value=True)
+        st.markdown("#### 🔍 تحسين محركات البحث (SEO)")
+        keywords = st.text_area("كلمات المفتاح الموثقة:", "Financial Mastery, Empire Builder, MR7 Mentorship")
+        st.progress(0.85)
+        st.caption("كفاءة أرشفة بروفايلك: 85% (ممتاز)")
+        st.checkbox("تفعيل الظهور في نتائج البحث العامة (Google/Bing)", value=True)
 
 st.divider()
 
-# معرض صور المشاريع (Visual Grid)
-st.subheader("🖼️ معرض أصول الإمبراطورية")
-img_cols = st.columns(3)
-empire_assets = [
-    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&q=80",
-    "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=500&q=80",
-    "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=500&q=80"
+# معرض أصول الإمبراطورية (Business Portfolio)
+st.subheader("🖼️ معرض أصول القائد (Business Portfolio)")
+assets = [
+    ("https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&q=80", "مشروع الاستثمار العقاري الذكي"),
+    ("https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=500&q=80", "أكاديمية تدريب الجيل الثالث"),
+    ("https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=500&q=80", "مركز تطوير حلول الـ AI")
 ]
-for i, img in enumerate(empire_assets):
-    with img_cols[i]:
-        st.image(img, caption=f"مشروع سيادة #{i+1}", use_container_width=True)
+asset_cols = st.columns(3)
+for i, (img, title) in enumerate(assets):
+    with asset_cols[i]:
+        st.image(img, caption=title, use_container_width=True)
 
-# روابط سريعة
 st.divider()
-c_b1, c_b2, c_b3 = st.columns(3)
-with c_b1:
+
+# روابط التنقل السريع
+st.markdown("### 🗺️ خريطة السيادة السريعة")
+c_nav1, c_nav2, c_nav3, c_nav4 = st.columns(4)
+with c_nav1:
     if st.button("🛒 المتجر العالمي"): st.switch_page("pages/4_Marketplace.py")
-with c_b2:
+with c_nav2:
     if st.button("👥 إدارة الفريق"): st.switch_page("pages/6_Teams.py")
-with c_b3:
-    if st.button("🏛️ العودة للرؤية"): st.switch_page("pages/0_My_Vision.py")
+with c_nav3:
+    if st.button("💰 الخزنة"): st.switch_page("pages/3_Wallet.py")
+with c_nav4:
+    if st.button("🏠 الرئيسية"): st.switch_page("app.py")
