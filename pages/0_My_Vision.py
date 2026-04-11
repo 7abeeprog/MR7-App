@@ -1,114 +1,134 @@
 import streamlit as st
 import time
 
-# --- 1. إعدادات التصميم الإبداعي (Elite High-Contrast UI) ---
+# --- 1. إعدادات التصميم الإبداعي (Ultra-High Contrast Elite UI) ---
 st.markdown("""
     <style>
-    /* تحسين الخلفية العامة */
+    /* تحسين الخلفية العامة وجعل الخطوط بيضاء تماماً */
     .main {
         background-color: #000000 !important;
+        color: #FFFFFF !important;
     }
     
+    /* جعل كل النصوص الافتراضية بيضاء */
+    div[data-testid="stMarkdownContainer"] p, h1, h2, h3, span {
+        color: #FFFFFF !important;
+    }
+
     /* بطاقة الرؤية - تصميم زجاجي بحدود ذهبية مضيئة */
     .vision-card {
-        background: rgba(25, 25, 25, 0.95);
-        backdrop-filter: blur(20px);
-        padding: 50px;
+        background: rgba(30, 30, 30, 0.9);
+        backdrop-filter: blur(25px);
+        padding: 60px;
         border-radius: 40px;
         border: 2px solid #FFD700;
-        box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+        box-shadow: 0 0 50px rgba(255, 215, 0, 0.25);
         margin-bottom: 30px;
         text-align: center;
     }
     
-    /* نصوص براقة عالية التباين */
+    /* نصوص براقة عالية التباين (أبيض مع توهج ذهبي) */
     .glitter-text {
-        background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
+        background: linear-gradient(90deg, #FFFFFF, #FFD700, #FFFFFF);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 900;
-        font-size: 40px;
-        text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        font-size: 45px;
+        text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
     }
 
-    /* إصلاح ألوان الاختيارات (Radio Buttons) لتكون مرئية جداً */
+    /* إصلاح ألوان الاختيارات (Radio Buttons) لتكون بيضاء وواضحة جداً */
     .stRadio > div {
-        gap: 20px;
-        padding: 10px;
+        gap: 25px;
+        padding: 15px;
     }
     .stRadio label {
-        background: #1A1A1A !important;
+        background: #111111 !important;
         border: 2px solid #444 !important;
-        padding: 25px 40px !important;
+        padding: 30px 45px !important;
         border-radius: 20px !important;
-        transition: all 0.3s ease !important;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         width: 100%;
-        /* جعل النص أبيض ناصع ليظهر فوق الأسود */
+        /* اللون الأبيض الناصع للنص */
         color: #FFFFFF !important; 
-        font-weight: 800 !important;
-        font-size: 22px !important;
-        display: block !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,1) !important;
-    }
-    /* عند المرور فوق الخيار */
-    .stRadio label:hover {
-        border-color: #00FF88 !important;
-        background: #222 !important;
-        transform: scale(1.02);
-        box-shadow: 0 0 20px rgba(0, 255, 136, 0.4) !important;
-    }
-    /* عند اختيار العنصر */
-    .stRadio div[role="radiogroup"] input:checked + label {
-        border-color: #FFD700 !important;
-        background: #2A2A2A !important;
-        color: #FFD700 !important;
+        font-weight: 900 !important;
+        font-size: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.8) !important;
     }
     
-    /* زر التثبيت الذهبي العملاق */
-    .stButton>button {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
-        color: #000000 !important;
-        border: none !important;
-        height: 85px !important;
-        font-size: 28px !important;
-        font-weight: 900 !important;
-        border-radius: 25px !important;
-        box-shadow: 0 15px 40px rgba(184, 134, 11, 0.6) !important;
-        text-transform: uppercase;
+    /* عند المرور فوق الخيار - توهج أخضر نيون */
+    .stRadio label:hover {
+        border-color: #00FF88 !important;
+        background: #1A1A1A !important;
+        transform: scale(1.03) translateX(5px);
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3) !important;
+        color: #00FF88 !important;
     }
-    .stButton>button:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 25px 60px rgba(255, 215, 0, 0.8) !important;
+    
+    /* عند اختيار العنصر - توهج ذهبي ملكي */
+    .stRadio div[role="radiogroup"] input:checked + label {
+        border-color: #FFD700 !important;
+        background: #222222 !important;
+        color: #FFD700 !important;
+        box-shadow: 0 0 40px rgba(255, 215, 0, 0.4) !important;
     }
 
-    /* شريط التقدم الذهبي */
+    /* إخفاء دائرة الراديو الافتراضية لزيادة الجمالية */
+    div[data-testid="stMarkdownContainer"] [data-testid="stWidgetLabel"] {
+        color: #FFFFFF !important;
+    }
+    
+    /* زر التثبيت الذهبي "الإمبراطوري" */
+    .stButton>button {
+        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
+        color: #000000 !important; /* النص أسود ليكون واضحاً فوق الذهبي */
+        border: none !important;
+        height: 90px !important;
+        font-size: 30px !important;
+        font-weight: 900 !important;
+        border-radius: 25px !important;
+        box-shadow: 0 20px 50px rgba(184, 134, 11, 0.5) !important;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .stButton>button:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 30px 70px rgba(255, 215, 0, 0.7) !important;
+        filter: brightness(1.1);
+    }
+
+    /* شريط التقدم الذهبي المتوهج */
     .stProgress > div > div > div > div {
         background-color: #FFD700;
-        box-shadow: 0 0 25px #FFD700;
+        box-shadow: 0 0 30px #FFD700;
     }
     </style>
 
     <script>
-    // نظام الأصوات المطور للعمل داخل المتصفح
+    // نظام الأصوات المطور للتفاعل المباشر
     function playSfx(url) {
         const audio = new Audio(url);
+        audio.volume = 0.6;
         audio.play().catch(e => console.log('Audio Blocked:', e));
     }
 
-    // صوت Hover عند المرور على الأهداف
+    // إضافة صوت الـ Hover بشكل احترافي
     document.addEventListener('mouseover', function(e) {
-        if (e.target.tagName === 'LABEL' || e.target.tagName === 'BUTTON') {
+        const isTarget = e.target.tagName === 'LABEL' || e.target.tagName === 'BUTTON' || e.target.closest('label');
+        if (isTarget) {
             playSfx('https://www.soundjay.com/buttons/sounds/button-37a.mp3');
         }
     });
     </script>
     """, unsafe_allow_html=True)
 
-# دالة لتشغيل أصوات ملهمة
-def play_inspire_sound(sound_key="select"):
+# دالة لتشغيل أصوات ملهمة وملحمية
+def play_epic_sound(sound_key="select"):
     sounds = {
         "select": "https://www.soundjay.com/buttons/sounds/button-16.mp3", # صوت اختيار نقي
-        "confirm": "https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3", # صوت ملهم (Epic Success)
+        "confirm": "https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3", # صوت ملهم (Epic Victory)
         "next": "https://www.soundjay.com/buttons/sounds/button-10.mp3"
     }
     st.components.v1.html(f"""
@@ -128,9 +148,9 @@ if 'v_step' not in st.session_state:
 
 # --- 4. واجهة المستخدم ---
 st.title("🏛️ مجمع الرؤية الاستراتيجية")
-st.markdown("<p style='font-size:24px; color:#FFD700; font-weight:bold;'>هندسة الاستحقاق القيادي لمنظومة MR7</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:26px; color:#FFD700; font-weight:bold; text-shadow: 0 0 10px rgba(255,215,0,0.4);'>صناعة الاستحقاق القيادي لمنظومة MR7</p>", unsafe_allow_html=True)
 
-# شريط التقدم
+# شريط التقدم الذهبي العملاق
 p_val = {1: 15, 2: 60, 3: 100}.get(st.session_state.v_step, 100)
 st.progress(p_val)
 
@@ -138,82 +158,102 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # المرحلة الأولى: اختيار التصنيف
 if st.session_state.v_step == 1:
-    st.markdown("<h3 style='text-align:center; color: white;'>1️⃣ اختر قطاع السيادة</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center; color: #FFFFFF;'>1️⃣ اختر قطاع السيادة الكوني</h3>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     
     with c1:
-        if st.button("💰\nالمالي", key="btn_money_v3"):
-            play_inspire_sound("select")
+        if st.button("💰\nالمالي", key="btn_money_v4"):
+            play_epic_sound("select")
             st.session_state.v_cat = "مالي"
             st.session_state.v_step = 2
             st.rerun()
     with c2:
-        if st.button("🎓\nالتعليمي", key="btn_edu_v3"):
-            play_inspire_sound("select")
+        if st.button("🎓\nالتعليمي", key="btn_edu_v4"):
+            play_epic_sound("select")
             st.session_state.v_cat = "تعليمي"
             st.session_state.v_step = 2
             st.rerun()
     with c3:
-        if st.button("✈️\nالسفر", key="btn_travel_v3"):
-            play_inspire_sound("select")
+        if st.button("✈️\nالسفر", key="btn_travel_v4"):
+            play_epic_sound("select")
             st.session_state.v_cat = "سفر"
             st.session_state.v_step = 2
             st.rerun()
     with c4:
-        if st.button("❤️\nالعاطفي", key="btn_emo_v3"):
-            play_inspire_sound("select")
+        if st.button("❤️\nالعاطفي", key="btn_emo_v4"):
+            play_epic_sound("select")
             st.session_state.v_cat = "عاطفي"
             st.session_state.v_step = 2
             st.rerun()
 
-# المرحلة الثانية: اختيار مستوى الطموح
+# المرحلة الثانية: اختيار مستوى الطموح (4 مستويات)
 elif st.session_state.v_step == 2:
     cat = st.session_state.v_cat
-    st.markdown(f"<h3 style='text-align:center; color: white;'>2️⃣ مسار الـ {cat}: حدد درجتك في الهرم</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align:center; color: #FFFFFF;'>2️⃣ مسار الـ {cat}: حدد درجتك في الهرم</h3>", unsafe_allow_html=True)
     
     levels = {
-        "مالي": ["🌱 مستوى الـ 1M: تأمين القاعدة", "📈 مستوى الـ 10M: النفوذ الإقليمي", "🔥 مستوى الـ 100M: الهيمنة الاقتصادية", "👑 مستوى المليار: نادي التريليون"],
-        "تعليمي": ["🧠 إتقان المهارات النادرة", "📜 الاعتماد القيادي الدولي", "🎓 خبير متخصص (PhD)", "✍️ مؤلف المناهج العالمية"],
-        "سفر": ["🧭 الاستكشاف المحلى العميق", "🗺️ فتح آفاق القارات الجديدة", "✈️ الطواف حول العالم", "🕊️ المهمة الكونية الإنسانية"],
-        "عاطفي": ["❤️ التوازن العائلي والداخلي", "🤝 شبكة علاقات النخبة", "🏛️ قيادة الأثر المجتمعي الوطني", "🕊️ الإرث الإنساني العالمي"]
+        "مالي": [
+            "🌱 مستوى الـ 1M: تأمين القاعدة المالية", 
+            "📈 مستوى الـ 10M: التوسع والنفوذ", 
+            "🔥 مستوى الـ 100M: السيادة المطلقة", 
+            "👑 مستوى المليار: نادي التريليون"
+        ],
+        "تعليمي": [
+            "🧠 إتقان المهارات النادرة", 
+            "📜 الاعتماد القيادي العالمي", 
+            "🎓 درجة المرجعية (Specialized PhD)", 
+            "✍️ مؤلف المناهج القيادية العالمية"
+        ],
+        "سفر": [
+            "🧭 الاستكشاف المحلى العميق", 
+            "🗺️ فتح آفاق القارات الجديدة", 
+            "✈️ الطواف حول العالم لنشر الرسالة", 
+            "🕊️ المهمة الكونية: ترك أثر في كل عاصمة"
+        ],
+        "عاطفي": [
+            "❤️ التوازن العائلي والداخلي العميق", 
+            "🤝 بناء شبكة علاقات النخبة العالمية", 
+            "🏛️ قيادة الأثر المجتمعي الوطني", 
+            "🕊️ الإرث الإنساني العابر للأجيال"
+        ]
     }
 
-    st.markdown("<div style='max-width: 800px; margin: auto;'>", unsafe_allow_html=True)
+    st.markdown("<div style='max-width: 850px; margin: auto;'>", unsafe_allow_html=True)
     selected = st.radio("اختر مستوى استحقاقك:", levels[cat], label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("<br><br>", unsafe_allow_html=True)
     if st.button("🏆 تثبيت الهدف الإمبراطوري"):
-        play_inspire_sound("confirm") # صوت ملهم جداً (Epic)
+        play_epic_sound("confirm") # صوت ملهم (Epic)
         st.session_state.v_goal = selected
         with st.spinner("يتم الآن نقش رؤيتك في الذاكرة الأبدية..."):
-            time.sleep(3)
+            time.sleep(3.5)
             st.session_state.v_step = 3
             st.rerun()
 
-# المرحلة الثالثة: النتيجة النهائية
+# المرحلة الثالثة: النتيجة النهائية بوضوح فائق
 elif st.session_state.v_step == 3:
     st.balloons()
     st.markdown(f"""
     <div class="vision-card">
-        <div style='font-size: 80px; margin-bottom: 20px;'>⚡</div>
-        <h2 class="glitter-text">ولدت رؤية التريليون</h2>
-        <p style='font-size: 38px; color: #FFD700; font-weight: 900;'>{st.session_state.v_goal}</p>
-        <div style='height: 5px; background: linear-gradient(90deg, transparent, #00FF88, transparent); margin: 35px 0;'></div>
-        <p style='font-style: italic; color: #FFFFFF; font-size: 24px; line-height: 1.8; font-weight: 500;'>
-        "يا قائد.. هذا الهدف ليس حلماً، بل هو خطة عمل تبدأ من هذه اللحظة. 
-        لقد أعدنا ضبط بوصلة التطبيق لتوجهك نحو هذا الاستحقاق العظيم."
+        <div style='font-size: 100px; margin-bottom: 20px;'>✨</div>
+        <h2 class="glitter-text">لقد وُلدت رؤية التريليون</h2>
+        <p style='font-size: 42px; color: #FFFFFF; font-weight: 900; text-shadow: 0 0 20px #FFD700;'>{st.session_state.v_goal}</p>
+        <div style='height: 6px; background: linear-gradient(90deg, transparent, #00FF88, transparent); margin: 40px 0;'></div>
+        <p style='color: #FFFFFF; font-size: 26px; line-height: 1.8; font-weight: 600; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px;'>
+        "من هذه اللحظة، أنت قائد يمتلك خارطة طريق كونية. 
+        لقد أعدنا ضبط بوصلة التطبيق لتوجهك نحو هذا الاستحقاق العظيم بكل قوة."
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    c_back, c_next = st.columns(2)
-    with c_back:
+    col_back, col_next = st.columns(2)
+    with col_back:
         if st.button("🔄 إعادة الصياغة"):
-            play_inspire_sound("select")
+            play_epic_sound("select")
             st.session_state.v_step = 1
             st.rerun()
-    with c_next:
+    with col_next:
         if st.button("🚀 انطلق لمركز التدريب الآن"):
-            play_inspire_sound("next")
+            play_epic_sound("next")
             st.switch_page("pages/1_Education.py")
