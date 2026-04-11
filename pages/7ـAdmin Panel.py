@@ -50,25 +50,16 @@ st.markdown(f"""
         font-size: 3.2rem !important; 
     }}
 
-    .admin-card {{
+    .project-card {{
         background: {t['card']};
         border: 2px solid {t['border']};
-        border-radius: 20px;
-        padding: 20px;
-        margin-bottom: 20px;
-        text-align: center;
+        border-radius: 25px;
+        padding: 25px;
+        margin-bottom: 25px;
+        transition: 0.4s ease;
     }}
+    .project-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
 
-    .level-box {{
-        background: rgba(255, 215, 0, 0.1);
-        border: 1px solid {t['accent']};
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        text-align: center;
-    }}
-
-    /* حل مشكلة الكتابة (نص أسود على خلفية بيضاء) لضمان الوضوح التام */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -82,16 +73,22 @@ st.markdown(f"""
         color: #000000 !important;
         font-weight: 950 !important;
         border-radius: 15px !important;
-        height: 50px;
+        height: 55px;
     }}
 
-    /* تحسين شكل القوائم المنسدلة */
-    div[data-baseweb="select"] > div {{ background-color: {t['select_bg']} !important; color: {t['select_text']} !important; }}
-    div[data-baseweb="popover"] li {{ color: {t['select_text']} !important; background-color: {t['select_bg']} !important; }}
+    .stProgress > div > div > div > div {{
+        background-color: #00FF88 !important;
+    }}
+    
+    .status-badge {{
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. القائمة الجانبية ---
 with st.sidebar:
     st.markdown(f"### 🎨 تخصيص المظهر")
     theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
@@ -99,158 +96,135 @@ with st.sidebar:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
-    st.markdown("### 👑 حالة الإدارة")
-    st.warning("وصول: أدمن رئيسي (Root)")
-    st.success("سيرفرات المنظومة: مستقرة ✅")
+    st.markdown("### 🏛️ رصيد الاستثمار")
+    st.success("المحفظة الاستثمارية: 50,000 EGP")
 
-# --- 3. واجهة لوحة التحكم العليا ---
-st.title("👑 لوحة التحكم العليا")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>الإدارة الإمبراطورية لمنظومة MR7 العالمية</p>", unsafe_allow_html=True)
-
-st.divider()
-
-# إحصائيات حية وشاملة
-col1, col2, col3, col4 = st.columns(4)
-metrics = [
-    ("إجمالي القادة", "15,420", "👥"),
-    ("أرباح المنظومة (EGP)", "2.4M", "💰"),
-    ("روابط الإحالة النشطة", "8,210", "🔗"),
-    ("معدل التحويل", "12.5%", "⚡")
-]
-
-for i, (label, val, icon) in enumerate(metrics):
-    with [col1, col2, col3, col4][i]:
-        st.markdown(f"""
-        <div class="admin-card">
-            <p style="font-size: 0.9rem;">{icon} {label}</p>
-            <div style="font-size: 1.8rem; font-weight: 900; color: {t['accent']};">{val}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-st.divider()
-
-tabs = st.tabs(["👥 إدارة القادة", "🛒 مراجعة المتجر", "💹 هندسة العمولات", "🔗 روابط الإحالة", "🏆 الترقيات"])
-
-# --- Tab 1: إدارة المستخدمين ---
-with tabs[0]:
-    st.subheader("👥 إدارة قاعدة بيانات القادة")
-    
-    col_search, col_filter = st.columns([3, 1])
-    with col_search:
-        st.text_input("بحث عن مستخدم (ID, Email, Name):", placeholder="أدخل بيانات البحث...", key="user_search")
-    with col_filter:
-        st.selectbox("الفلترة حسب الرتبة:", ["الكل", "أدمن", "مدرب", "متدرب", "قائد فريق"], key="rank_filter")
-
-    user_data = [
-        {"ID": "MR7-001", "الاسم": "أحمد علي", "الرتبة": "مدرب بلاتيني", "XP": "4500", "الحالة": "نشط ✅"},
-        {"ID": "MR7-042", "الاسم": "سارة محمد", "الرتبة": "قائد ماسي", "XP": "2800", "الحالة": "نشط ✅"},
+# --- 2. إدارة البيانات مع إضافة حالة المشروع (Status) ---
+if 'crowd_projects' not in st.session_state:
+    st.session_state.crowd_projects = [
+        {"title": "مزرعة الهيدروبونيك الذكية", "category": "زراعة ذكية", "owner": "م. يوسف القائد", "goal": 100000, "raised": 45000, "desc": "إنشاء أول مزرعة مائية مؤتمتة بالكامل بالذكاء الاصطناعي لإنتاج محاصيل عضوية عالية الجودة.", "status": "approved"},
+        {"title": "منصة تعليم البرمجة للأطفال", "category": "تعليم تقني", "owner": "ليلى المبدعة", "goal": 50000, "raised": 48000, "desc": "تطبيق لتبسيط منطق البرمجة باستخدام الألعاب لجيل التريليون القادم.", "status": "approved"}
     ]
-    st.table(user_data)
 
-# --- Tab 2: مراجعة المتجر ---
-with tabs[1]:
-    st.subheader("🛒 مراجعة معروضات السوق")
-    st.info("إدارة جودة المنتجات والخدمات المقدمة من التجار.")
-    
-    with st.expander("📝 طلبات نشر جديدة (14)"):
-        st.write("- دورة 'هندسة التريليون' (المدرب: أحمد علي) - **[معاينة]**")
-        st.write("- باقة 'أدوات الانتشار' (التاجر: سارة) - **[معاينة]**")
-        st.button("الموافقة على جميع الطلبات المستوفية للشروط")
-
-# --- Tab 3: هندسة العمولات متعددة المستويات (MLM System) ---
-with tabs[2]:
-    st.subheader("💹 هندسة العمولات متعددة المستويات")
-    st.markdown("قم بتصميم هيكلية الأرباح التضاعفية للمنظومة.")
-    
-    # اختيار نوع النظام
-    sys_type = st.radio("نوع إعدادات العمولات:", ["النظام الأساسي (الافتراضي)", "تخصيص حسب المنتج"], horizontal=True)
-    
-    if sys_type == "تخصيص حسب المنتج":
-        selected_prod = st.selectbox("اختر المنتج لتعديل عمولاته:", ["باقة القائد البلاتيني", "دورة عقلية المليار", "اشتراك الوكيل الذكي"])
-        st.info(f"أنت الآن تقوم بتخصيص عمولات: {selected_prod}")
-
-    # تحديد عدد المستويات
-    num_levels = st.number_input("حدد عدد مستويات العمولة:", min_value=1, max_value=15, value=7)
-    
-    # القيم الافتراضية للنظام الأساسي (7 مستويات)
-    default_rates = [10.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    
-    st.markdown("#### ضبط نسب المستويات (%)")
-    level_cols = st.columns(4)
-    final_rates = []
-    
-    for i in range(num_levels):
-        col_idx = i % 4
-        with level_cols[col_idx]:
-            # استخدام القيمة الافتراضية إذا كان المستوى ضمن الـ 7 الأوائل
-            default_val = default_rates[i] if i < len(default_rates) else 0.5
-            rate = st.number_input(f"المستوى {i+1}", min_value=0.0, max_value=100.0, value=default_val, step=0.5, key=f"lvl_rate_{i}")
-            final_rates.append(rate)
-            
-    st.divider()
-    
-    # ملخص التوزيع المالي
-    total_commission = sum(final_rates)
-    st.markdown(f"""
-    <div style="background: rgba(0, 255, 136, 0.1); border: 2px solid #00FF88; padding: 20px; border-radius: 15px; text-align: center;">
-        <h3 style="color: #00FF88; margin: 0;">إجمالي نسبة التوزيع المالي: {total_commission}%</h3>
-        <p style="margin: 5px 0 0 0;">سيتم خصم هذه النسبة من سعر البيع لتوزيعها على شجرة الإحالة.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if st.button("💾 حفظ وتطبيق هيكلية العمولات"):
-        with st.spinner("جاري تحديث عقود العمولات الذكية..."):
-            time.sleep(1.5)
-            st.success(f"تم اعتماد نظام الـ {num_levels} مستويات بنجاح!")
-
-# --- Tab 4: روابط الإحالة وتتبع المتاجر (Referral & Deep Linking) ---
-with tabs[3]:
-    st.subheader("🔗 مركز إدارة روابط الإحالة والانتشار")
-    st.info("توليد روابط ذكية مرتبطة بنظام المستويات المذكور في التبويب السابق.")
-    
-    col_ref1, col_ref2 = st.columns([2, 1])
-    
-    with col_ref1:
-        st.markdown("#### توليد رابط إحالة استراتيجي")
-        ref_user_id = st.text_input("معرف القائد (Leader ID):", placeholder="MR7-XXXX")
-        
-        link_target = st.selectbox("ربط الإحالة بـ:", ["المتجر العالمي بالكامل", "منتج تعليمي محدد", "متجر متدرب (Vendor Store)"])
-        
-        if link_target == "منتج تعليمي محدد":
-            st.selectbox("اختر المنتج:", ["دورة القيادة", "باقة التوسع", "أدوات الذكاء الاصطناعي"])
-        elif link_target == "متجر متدرب (Vendor Store)":
-            st.text_input("معرف التاجر المستهدف (Vendor ID):")
-            
-        if st.button("🚀 إنشاء رابط التتبع"):
-            # محاكاة الرابط
-            ref_code = ref_user_id or "MASTER"
-            final_url = f"https://mr7-app.com/marketplace?ref={ref_code}&source=admin_gen"
-            st.code(final_url, language="text")
-            st.success("الرابط نشط ومرتبط بنظام الـ 7 مستويات تلقائياً.")
-
-    with col_ref2:
-        st.markdown("#### إحصائيات الروابط الذكية")
-        st.markdown(f"""
-        <div class="admin-card">
-            <p>أكثر رابط تم تداوله</p>
-            <h4 style="color:{t['accent']};">MR7-GOLD-01</h4>
-            <p style="font-size: 1.5rem; font-weight: 900;">2,450 نقرة</p>
-            <p style="color: #00FF88;">معدل تحويل: 18%</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-# --- Tab 5: الأوسمة والترقيات ---
-with tabs[4]:
-    st.subheader("🏆 نظام الاستحقاق والجيميفيكيشن")
-    with st.form("admin_badge_form"):
-        st.text_input("اسم الوسام الجديد:")
-        st.selectbox("أيقونة الوسام:", ["👑", "💎", "🚀", "⚡", "🔥"])
-        st.number_input("نقاط XP المطلوبة:", min_value=0)
-        if st.form_submit_button("إدراج الوسام في النظام"):
-            st.success("تم التحديث!")
+st.title("🤝 مجمع التمويل الجماعي")
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>دعم المشاريع الناشئة وتبادل الاستثمارات الاستراتيجية</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# العودة للرئيسية
-if st.button("🏠 العودة للوحة التحكم الرئيسية"):
-    st.switch_page("app.py")
+tabs = st.tabs(["🌎 استكشاف المشاريع", "🚀 اطرح مشروعك باحترافية", "💰 استثماراتي", "📊 إحصائيات السوق"])
+
+# --- Tab 1: استكشاف المشاريع (المعتمدة فقط) ---
+with tabs[0]:
+    st.subheader("🌎 منصة عرض أفكار النخبة")
+    
+    # فلترة المشاريع المعتمدة فقط
+    approved_projects = [p for p in st.session_state.crowd_projects if p.get('status') == "approved"]
+    
+    if not approved_projects:
+        st.info("لا توجد مشاريع معتمدة حالياً. كن أول من يطرح فكرة مليار دولار!")
+    else:
+        for idx, proj in enumerate(approved_projects):
+            with st.container():
+                st.markdown(f"""
+                <div class="project-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <span style="background: {t['accent']}; color: black; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem;">{proj.get('category', 'عام')}</span>
+                            <h2 style="color: {t['accent']}; margin-top: 5px;">{proj['title']}</h2>
+                        </div>
+                        <span style="color: #888; font-size: 0.9rem;">👤 صاحب المشروع: {proj['owner']}</span>
+                    </div>
+                    <p style="color: #ccc; margin-top: 10px;">{proj['desc']}</p>
+                    <div style="margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>الهدف: {proj['goal']:,} EGP</span>
+                            <span>تم جمع: {proj['raised']:,} EGP</span>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                progress = min(proj['raised'] / proj['goal'], 1.0)
+                st.progress(progress)
+                
+                col_in, col_btn = st.columns([1, 1])
+                with col_in:
+                    fund_amt = st.number_input(f"مبلغ التمويل (EGP):", min_value=100, key=f"amt_{idx}", step=500)
+                with col_btn:
+                    st.write("") # تعويض المسافة
+                    if st.button(f"🤝 تمويل الآن", key=f"btn_{idx}"):
+                        # تحديث المشروع الأصلي في القائمة الكبيرة
+                        for original_p in st.session_state.crowd_projects:
+                            if original_p['title'] == proj['title']:
+                                original_p['raised'] += fund_amt
+                        st.success(f"تم تسجيل استثمارك في {proj['title']}!")
+                        time.sleep(1)
+                        st.rerun()
+
+# --- Tab 2: اطرح مشروعك (مع حالة الانتظار) ---
+with tabs[1]:
+    st.subheader("🚀 نموذج طرح المشروع الاستراتيجي")
+    st.info("املأ البيانات التالية بعناية. سيتم مراجعة مشروعك من قبل الإدارة قبل نشره في السوق العالمي.")
+    
+    with st.form("professional_pitch"):
+        col_t, col_c = st.columns(2)
+        with col_t:
+            p_title = st.text_input("اسم المشروع (العنوان الجاذب):")
+        with col_c:
+            p_cat = st.selectbox("تصنيف المشروع:", ["تقني (AI/Software)", "زراعي", "عقاري", "تعليمي", "تجاري", "صناعي"])
+        
+        p_goal = st.number_input("المبلغ المطلوب للتمويل الإجمالي (EGP):", min_value=1000, step=1000)
+        p_summary = st.text_input("ملخص فكرة المشروع (Hook):")
+        p_desc = st.text_area("شرح تفصيلي للمشروع وجدواه الاقتصادية:", height=150)
+        p_risks = st.text_area("المخاطر والتحديات وكيفية مواجهتها:")
+        p_timeline = st.text_input("الجدول الزمني المتوقع:")
+        p_video = st.text_input("رابط فيديو تعريفي (يوتيوب):")
+        
+        if st.form_submit_button("إرسال المشروع للمراجعة والنشر 📤"):
+            if p_title and p_desc and p_goal > 0:
+                # إضافة المشروع بحالة "pending"
+                st.session_state.crowd_projects.append({
+                    "title": p_title, 
+                    "category": p_cat,
+                    "owner": "أنت (القائد الحالي)", 
+                    "goal": p_goal, 
+                    "raised": 0, 
+                    "desc": f"{p_summary}\n\n{p_desc}",
+                    "status": "pending"
+                })
+                st.success("تم إرسال مشروعك بنجاح! هو الآن قيد المراجعة الإدارية وسنقوم بإشعارك فور اعتماده.")
+                st.balloons()
+            else:
+                st.error("يرجى التأكد من ملء الحقول الأساسية.")
+
+# --- Tab 3: استثماراتي ---
+with tabs[2]:
+    st.subheader("💰 محفظة استثماراتي الجماعية")
+    my_investments = [
+        {"المشروع": "منصة تعليم البرمجة", "المبلغ المستثمر": "5,000 EGP", "النسبة من الهدف": "10%", "الحالة": "نشط ✅"},
+    ]
+    st.table(my_investments)
+    
+    # عرض حالة المشاريع التي طرحها المستخدم
+    st.markdown("---")
+    st.subheader("📤 مشاريعي المطروحة")
+    my_projects = [p for p in st.session_state.crowd_projects if p['owner'] == "أنت (القائد الحالي)"]
+    if my_projects:
+        for p in my_projects:
+            status_text = "قيد المراجعة ⏳" if p['status'] == "pending" else "معتمد ومتاح للتمويل ✅"
+            st.write(f"- **{p['title']}**: {status_text}")
+    else:
+        st.caption("لم تقم بطرح أي مشاريع بعد.")
+
+# --- Tab 4: إحصائيات السوق ---
+with tabs[3]:
+    st.subheader("📊 أداء سوق التمويل")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("إجمالي الضخ المالي", "245,000 EGP", "+15%")
+    c2.metric("مشاريع معتمدة", f"{len(approved_projects)}", "+2")
+    c3.metric("المستثمرون", "142", "🚀")
+
+st.divider()
+
+if st.button("👑 الانتقال للوحة التحكم العليا"):
+    st.switch_page("pages/8_Admin_Panel.py")
