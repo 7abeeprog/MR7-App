@@ -8,6 +8,28 @@ st.markdown("""
     .stApp {
         background-color: #000000 !important;
     }
+
+    /* تحسين العناوين الرئيسية لتبرز فوق الأسود */
+    h1 {
+        color: #FFD700 !important;
+        text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        text-align: center;
+        font-weight: 900 !important;
+    }
+    
+    h3 {
+        color: #FFFFFF !important;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        font-weight: 800 !important;
+    }
+
+    /* تحسين تسميات الحقول (Labels) لتكون واضحة جداً */
+    label {
+        color: #00FF88 !important;
+        font-weight: bold !important;
+        font-size: 1.2rem !important;
+        text-shadow: 0 0 5px rgba(0, 255, 136, 0.2);
+    }
     
     /* بطاقة المسار التعليمي - Glassmorphism */
     .course-card {
@@ -26,7 +48,7 @@ st.markdown("""
         box-shadow: 0 20px 40px rgba(255, 215, 0, 0.2);
     }
 
-    /* نصوص عالية الوضوح */
+    /* نصوص عالية الوضوح داخل البطاقات */
     .elite-title {
         color: #FFD700 !important;
         font-weight: 900;
@@ -39,11 +61,15 @@ st.markdown("""
         line-height: 1.6;
     }
 
-    /* تخصيص صناديق الاختيار */
+    /* تخصيص صناديق الاختيار (Selectbox) */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #111 !important;
         border-radius: 15px !important;
-        border: 1px solid #444 !important;
+        border: 2px solid #333 !important;
+        color: white !important;
+    }
+    .stSelectbox div[data-baseweb="select"]:hover {
+        border-color: #00FF88 !important;
     }
     
     /* أزرار الإطلاق */
@@ -54,6 +80,13 @@ st.markdown("""
         border-radius: 15px !important;
         height: 60px !important;
         font-size: 20px !important;
+        border: none !important;
+    }
+    
+    /* تحسين شريط التقدم */
+    .stProgress > div > div > div > div {
+        background-color: #00FF88 !important;
+        box-shadow: 0 0 15px #00FF88;
     }
     </style>
 
@@ -82,14 +115,14 @@ if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
 
 # --- 3. واجهة المستخدم ---
 st.title("🎓 مركز التميز القيادي")
-st.markdown("<p style='color:#00FF88; font-size:20px;'>نحول طموحك إلى كفاءة عالمية</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:#00FF88; font-size:22px; text-align:center; font-weight:bold;'>نحول طموحك إلى كفاءة عالمية</p>", unsafe_allow_html=True)
 
 st.divider()
 
 # شريط التقدم التعليمي العام
 st.write("### 📈 مستوى تطورك القيادي")
 st.progress(35)
-st.caption("لقد أكملت 35% من مسار 'تأسيس القيادة'.")
+st.markdown("<p style='color:#FFFFFF; font-size:16px;'>لقد أكملت <b>35%</b> من مسار 'تأسيس القيادة'.</p>", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
