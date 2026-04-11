@@ -1,99 +1,124 @@
 import streamlit as st
 import time
 
-# --- 1. إعدادات التصميم الإبداعي (Neon Education UI) ---
+# --- 1. إعدادات التصميم الإبداعي (Ultra-High Contrast Education UI) ---
 st.markdown("""
     <style>
-    /* تحسين الخلفية العامة */
+    /* تحسين الخلفية العامة وجعلها سوداء عميقة */
     .stApp {
         background-color: #000000 !important;
+        color: #FFFFFF !important;
     }
 
-    /* تحسين العناوين الرئيسية لتبرز فوق الأسود */
+    /* جعل كل النصوص الافتراضية بيضاء ناصعة */
+    div[data-testid="stMarkdownContainer"] p, h2, h3, span {
+        color: #FFFFFF !important;
+        font-weight: 500;
+    }
+
+    /* تصميم العنوان الرئيسي (st.title) - ذهبي ملكي متوهج */
     h1 {
-        color: #FFD700 !important;
-        text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 950 !important;
         text-align: center;
-        font-weight: 900 !important;
+        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.7));
+        padding-top: 20px;
+        padding-bottom: 20px;
+        font-size: 3.2rem !important;
     }
     
+    /* تصميم عناوين الأقسام */
     h3 {
         color: #FFFFFF !important;
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        border-right: 5px solid #00FF88;
+        padding-right: 15px;
+        margin-top: 30px;
         font-weight: 800 !important;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
     }
 
-    /* تحسين تسميات الحقول (Labels) لتكون واضحة جداً */
+    /* تحسين تسميات الحقول (Labels) لتكون واضحة باللون الأخضر النيون */
     label {
         color: #00FF88 !important;
-        font-weight: bold !important;
-        font-size: 1.2rem !important;
-        text-shadow: 0 0 5px rgba(0, 255, 136, 0.2);
+        font-weight: 900 !important;
+        font-size: 1.3rem !important;
+        text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+        margin-bottom: 10px !important;
     }
     
-    /* بطاقة المسار التعليمي - Glassmorphism */
+    /* بطاقة المسار التعليمي - Glassmorphism فخم */
     .course-card {
-        background: rgba(20, 20, 20, 0.9);
-        backdrop-filter: blur(20px);
-        padding: 35px;
-        border-radius: 30px;
-        border: 1px solid #00FF88;
-        box-shadow: 0 15px 35px rgba(0, 255, 136, 0.15);
-        margin-bottom: 25px;
-        transition: all 0.3s ease;
+        background: rgba(30, 30, 30, 0.95);
+        backdrop-filter: blur(25px);
+        padding: 40px;
+        border-radius: 35px;
+        border: 2px solid #00FF88;
+        box-shadow: 0 20px 50px rgba(0, 255, 136, 0.1);
+        margin-bottom: 30px;
+        transition: all 0.4s ease;
     }
     .course-card:hover {
-        transform: translateY(-10px);
+        transform: translateY(-12px);
         border-color: #FFD700;
-        box-shadow: 0 20px 40px rgba(255, 215, 0, 0.2);
+        box-shadow: 0 25px 60px rgba(255, 215, 0, 0.25);
     }
 
-    /* نصوص عالية الوضوح داخل البطاقات */
+    /* نصوص عالية الوضوح داخل البطاقات الذكية */
     .elite-title {
         color: #FFD700 !important;
-        font-weight: 900;
-        font-size: 30px;
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        font-weight: 950;
+        font-size: 34px;
+        text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+        margin-bottom: 15px;
     }
     .elite-desc {
         color: #FFFFFF !important;
-        font-size: 18px;
-        line-height: 1.6;
+        font-size: 20px;
+        line-height: 1.8;
+        font-weight: 500;
     }
 
     /* تخصيص صناديق الاختيار (Selectbox) */
     .stSelectbox div[data-baseweb="select"] {
-        background-color: #111 !important;
-        border-radius: 15px !important;
-        border: 2px solid #333 !important;
-        color: white !important;
+        background-color: #151515 !important;
+        border-radius: 18px !important;
+        border: 2px solid #444 !important;
+        height: 60px;
     }
     .stSelectbox div[data-baseweb="select"]:hover {
         border-color: #00FF88 !important;
     }
     
-    /* أزرار الإطلاق */
+    /* أزرار الإطلاق القيادية */
     .stButton>button {
         background: linear-gradient(135deg, #00FF88 0%, #008080 100%) !important;
-        color: #000 !important;
+        color: #000000 !important;
         font-weight: 900 !important;
-        border-radius: 15px !important;
-        height: 60px !important;
-        font-size: 20px !important;
+        border-radius: 20px !important;
+        height: 70px !important;
+        font-size: 22px !important;
         border: none !important;
+        transition: all 0.3s !important;
+        box-shadow: 0 10px 25px rgba(0, 255, 136, 0.3);
+    }
+    .stButton>button:hover {
+        transform: scale(1.03);
+        box-shadow: 0 15px 35px rgba(0, 255, 136, 0.5);
     }
     
-    /* تحسين شريط التقدم */
+    /* تحسين شريط التقدم ليكون زمردياً مشعاً */
     .stProgress > div > div > div > div {
         background-color: #00FF88 !important;
-        box-shadow: 0 0 15px #00FF88;
+        box-shadow: 0 0 20px #00FF88;
     }
     </style>
 
     <script>
     function playSfx(url) {
         const audio = new Audio(url);
-        audio.volume = 0.4;
+        audio.volume = 0.5;
         audio.play().catch(e => console.log('Audio Blocked'));
     }
     </script>
@@ -115,69 +140,71 @@ if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
 
 # --- 3. واجهة المستخدم ---
 st.title("🎓 مركز التميز القيادي")
-st.markdown("<p style='color:#00FF88; font-size:22px; text-align:center; font-weight:bold;'>نحول طموحك إلى كفاءة عالمية</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:#00FF88; font-size:24px; text-align:center; font-weight:bold; text-shadow: 0 0 10px rgba(0,255,136,0.3);'>نحو هندسة عقلية المليار دولار</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# شريط التقدم التعليمي العام
-st.write("### 📈 مستوى تطورك القيادي")
+# شريط التقدم التعليمي العام بتصميم واضح
+st.markdown("### 📈 مستوى تطورك القيادي الموثق")
 st.progress(35)
-st.markdown("<p style='color:#FFFFFF; font-size:16px;'>لقد أكملت <b>35%</b> من مسار 'تأسيس القيادة'.</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:#FFFFFF; font-size:18px; font-weight:bold;'>لقد أنجزت <span style='color:#00FF88; font-size:22px;'>35%</span> من مسار 'تأسيس القيادة الإمبراطورية'.</p>", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# وكيل التوصيات الذكي
+# وكيل التوصيات الذكي (Smart AI Agent)
 with st.container():
     st.markdown("""
     <div class="course-card">
         <h2 class="elite-title">🤖 وكيل التوصيات الذكي</h2>
-        <p class="elite-desc">بناءً على هدفك (<b>المليار دولار</b>) الذي حددته في صفحة الرؤية، قمت بتحليل المسارات المتاحة لاقتراح الأنسب لك.</p>
+        <p class="elite-desc">بناءً على هدفك العظيم (<b>المليار دولار</b>) الذي صغته في الرؤية، قمت بتحليل الفجوات المعرفية لديك واقتراح المسار الأمثل:</p>
     </div>
     """, unsafe_allow_html=True)
 
+    # تحسين اختيار التحدي
     interest = st.selectbox(
-        "ما هو التحدي الذي تواجهه الآن؟",
-        ["اختر تحدياً...", "إدارة فرق عمل ضخمة", "رفع كفاءة التدفقات النقدية", "غزو أسواق دولية جديدة"]
+        "ما هو التحدي الاستراتيجي الذي يواجهك الآن؟",
+        ["اختر تحدياً من قائمة القادة...", "إدارة فرق عمل عابرة للقارات", "رفع كفاءة التدفقات النقدية والسيولة", "التوسع والاستحواذ في أسواق ناشئة"]
     )
 
-    if interest != "اختر تحدياً...":
+    if interest != "اختر تحدياً من قائمة القادة...":
         play_edu_sound("recommend")
-        if interest == "إدارة فرق عمل ضخمة":
-            st.success("🎯 وكيل MR7 يقترح: 'ماستر كلاس القيادة الهرمية'. ستتعلم كيف تدير 100+ موظف بكفاءة المليار.")
-        elif interest == "رفع كفاءة التدفقات النقدية":
-            st.success("🎯 وكيل MR7 يقترح: 'دبلوم الهندسة المالية المتقدمة'.")
-        elif interest == "غزو أسواق دولية جديدة":
-            st.success("🎯 وكيل MR7 يقترح: 'استراتيجيات التوسع العالمي العابر للقارات'.")
+        if "إدارة فرق عمل" in interest:
+            st.success("🎯 وكيل MR7 يقترح: 'ماستر كلاس القيادة الهرمية المرنة'. ستتعلم كيف تدير 500+ موظف بروح الفريق الواحد.")
+        elif "التدفقات النقدية" in interest:
+            st.success("🎯 وكيل MR7 يقترح: 'دبلوم الهندسة المالية المتقدمة لأصحاب المليارات'.")
+        elif "التوسع" in interest:
+            st.success("🎯 وكيل MR7 يقترح: 'استراتيجيات الاختراق العالمي: كيف تغزو سوقاً جديداً في 30 يوماً'.")
 
 st.divider()
 
-# عرض المسارات التعليمية كبطاقات
+# عرض المسارات التعليمية كبطاقات متطورة
 st.subheader("🚀 مسارات التعلم النشطة")
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
     <div class="course-card">
-        <h3 style='color:#FFD700;'>عقلية المليار 🧠</h3>
-        <p style='color:#ccc;'>12 درس مرئي - 5 تمارين عملية</p>
-        <p style='color:#00FF88; font-weight:bold;'>تم إنجاز 60%</p>
+        <h3 style='color:#FFD700; margin-bottom:10px;'>عقلية المليار 🧠</h3>
+        <p style='color:#FFFFFF; font-size:16px;'>12 درس مرئي عالي الجودة - 5 مشاريع تطبيقية</p>
+        <p style='color:#00FF88; font-weight:900; font-size:20px;'>معدل الإنجاز: 60%</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("متابعة التعلم 📖", key="c1"):
+    if st.button("متابعة بناء العقلية 📖", key="course_1"):
         play_edu_sound("start")
 
 with col2:
     st.markdown("""
     <div class="course-card">
-        <h3 style='color:#FFD700;'>إدارة الانبعاثات الكربونية 🌍</h3>
-        <p style='color:#ccc;'>8 دروس - مشروع تطبيقي</p>
-        <p style='color:#00FF88; font-weight:bold;'>لم يتم البدء</p>
+        <h3 style='color:#FFD700; margin-bottom:10px;'>القيادة الخضراء 🌍</h3>
+        <p style='color:#FFFFFF; font-size:16px;'>8 دروس استراتيجية - مشروع تقليل الانبعاثات</p>
+        <p style='color:#FF4B4B; font-weight:900; font-size:20px;'>لم يتم البدء بعد</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("بدء المسار الآن 🚀", key="c2"):
+    if st.button("بدء المسار البيئي 🚀", key="course_2"):
         play_edu_sound("start")
 
-# زر العودة أو الانتقال للمحفظة
+# الانتقال للمحفظة
 st.markdown("<br><br>", unsafe_allow_html=True)
-if st.button("💰 الانتقال لمحفظة الأرباح"):
+if st.button("💰 عرض أرباح القائد واستلام العمولات"):
+    play_edu_sound("recommend")
     st.switch_page("pages/3_Wallet.py")
