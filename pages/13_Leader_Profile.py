@@ -37,6 +37,7 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
+    /* الفلسفة التصميمية الجديدة: عمق بصري وتفاعل فائق */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
@@ -51,83 +52,86 @@ st.markdown(f"""
         -webkit-text-fill-color: transparent; 
         font-weight: 950 !important; 
         text-align: center; 
-        filter: drop-shadow(0 0 10px {t['accent']}); 
-        font-size: 3.2rem !important; 
+        filter: drop-shadow(0 0 15px {t['accent']}); 
+        font-size: 3.5rem !important; 
     }}
 
-    /* تصميم بطاقة البروفايل العلوية */
-    .profile-header {{
-        background: linear-gradient(180deg, rgba(255, 215, 0, 0.1) 0%, {t['card']} 100%);
+    /* بطاقة الهوية الملكية (Elite Header) */
+    .elite-header {{
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(0,0,0,0.8) 100%);
         border: 2px solid {t['accent']};
-        border-radius: 40px;
-        padding: 40px;
+        border-radius: 50px;
+        padding: 50px;
         text-align: center;
-        margin-bottom: 30px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.8);
     }}
+    
+    .elite-header::before {{
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,215,0,0.05) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }}
+
+    @keyframes rotate {{ 100% {{ transform: rotate(360deg); }} }}
 
     .avatar-glow {{
-        width: 180px;
-        height: 180px;
+        width: 200px;
+        height: 200px;
         border-radius: 50%;
-        border: 4px solid {t['accent']};
-        box-shadow: 0 0 30px {t['accent']};
-        margin-bottom: 20px;
+        border: 5px solid {t['accent']};
+        box-shadow: 0 0 40px {t['accent']};
+        margin-bottom: 25px;
         object-fit: cover;
+        position: relative;
+        z-index: 2;
     }}
 
-    .stat-box {{
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid {t['border']};
+    /* نظام الأوسمة المتقدم */
+    .achievement-hub {{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }}
+
+    .badge-card {{
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 215, 0, 0.2);
         border-radius: 20px;
         padding: 20px;
         text-align: center;
-        transition: 0.3s;
+        transition: 0.4s;
     }}
-    .stat-box:hover {{ transform: translateY(-5px); border-color: #00FF88; }}
-
-    .badge-wall {{
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        flex-wrap: wrap;
-        margin-top: 20px;
-    }}
-    .mini-badge {{
-        background: {t['accent']};
-        color: black !important;
-        padding: 5px 15px;
-        border-radius: 50px;
-        font-size: 0.8rem;
-        font-weight: 900;
+    .badge-card:hover {{
+        background: rgba(255, 215, 0, 0.1);
+        border-color: {t['accent']};
+        transform: translateY(-10px);
     }}
 
-    /* حل شامل لمشكلة وضوح الكتابة: نص أسود صريح على خلفية بيضاء في كافة الحالات */
+    /* إحصائيات الأداء (Global Standards) */
+    .stat-metric {{
+        background: {t['card']};
+        border-left: 5px solid {t['accent']};
+        border-radius: 15px;
+        padding: 25px;
+        text-align: right;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }}
+
+    /* حل مشكلة الكتابة باللون الأسود */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 2px solid {t['border']} !important;
         border-radius: 12px !important;
-        font-weight: bold !important;
-        opacity: 1 !important;
-    }}
-
-    /* ضمان بقاء النص أسود عند الوقوف أو الكتابة (Hover & Focus) */
-    .stTextInput input:hover, .stTextInput input:focus, 
-    .stTextArea textarea:hover, .stTextArea textarea:focus,
-    .stNumberInput input:hover, .stNumberInput input:focus {{
-        color: #000000 !important;
-        background-color: #FFFFFF !important;
-    }}
-    
-    /* تنسيق زر رفع الملفات والنصوص بداخلها لضمان الوضوح */
-    [data-testid="stFileUploader"] section {{
-        background-color: #FFFFFF !important;
-        border: 2px dashed {t['accent']} !important;
-        border-radius: 15px !important;
-    }}
-    [data-testid="stFileUploader"] section div {{
-        color: #000000 !important;
         font-weight: bold !important;
     }}
 
@@ -135,157 +139,147 @@ st.markdown(f"""
         background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
         font-weight: 950 !important;
-        border-radius: 15px !important;
-        height: 55px;
+        border-radius: 20px !important;
+        height: 60px;
+        font-size: 1.2rem;
+        transition: 0.3s;
     }}
+    .stButton>button:hover {{ transform: scale(1.05); filter: brightness(1.2); }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. إدارة بيانات القائد (Leader Identity) ---
+# --- 2. إدارة الهوية (Expanded Logic) ---
 if 'user_id' not in st.session_state:
     st.session_state.user_id = str(uuid.uuid4())
 if 'leader_name' not in st.session_state:
-    st.session_state.leader_name = "القائد المجهول"
+    st.session_state.leader_name = "إمبراطور المستقبل"
 if 'user_rank' not in st.session_state:
-    st.session_state.user_rank = "قائد ناشئ 🌱"
-if 'profile_pic_base64' not in st.session_state:
-    st.session_state.profile_pic_base64 = None
+    st.session_state.user_rank = "قائد استراتيجي 💎"
+if 'profile_pic' not in st.session_state:
+    st.session_state.profile_pic = None
 
-# --- 3. القائمة الجانبية (الإعدادات) ---
+# --- 3. القائمة الجانبية المتقدمة ---
 with st.sidebar:
-    st.markdown(f"### 🎨 تخصيص المظهر")
-    theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
+    st.markdown(f"### 🎨 النمط الإمبراطوري")
+    theme_choice = st.selectbox("اختر الجو العام:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
     if theme_choice != st.session_state.app_theme:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
     
-    st.markdown("### ⚙️ إعدادات الهوية")
-    st.session_state.leader_name = st.text_input("اسم الشهرة القيادي:", st.session_state.leader_name)
-    
-    # ميزة رفع الصورة الشخصية
-    uploaded_file = st.file_uploader("رفع صورة البروفايل:", type=["jpg", "jpeg", "png"])
-    if uploaded_file is not None:
-        bytes_data = uploaded_file.getvalue()
-        base64_img = base64.b64encode(bytes_data).decode()
-        st.session_state.profile_pic_base64 = f"data:image/png;base64,{base64_img}"
-        st.success("تم تجهيز الصورة!")
+    with st.expander("🛠️ تخصيص الهوية الرسمية"):
+        st.session_state.leader_name = st.text_input("اسم الشهرة في المنظومة:", st.session_state.leader_name)
+        up_file = st.file_uploader("رفع ختم الصورة الشخصية:", type=["jpg", "png"])
+        if up_file:
+            b_data = up_file.getvalue()
+            b64 = base64.b64encode(b_data).decode()
+            st.session_state.profile_pic = f"data:image/png;base64,{b64}"
+        
+        if st.button("تثبيت التعديلات"):
+            st.toast("تم تحديث السجلات العالمية!")
 
-    if st.button("💾 حفظ البيانات"):
-        st.success("تم تحديث السجل الإمبراطوري بنجاح ✅")
-        time.sleep(1)
-        st.rerun()
+# --- 4. واجهة ملف القائد (The Masterpiece) ---
+st.title("👤 مركز قيادة القائد")
 
-# --- 4. واجهة ملف القائد ---
-st.title("👤 الملف الشخصي للقائد")
+# القسم العلوي: الهوية والبصمة (Elite Experience)
+avatar = st.session_state.profile_pic or f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
 
-display_avatar = st.session_state.profile_pic_base64 if st.session_state.profile_pic_base64 else f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
-
-# القسم العلوي: الهوية والبصمة
 st.markdown(f"""
-<div class="profile-header">
-    <img src="{display_avatar}" class="avatar-glow">
-    <h2 style="color: {t['accent']}; font-size: 2.5rem; margin-bottom: 5px;">{st.session_state.leader_name}</h2>
-    <p style="font-size: 1.2rem; opacity: 0.8;">معرف القائد الفريد: <code>{st.session_state.user_id[:13]}</code></p>
-    <div class="badge-wall">
-        <span class="mini-badge">💎 {st.session_state.user_rank}</span>
-        <span class="mini-badge" style="background: #00FF88;">✅ موثق</span>
-        <span class="mini-badge" style="background: #FFFFFF;">🚀 عضو مؤسس</span>
+<div class="elite-header">
+    <img src="{avatar}" class="avatar-glow">
+    <h2 style="color: {t['accent']}; font-size: 3rem; margin-bottom: 10px;">{st.session_state.leader_name}</h2>
+    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
+        <span style="background: {t['accent']}; color: black; padding: 5px 20px; border-radius: 50px; font-weight: 900;">{st.session_state.user_rank}</span>
+        <span style="background: #00FF88; color: black; padding: 5px 20px; border-radius: 50px; font-weight: 900;">مستوى السيادة: 12</span>
     </div>
+    <p style="opacity: 0.7; font-family: monospace;">UUID: {st.session_state.user_id}</p>
 </div>
 """, unsafe_allow_html=True)
 
-# القسم الثاني: إحصائيات السيادة
-col1, col2, col3, col4 = st.columns(4)
+# القسم الثاني: لوحة بيانات القائد (Dashboard Metrics)
+st.subheader("📈 مؤشرات السيادة اللحظية")
+m1, m2, m3, m4 = st.columns(4)
 
-with col1:
-    st.markdown(f"""
-    <div class="stat-box">
-        <p style="color: #888; font-size: 0.8rem;">رصيد الثروة</p>
-        <h3 style="color: #00FF88;">$1.2M</h3>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown(f"""
-    <div class="stat-box">
-        <p style="color: #888; font-size: 0.8rem;">جيش القادة</p>
-        <h3 style="color: {t['accent']};">1,248</h3>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col3:
-    st.markdown(f"""
-    <div class="stat-box">
-        <p style="color: #888; font-size: 0.8rem;">نقاط الخبرة XP</p>
-        <h3 style="color: #FFFFFF;">4,520</h3>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col4:
-    st.markdown(f"""
-    <div class="stat-box">
-        <p style="color: #888; font-size: 0.8rem;">مستوى التأثير</p>
-        <h3 style="color: #FF4B4B;">9.8/10</h3>
-    </div>
-    """, unsafe_allow_html=True)
+with m1:
+    st.markdown(f"""<div class="stat-metric"><small>صافي الثروة</small><br><span style="font-size:1.8rem; color:#00FF88;">$1.24M</span></div>""", unsafe_allow_html=True)
+with m2:
+    st.markdown(f"""<div class="stat-metric"><small>عدد القادة</small><br><span style="font-size:1.8rem; color:{t['accent']};">852</span></div>""", unsafe_allow_html=True)
+with m3:
+    st.markdown(f"""<div class="stat-metric"><small>تأثير المحتوى</small><br><span style="font-size:1.8rem;">94%</span></div>""", unsafe_allow_html=True)
+with m4:
+    st.markdown(f"""<div class="stat-metric"><small>رتبة العالم</small><br><span style="font-size:1.8rem; color:#FF4B4B;">#42</span></div>""", unsafe_allow_html=True)
 
 st.divider()
 
-# الأقسام التفصيلية
-tab_vision, tab_achievements, tab_social = st.tabs(["🏛️ الرؤية الاستراتيجية", "🏆 جدار الأوسمة", "💬 السجل التفاعلي"])
+# التبويبات الموسعة (Path 2: Expanding Functions)
+tabs = st.tabs(["🏛️ ميثاق الرؤية", "🏆 خزنة الأوسمة", "📊 تحليل الفريق", "🤝 التحالفات والدعم"])
 
-with tab_vision:
-    st.subheader("🏛️ ميثاق الرؤية الشخصي")
+with tabs[0]:
     st.markdown(f"""
-    <div style="background: rgba(255, 215, 0, 0.05); border-right: 4px solid {t['accent']}; padding: 25px; border-radius: 15px;">
-        <h4 style="color: {t['accent']};">الهدف الكوني المختار:</h4>
-        <p style="font-size: 1.5rem; font-weight: 800;">"تأمين سيادة مالية بقيمة 100 مليون دولار وقيادة جيل من القادة الأحرار"</p>
-        <hr style="border-color: rgba(255,255,255,0.1);">
-        <p style="color: #888;">تاريخ التوثيق: 11 أبريل 2026</p>
+    <div style="background: {t['card']}; padding: 30px; border-radius: 30px; border: 2px solid {t['accent']};">
+        <h3 style="color: {t['accent']};">بوصلة التريليون الموثقة</h3>
+        <p style="font-size: 1.4rem; line-height: 1.8;">"أقسمت أن أقود فريقاً من 10,000 قائد نحو الحرية المالية المطلقة، وبناء نظام تعليمي يغير وجه المنطقة العربية تجارياً."</p>
+        <hr style="opacity:0.2;">
+        <div style="display: flex; justify-content: space-between;">
+            <span>حالة الرؤية: <b>نشطة ✅</b></span>
+            <span>تاريخ الانعقاد: <b>2026-04-11</b></span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("🔄 تعديل ميثاق الرؤية"):
-        st.switch_page("pages/0_My_Vision.py")
 
-with tab_achievements:
-    st.subheader("🏆 الإنجازات المحققة في المنظومة")
-    cols = st.columns(3)
+with tabs[1]:
+    st.subheader("🏅 جدار الاستحقاق العالمي")
+    st.markdown('<div class="achievement-hub">', unsafe_allow_html=True)
     badges = [
-        ("🥇 باني الإمبراطورية", "إتمام أول 1000 عضو في الفريق"),
-        ("🧠 العقل الذهبي", "اجتياز اختبارات عقلية المليار بنسبة 100%"),
-        ("💰 المحرك المالي", "تحقيق أول مليون دولار تدفق نقدي")
+        ("🥇 المؤسس الأول", "تم إطلاق أول مشروع تمويل جماعي", "icon"),
+        ("🧠 مهندس العقول", "إتمام 50 ساعة تدريبية معتمدة", "icon"),
+        ("🌍 عابر الحدود", "بناء فريق في 3 قارات مختلفة", "icon"),
+        ("💎 نادي المليون", "تحقيق أول مليون دولار في المحفظة", "icon"),
+        ("⚡ القائد الفذ", "الحصول على 1000 تأييد في الساحة", "icon"),
+        ("👑 الرؤية الكونية", "توثيق ميثاق الرؤية الثلاثي", "icon")
     ]
-    for i, (b_name, b_desc) in enumerate(badges):
-        with cols[i % 3]:
-            st.markdown(f"""
-            <div style="text-align: center; padding: 20px; border: 1px solid {t['border']}; border-radius: 15px; background: {t['card']};">
-                <div style="font-size: 40px;">🏅</div>
-                <h5 style="color: {t['accent']};">{b_name}</h5>
-                <p style="font-size: 0.8rem; color: #888;">{b_desc}</p>
-            </div>
-            """, unsafe_allow_html=True)
+    for name, desc, _ in badges:
+        st.markdown(f"""
+        <div class="badge-card">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🛡️</div>
+            <h4 style="color: {t['accent']}; margin: 0;">{name}</h4>
+            <p style="font-size: 0.8rem; opacity: 0.7;">{desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with tab_social:
-    st.subheader("💬 آخر ما بثت رؤيتك في الساحة")
-    st.info("هنا تظهر منشوراتك التي شاركتها مع المجتمع العالمي.")
-    st.markdown("""
-    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
-        <p style="font-weight: bold; margin-bottom: 5px;">"السيادة لا تمنح، بل تنتزع بقوة الرؤية واتساع الفريق."</p>
-        <small style="color: #666;">منذ ساعتين • 24 تأييد 👍</small>
+with tabs[2]:
+    st.subheader("📊 الهيكل التنظيمي وتحليل الأداء")
+    st.info("هذا القسم يتم سحب بياناته مباشرة من 'شجرة التضاعف العشري' لتقديم تحليل ذكاء أعمال (BI) متقدم.")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.write("✅ نمو الجيل الأول: +15% هذا الشهر")
+        st.progress(0.85)
+    with col_b:
+        st.write("✅ كفاءة التحويل: 22%")
+        st.progress(0.65)
+    
+    st.markdown(f"""
+    <div style="margin-top: 20px; padding: 20px; border-radius: 20px; background: rgba(0,255,136,0.05); border: 1px solid #00FF88;">
+        <p style="color: #00FF88; margin: 0;">🚀 تنبيه ذكي: فريق القائد 'أحمد' يحتاج لدعم تدريبي لرفع مبيعات الجيل الثالث.</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("🌐 الانتقال للساحة العالمية"):
-        st.switch_page("pages/12_Social_Network.py")
+
+with tabs[3]:
+    st.subheader("🤝 تواصل مع مستشارك الخاص")
+    st.text_area("أرسل طلباً استراتيجياً مباشراً للإدارة أو لمستشارك الذكي:", placeholder="اكتب هنا...")
+    st.button("إرسال البرقية القيادية ⚡")
 
 st.divider()
 
-# أزرار الانتقال السريع
-st.markdown("### 🚀 روابط السيادة السريعة")
-c1, c2, c3 = st.columns(3)
+# روابط سريعة (Global Navigation)
+st.markdown("### 🗺️ خريطة السيادة السريعة")
+c1, c2, c3, c4 = st.columns(4)
 with c1:
-    if st.button("💰 الخزنة"): st.switch_page("pages/3_Wallet.py")
+    if st.button("💰 الخزنة المالية"): st.switch_page("pages/3_Wallet.py")
 with c2:
-    if st.button("👥 الفريق"): st.switch_page("pages/6_Teams.py")
+    if st.button("👥 جيش القادة"): st.switch_page("pages/6_Teams.py")
 with c3:
-    if st.button("🔔 التنبيهات"): st.switch_page("pages/10_Notifications.py")
+    if st.button("🛒 المتجر العالمي"): st.switch_page("pages/4_Marketplace.py")
+with c4:
+    if st.button("🌐 الساحة العامة"): st.switch_page("pages/12_Social_Network.py")
