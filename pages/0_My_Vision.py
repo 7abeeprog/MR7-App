@@ -1,117 +1,121 @@
 import streamlit as st
 import time
 
-# --- 1. إعدادات التصميم الإبداعي المتطور (Elite UI & High Contrast) ---
+# --- 1. إعدادات التصميم الإبداعي الفائق (Neon Elite UI & High Contrast) ---
 st.markdown("""
     <style>
-    /* تحسين الخلفية العامة */
+    /* تحسين الخلفية العامة والخطوط */
     .main {
-        background-color: #050505;
+        background-color: #000000;
         color: #FFFFFF;
     }
     
-    /* بطاقة الرؤية الزجاجية مع حدود ذهبية */
+    /* بطاقة الرؤية الزجاجية - توهج زمردي وذهبي */
     .vision-card {
-        background: rgba(30, 30, 30, 0.8);
-        backdrop-filter: blur(15px);
-        padding: 45px;
-        border-radius: 35px;
-        border: 2px solid rgba(255, 215, 0, 0.4);
-        box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(255, 215, 0, 0.05);
+        background: rgba(20, 20, 20, 0.9);
+        backdrop-filter: blur(20px);
+        padding: 50px;
+        border-radius: 40px;
+        border: 2px solid #FFD700;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.2), inset 0 0 15px rgba(80, 200, 120, 0.1);
         margin-bottom: 30px;
         text-align: center;
     }
     
-    /* نصوص عالية التباين */
+    /* نصوص براقة عالية التباين جداً */
     .glitter-text {
-        background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
+        background: linear-gradient(90deg, #FFD700, #00FF88, #FFD700);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 900;
-        font-size: 32px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        font-size: 36px;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
     }
 
-    /* تحسين تباين الاختيارات (Radio Buttons) */
+    /* تحسين تباين الاختيارات (Radio Buttons) لتكون واضحة تماماً */
     .stRadio > div {
-        gap: 20px;
-        padding: 15px;
+        gap: 25px;
+        padding: 20px;
     }
     .stRadio label {
-        background: linear-gradient(145deg, #1a1a1a, #0d0d0d) !important;
-        border: 1px solid #444 !important;
-        padding: 20px 30px !important;
-        border-radius: 18px !important;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        background: #111111 !important;
+        border: 2px solid #333 !important;
+        padding: 25px 35px !important;
+        border-radius: 20px !important;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         width: 100%;
-        color: #FFFFFF !important; /* لون نص أبيض واضح */
-        font-weight: 600 !important;
-        font-size: 18px !important;
+        color: #00FF88 !important; /* لون أخضر نيون للوضوح العالي */
+        font-weight: 800 !important;
+        font-size: 20px !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
     .stRadio label:hover {
         border-color: #FFD700 !important;
-        transform: scale(1.02) translateX(10px);
-        box-shadow: 0 10px 20px rgba(255, 215, 0, 0.2);
+        background: #1a1a1a !important;
+        transform: scale(1.03) translateY(-5px);
+        box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+        color: #FFFFFF !important;
     }
     
     /* زر التثبيت الإمبراطوري المتوهج */
     .stButton>button {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
-        color: #000 !important;
-        border: none;
-        height: 75px;
-        font-size: 24px !important;
-        font-weight: 900;
-        border-radius: 22px;
-        box-shadow: 0 12px 25px rgba(184, 134, 11, 0.4);
-        transition: all 0.4s !important;
+        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
+        color: #000000 !important;
+        border: none !important;
+        height: 80px !important;
+        font-size: 26px !important;
+        font-weight: 900 !important;
+        border-radius: 25px !important;
+        box-shadow: 0 15px 35px rgba(184, 134, 11, 0.5) !important;
+        text-transform: uppercase;
+        letter-spacing: 2px;
     }
     .stButton>button:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(255, 215, 0, 0.6);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(255, 215, 0, 0.7) !important;
         filter: brightness(1.2);
     }
 
-    /* أزرار الانتقال (Next Page) */
-    .next-btn>button {
-        background: transparent !important;
-        color: #50C878 !important;
-        border: 2px solid #50C878 !important;
-        margin-top: 20px;
-    }
-
-    /* شريط التقدم الذهبي */
+    /* شريط التقدم الذهبي اللامع */
     .stProgress > div > div > div > div {
         background-color: #FFD700;
-        box-shadow: 0 0 10px #FFD700;
+        box-shadow: 0 0 20px #FFD700;
+    }
+
+    /* تحسين الأزرار الجانبية */
+    .stButton.primary-btn > button {
+        background: #00FF88 !important;
+        color: #000 !important;
     }
     </style>
 
     <script>
-    // نظام الأصوات التفاعلية بالحقن المباشر
-    function playSound(url) {
+    // نظام الأصوات المطور
+    function playSfx(url) {
         const audio = new Audio(url);
-        audio.play();
+        audio.volume = 0.5;
+        audio.play().catch(e => console.log('Audio error:', e));
     }
 
-    // نراقب العناصر لإضافة صوت الـ Hover
+    // صوت الـ Hover عند المرور على الأهداف أو الأزرار
     document.addEventListener('mouseover', function(e) {
-        if (e.target.tagName === 'LABEL' || e.target.tagName === 'BUTTON') {
-            playSound('https://www.soundjay.com/buttons/sounds/button-37a.mp3');
+        const target = e.target.closest('label') || e.target.closest('button');
+        if (target) {
+            playSfx('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'); // صوت Hover قصير واحترافي
         }
     });
     </script>
     """, unsafe_allow_html=True)
 
 # دالة لتشغيل أصوات محددة برمجياً
-def play_audio(sound_type="select"):
-    urls = {
-        "select": "https://www.soundjay.com/buttons/sounds/button-09.mp3",
-        "confirm": "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3", # صوت إلهامي
-        "hover": "https://www.soundjay.com/buttons/sounds/button-37a.mp3"
+def play_audio_feedback(sound_key="select"):
+    sounds = {
+        "select": "https://www.soundjay.com/buttons/sounds/button-16.mp3", # صوت اختيار نقي
+        "confirm": "https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3", # صوت ملهم (Success Fanfare)
+        "next": "https://www.soundjay.com/buttons/sounds/button-3.mp3"
     }
     st.components.v1.html(f"""
-        <audio autoplay><source src="{urls[sound_type]}" type="audio/mpeg"></audio>
+        <audio autoplay><source src="{sounds[sound_key]}" type="audio/mpeg"></audio>
     """, height=0)
 
 # --- 2. التحقق من الدخول ---
@@ -127,9 +131,9 @@ if 'v_step' not in st.session_state:
 
 # --- 4. واجهة المستخدم الإبداعية ---
 st.title("🏛️ مجمع الرؤية الاستراتيجية")
-st.markdown("<p style='font-size:22px; color:#FFD700; font-weight:bold;'>صمم استحقاقك القيادي في منظومة MR7</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:24px; color:#FFD700; font-weight:bold; text-shadow: 0 0 10px rgba(255,215,0,0.3);'>صمم استحقاقك القيادي في منظومة MR7</p>", unsafe_allow_html=True)
 
-# شريط التقدم الذهبي المتوهج
+# شريط التقدم الذهبي
 p_val = {1: 15, 2: 60, 3: 100}.get(st.session_state.v_step, 100)
 st.progress(p_val)
 
@@ -137,30 +141,30 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # المرحلة الأولى: اختيار التصنيف
 if st.session_state.v_step == 1:
-    st.markdown("<h3 style='text-align:center; color: white;'>1️⃣ اختر قطاع السيادة</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center; color: white; margin-bottom: 30px;'>1️⃣ اختر قطاع السيادة</h3>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     
     with c1:
-        if st.button("💰\nالمالي", key="btn_money"):
-            play_audio("select")
+        if st.button("💰\nالمالي", key="btn_money_v2"):
+            play_audio_feedback("select")
             st.session_state.v_cat = "مالي"
             st.session_state.v_step = 2
             st.rerun()
     with c2:
-        if st.button("🎓\nالتعليمي", key="btn_edu"):
-            play_audio("select")
+        if st.button("🎓\nالتعليمي", key="btn_edu_v2"):
+            play_audio_feedback("select")
             st.session_state.v_cat = "تعليمي"
             st.session_state.v_step = 2
             st.rerun()
     with c3:
-        if st.button("✈️\nالسفر", key="btn_travel"):
-            play_audio("select")
+        if st.button("✈️\nالسفر", key="btn_travel_v2"):
+            play_audio_feedback("select")
             st.session_state.v_cat = "سفر"
             st.session_state.v_step = 2
             st.rerun()
     with c4:
-        if st.button("❤️\nالعاطفي", key="btn_emo"):
-            play_audio("select")
+        if st.button("❤️\nالعاطفي", key="btn_emo_v2"):
+            play_audio_feedback("select")
             st.session_state.v_cat = "عاطفي"
             st.session_state.v_step = 2
             st.rerun()
@@ -177,42 +181,43 @@ elif st.session_state.v_step == 2:
         "عاطفي": ["❤️ التوازن العائلي والداخلي", "🤝 بناء شبكة النخبة (High-Net-Worth)", "🏛️ قيادة الأثر المجتمعي الوطني", "🕊️ الإرث الإنساني العابر للأجيال"]
     }
 
-    st.markdown("<div style='max-width: 700px; margin: auto;'>", unsafe_allow_html=True)
+    st.markdown("<div style='max-width: 750px; margin: auto;'>", unsafe_allow_html=True)
     selected = st.radio("اختر مستوى استحقاقك:", levels[cat], label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("<br><br>", unsafe_allow_html=True)
     if st.button("🏆 تثبيت الهدف الإمبراطوري"):
-        play_audio("confirm") # صوت إلهامي عند التثبيت
+        play_audio_feedback("confirm") # صوت إلهامي جداً عند التثبيت
         st.session_state.v_goal = selected
         with st.spinner("يتم الآن نقش رؤيتك في الذاكرة الأبدية..."):
-            time.sleep(2.5)
+            time.sleep(3)
             st.session_state.v_step = 3
             st.rerun()
 
-# المرحلة الثالثة: النتيجة بتصميم مذهل وزر الانتقال
+# المرحلة الثالثة: النتيجة النهائية وزر الانتقال
 elif st.session_state.v_step == 3:
     st.balloons()
     st.markdown(f"""
     <div class="vision-card">
-        <div style='font-size: 60px; margin-bottom: 20px;'>✨</div>
+        <div style='font-size: 70px; margin-bottom: 20px;'>✨</div>
         <h2 class="glitter-text">لقد ولدت رؤية جديدة</h2>
-        <p style='font-size: 30px; color: #FFD700; font-weight: bold;'>{st.session_state.v_goal}</p>
-        <div style='height: 3px; background: linear-gradient(90deg, transparent, #FFD700, transparent); margin: 30px 0;'></div>
-        <p style='font-style: italic; color: #FFFFFF; font-size: 20px; line-height: 1.8;'>
-        "من هذه اللحظة، أنت قائد يمتلك بوصلة. 
-        كل ثانية من الآن يجب أن تخدم هذا الهدف العظيم. الذكاء الاصطناعي بدأ فعلياً في إعادة جدولة أولوياتك."
+        <p style='font-size: 34px; color: #00FF88; font-weight: 900; text-shadow: 0 0 15px rgba(0,255,136,0.4);'>{st.session_state.v_goal}</p>
+        <div style='height: 4px; background: linear-gradient(90deg, transparent, #FFD700, transparent); margin: 35px 0;'></div>
+        <p style='font-style: italic; color: #FFFFFF; font-size: 22px; line-height: 1.8; font-weight: 500;'>
+        "من هذه اللحظة، أنت قائد يمتلك بوصلة كونية. 
+        كل ثانية من الآن يجب أن تخدم هذا الهدف العظيم. الذكاء الاصطناعي بدأ فعلياً في إعادة هندسة واقعك."
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    col_a, col_b = st.columns(2)
-    with col_a:
+    col_x, col_y = st.columns(2)
+    with col_x:
         if st.button("🔄 إعادة صياغة المسار"):
+            play_audio_feedback("select")
             st.session_state.v_step = 1
             st.rerun()
-    with col_b:
-        # زر الانتقال للصفحة التالية (النظام التعليمي)
-        if st.button("🚀 انطلق لمركز التدريب", type="primary"):
-            play_audio("select")
+    with col_y:
+        # زر الانتقال للصفحة التالية (النظام التعليمي) بتصميم بارز
+        if st.button("🚀 انطلق لمركز التدريب الآن"):
+            play_audio_feedback("next")
             st.switch_page("pages/1_Education.py")
