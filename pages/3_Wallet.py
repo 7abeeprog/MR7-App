@@ -1,41 +1,47 @@
 import streamlit as st
+from datetime import datetime
 
-# 1. التأكد من تسجيل الدخول
+# 1. التحقق من الدخول
 if 'logged_in' not in st.session_state or st.session_state['logged_in'] == False:
     st.warning("الرجاء تسجيل الدخول أولاً.")
     st.stop()
 
-st.title("💰 محفظة MR7 الرقمية")
-st.write("إدارة أموالك، عمولاتك، ونقاط الولاء في مكان واحد.")
+st.title("💰 محفظة MR7 الآمنة")
+
+# محاكاة أرصدة من قاعدة البيانات
+if 'cash_balance' not in st.session_state:
+    st.session_state.cash_balance = 1250.0
+    st.session_state.points_balance = 5400
+
+# 2. عرض الأرصدة بشكل احترافي
+col1, col2 = st.columns(2)
+col1.metric("رصيد الكاش (قابل للسحب)", f"${st.session_state.cash_balance}", "USD")
+col2.metric("نقاط الجيميفيكيشن (هجين)", f"{st.session_state.points_balance} PTS", "Active")
 
 st.divider()
 
-# 2. عرض الأرصدة بنظام الأعمدة الاحترافي
-col1, col2, col3 = st.columns(3)
+# 3. نظام التدقيق (Audit Trail)
+st.subheader("📜 سجل العمليات الموثق")
 
-with col1:
-    st.metric(label="الرصيد النقدي (USD)", value="$1,250.00", delta="+ $150")
+# سجل بيانات محاكى (في الحقيقية نجلبه من قاعدة البيانات)
+ledger_data = [
+    {"التاريخ": "2026-04-10 10:30", "النوع": "كاش", "العملية": "عمولة مبيعات", "المبلغ": "+$50", "الحالة": "مؤكد ✅"},
+    {"التاريخ": "2026-04-11 08:15", "النوع": "نقاط", "العملية": "إنهاء دورة القيادة", "المبلغ": "+100 PTS", "الحالة": "مؤكد ✅"},
+]
 
-with col2:
-    st.metric(label="نقاط الجيميفيكيشن (PTS)", value="5,400", delta="تحدي يومي")
+st.table(ledger_data)
 
-with col3:
-    st.metric(label="العمولات المعلقة", value="$45.00")
-
-st.divider()
-
-# 3. قسم العمليات السريعة
-st.subheader("🚀 عمليات سريعة")
-action = st.radio("ماذا تريد أن تفعل؟", ["عرض السجل", "تحويل رصيد", "سحب الأرباح"])
-
-if action == "عرض السجل":
-    st.table({
-        "التاريخ": ["2024-03-01", "2024-03-05", "2024-03-10"],
-        "العملية": ["عمولة بيع", "مكافأة تعليمية", "سحب كاش"],
-        "المبلغ": ["+$20", "+100 PTS", "-$50"]
-    })
-elif action == "تحويل رصيد":
-    target = st.text_input("أدخل معرف المستخدم (User ID) للمستلم:")
-    amount = st.number_input("المبلغ المراد تحويله:", min_value=1.0)
-    if st.button("تأكيد التحويل الآمن 🔒"):
-        st.success(f"تم إرسال {amount} إلى {target} بنجاح!")
+# 4. منطق التحويل الآمن
+st.subheader("🔐 تحويل داخلي آمن")
+with st.expander("إجراء تحويل جديد"):
+    recipient = st.text_input("معرف المستلم (ID):")
+    amount = st.number_input("المبلغ:", min_value=1.0)
+    
+    if st.button("تأفيذ التحويل"):
+        if amount <= st.session_state.cash_balance:
+            # هنا يحدث المنطق البرمجي الآمن
+            st.session_state.cash_balance -= amount
+            st.success(f"تم التحويل بنجاح! رقم العملية: TXN-{datetime.now().strftime('%Y%m%d%H%M%S')}")
+            st.rerun()
+        else:
+            st.error("⚠️ فشل العملية: الرصيد غير كافٍ.")
