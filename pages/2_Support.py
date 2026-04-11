@@ -10,19 +10,23 @@ if 'app_theme' not in st.session_state:
 themes = {
     "غامق إمبراطوري 🖤": {
         "bg": "#000000", "sidebar": "#050505", "text": "#FFFFFF", 
-        "accent": "#FFD700", "card": "rgba(30, 30, 30, 0.9)", "border": "#FFD700"
+        "accent": "#FFD700", "card": "rgba(30, 30, 30, 0.9)", "border": "#FFD700",
+        "select_text": "#FFFFFF", "select_bg": "#1A1A1A"
     },
     "فاتح ملكي ✨": {
         "bg": "#F5F5F5", "sidebar": "#FFFFFF", "text": "#1A1A1A", 
-        "accent": "#B8860B", "card": "rgba(255, 255, 255, 0.95)", "border": "#B8860B"
+        "accent": "#B8860B", "card": "rgba(255, 255, 255, 0.95)", "border": "#B8860B",
+        "select_text": "#1A1A1A", "select_bg": "#FFFFFF"
     },
     "أزرق القيادة 💙": {
         "bg": "#001F3F", "sidebar": "#001529", "text": "#FFFFFF", 
-        "accent": "#0074D9", "card": "rgba(0, 31, 63, 0.8)", "border": "#0074D9"
+        "accent": "#0074D9", "card": "rgba(0, 31, 63, 0.8)", "border": "#0074D9",
+        "select_text": "#FFFFFF", "select_bg": "#001529"
     },
     "أخضر الاستدامة 💚": {
         "bg": "#002B1B", "sidebar": "#001A10", "text": "#FFFFFF", 
-        "accent": "#00FF88", "card": "rgba(0, 43, 27, 0.8)", "border": "#00FF88"
+        "accent": "#00FF88", "card": "rgba(0, 43, 27, 0.8)", "border": "#00FF88",
+        "select_text": "#FFFFFF", "select_bg": "#001A10"
     }
 }
 
@@ -32,21 +36,25 @@ t = themes[selected_theme]
 # تطبيق التصميم بناءً على النمط المختار
 st.markdown(f"""
     <style>
+    /* التنسيق العام للتطبيق */
     .stApp {{
         background-color: {t['bg']} !important;
         color: {t['text']} !important;
     }}
     
+    /* تنسيق القائمة الجانبية */
     [data-testid="stSidebar"] {{
         background-color: {t['sidebar']} !important;
         border-right: 2px solid {t['accent']} !important;
     }}
 
+    /* تنسيق النصوص */
     div[data-testid="stMarkdownContainer"] p, h2, h3, span, label, li {{
         color: {t['text']} !important;
         font-weight: 700 !important;
     }}
 
+    /* تنسيق العنوان الرئيسي */
     h1 {{
         background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']});
         -webkit-background-clip: text;
@@ -57,6 +65,7 @@ st.markdown(f"""
         font-size: 3rem !important;
     }}
 
+    /* تنسيق بطاقة الوكيل */
     .agent-card {{
         background: {t['card']};
         backdrop-filter: blur(20px);
@@ -68,6 +77,7 @@ st.markdown(f"""
         text-align: center;
     }}
     
+    /* تنسيق منطقة النص */
     .stTextArea textarea {{
         background-color: rgba(255,255,255,0.05) !important;
         color: {t['text']} !important;
@@ -75,6 +85,7 @@ st.markdown(f"""
         border-radius: 20px !important;
     }}
 
+    /* تنسيق الأزرار */
     .stButton>button {{
         background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
@@ -84,6 +95,27 @@ st.markdown(f"""
         font-size: 22px !important;
         border: none !important;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }}
+
+    /* حل مشكلة القوائم المنسدلة (Selectbox) - إصلاح الأبيض على الأبيض */
+    div[data-baseweb="select"] > div {{
+        background-color: {t['select_bg']} !important;
+        color: {t['select_text']} !important;
+    }}
+    
+    /* تنسيق الخيارات داخل القائمة المفتوحة */
+    div[data-baseweb="popover"] ul {{
+        background-color: {t['select_bg']} !important;
+    }}
+    
+    div[data-baseweb="popover"] li {{
+        color: {t['select_text']} !important;
+        background-color: {t['select_bg']} !important;
+    }}
+    
+    div[data-baseweb="popover"] li:hover {{
+        background-color: {t['accent']} !important;
+        color: #000000 !important;
     }}
     </style>
     """, unsafe_allow_html=True)
