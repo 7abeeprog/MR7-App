@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+from datetime import datetime
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -79,16 +80,18 @@ st.markdown(f"""
     .stProgress > div > div > div > div {{
         background-color: #00FF88 !important;
     }}
-    
-    .status-badge {{
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: bold;
-    }}
     </style>
     """, unsafe_allow_html=True)
 
+# --- 2. محرك التنبيهات العالمي (Global Logic) ---
+if 'notifications' not in st.session_state:
+    st.session_state.notifications = []
+
+def add_notification(msg, icon="⚡"):
+    new_notif = {"msg": msg, "time": datetime.now().strftime("%Y-%m-%d %H:%M"), "icon": icon}
+    st.session_state.notifications.insert(0, new_notif)
+
+# --- 3. الشريط الجانبي ---
 with st.sidebar:
     st.markdown(f"### 🎨 تخصيص المظهر")
     theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
@@ -96,10 +99,17 @@ with st.sidebar:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
+    
+    # رابط لمركز التنبيهات بدلاً من العرض المباشر
+    notif_count = len(st.session_state.notifications)
+    if st.button(f"🔔 مركز التنبيهات ({notif_count})"):
+        st.switch_page("pages/10_Notifications.py")
+    
+    st.divider()
     st.markdown("### 🏛️ رصيد الاستثمار")
     st.success("المحفظة الاستثمارية: 50,000 EGP")
 
-# --- 2. إدارة البيانات مع إضافة حالة المشروع (Status) ---
+# --- 4. إدارة البيانات ---
 if 'crowd_projects' not in st.session_state:
     st.session_state.crowd_projects = [
         {"title": "مزرعة الهيدروبونيك الذكية", "category": "زراعة ذكية", "owner": "م. يوسف القائد", "goal": 100000, "raised": 45000, "desc": "إنشاء أول مزرعة مائية مؤتمتة بالكامل بالذكاء الاصطناعي لإنتاج محاصيل عضوية عالية الجودة.", "status": "approved"},
@@ -113,15 +123,13 @@ st.divider()
 
 tabs = st.tabs(["🌎 استكشاف المشاريع", "🚀 اطرح مشروعك باحترافية", "💰 استثماراتي", "📊 إحصائيات السوق"])
 
-# --- Tab 1: استكشاف المشاريع (المعتمدة فقط) ---
+# --- Tab 1: استكشاف المشاريع ---
 with tabs[0]:
     st.subheader("🌎 منصة عرض أفكار النخبة")
-    
-    # فلترة المشاريع المعتمدة فقط
     approved_projects = [p for p in st.session_state.crowd_projects if p.get('status') == "approved"]
     
     if not approved_projects:
-        st.info("لا توجد مشاريع معتمدة حالياً. كن أول من يطرح فكرة مليار دولار!")
+        st.info("لا توجد مشاريع معتمدة حالياً.")
     else:
         for idx, proj in enumerate(approved_projects):
             with st.container():
@@ -151,20 +159,20 @@ with tabs[0]:
                 with col_in:
                     fund_amt = st.number_input(f"مبلغ التمويل (EGP):", min_value=100, key=f"amt_{idx}", step=500)
                 with col_btn:
-                    st.write("") # تعويض المسافة
+                    st.write("") 
                     if st.button(f"🤝 تمويل الآن", key=f"btn_{idx}"):
-                        # تحديث المشروع الأصلي في القائمة الكبيرة
                         for original_p in st.session_state.crowd_projects:
                             if original_p['title'] == proj['title']:
                                 original_p['raised'] += fund_amt
-                        st.success(f"تم تسجيل استثمارك في {proj['title']}!")
+                                add_notification(f"تم استثمار {fund_amt:,} EGP في مشروع {proj['title']}", "💰")
+                        st.toast(f"✅ تم تسجيل استثمارك بنجاح!")
                         time.sleep(1)
                         st.rerun()
 
-# --- Tab 2: اطرح مشروعك (مع حالة الانتظار) ---
+# --- Tab 2: اطرح مشروعك ---
 with tabs[1]:
     st.subheader("🚀 نموذج طرح المشروع الاستراتيجي")
-    st.info("املأ البيانات التالية بعناية. سيتم مراجعة مشروعك من قبل الإدارة قبل نشره في السوق العالمي.")
+    st.info("سيتم مراجعة مشروعك من قبل الإدارة قبل نشره.")
     
     with st.form("professional_pitch"):
         col_t, col_c = st.columns(2)
@@ -182,7 +190,6 @@ with tabs[1]:
         
         if st.form_submit_button("إرسال المشروع للمراجعة والنشر 📤"):
             if p_title and p_desc and p_goal > 0:
-                # إضافة المشروع بحالة "pending"
                 st.session_state.crowd_projects.append({
                     "title": p_title, 
                     "category": p_cat,
@@ -192,7 +199,8 @@ with tabs[1]:
                     "desc": f"{p_summary}\n\n{p_desc}",
                     "status": "pending"
                 })
-                st.success("تم إرسال مشروعك بنجاح! هو الآن قيد المراجعة الإدارية وسنقوم بإشعارك فور اعتماده.")
+                add_notification(f"تم إرسال مشروع '{p_title}' للمراجعة الإدارية.", "⏳")
+                st.success("تم إرسال مشروعك بنجاح!")
                 st.balloons()
             else:
                 st.error("يرجى التأكد من ملء الحقول الأساسية.")
@@ -205,7 +213,6 @@ with tabs[2]:
     ]
     st.table(my_investments)
     
-    # عرض حالة المشاريع التي طرحها المستخدم
     st.markdown("---")
     st.subheader("📤 مشاريعي المطروحة")
     my_projects = [p for p in st.session_state.crowd_projects if p['owner'] == "أنت (القائد الحالي)"]
