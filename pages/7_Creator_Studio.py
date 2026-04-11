@@ -68,17 +68,18 @@ st.markdown(f"""
         height: 60px;
     }}
 
+    /* حل مشكلة الكتابة (أبيض على أبيض) - جعل الخلفية بيضاء والنص أسود */
+    .stTextInput input, .stTextArea textarea, .stNumberInput input {{
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 2px solid {t['border']} !important;
+        border-radius: 12px !important;
+        font-weight: bold !important;
+    }}
+    
     /* تحسين شكل القوائم المنسدلة */
     div[data-baseweb="select"] > div {{ background-color: {t['select_bg']} !important; color: {t['select_text']} !important; }}
     div[data-baseweb="popover"] li {{ color: {t['select_text']} !important; background-color: {t['select_bg']} !important; }}
-    
-    /* تنسيق منطقة الإدخال */
-    .stTextInput input, .stTextArea textarea {{
-        background-color: rgba(255,255,255,0.05) !important;
-        color: {t['text']} !important;
-        border: 2px solid {t['border']} !important;
-        border-radius: 15px !important;
-    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -96,7 +97,7 @@ with st.sidebar:
 
 # --- 3. واجهة استوديو بناء المحتوى ---
 st.title("🎬 استوديو بناء المحتوى")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>حول خبرتك القيادية إلى إرث تعليمي عالمي</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>صمم دورتك، ارفع فيديوهاتك، واقبض بعملتك المحلية</p>", unsafe_allow_html=True)
 
 st.divider()
 
@@ -110,36 +111,50 @@ with tabs[0]:
     with st.container():
         st.markdown(f"""
         <div class="studio-card">
-            <h4 style="color: {t['accent']};">1. أساسيات الدورة</h4>
+            <h4 style="color: {t['accent']};">1. أساسيات الدورة والعملة</h4>
         </div>
         """, unsafe_allow_html=True)
         
-        c_name = st.text_input("عنوان الدورة (مثال: أسرار القيادة العشرية):")
-        c_desc = st.text_area("وصف الدورة والقيمة المضافة للمتدربين:")
-        c_price = st.number_input("السعر المقترح في المركز التجاري ($):", min_value=1, value=100)
+        c_name = st.text_input("عنوان الدورة الاستراتيجي:")
+        c_desc = st.text_area("وصف القيمة المضافة للمتدربين:")
+        
+        col_price, col_curr = st.columns([2, 1])
+        with col_curr:
+            currency_opt = st.selectbox("اختر عملة الحجز:", ["الجنيه المصري (EGP)", "الدولار (USD)", "الريال السعودي (SAR)", "الدرهم الإماراتي (AED)"])
+            currency_symbol = currency_opt.split('(')[1].replace(')', '')
+        with col_price:
+            c_price = st.number_input(f"سعر الدورة المخطط له ({currency_symbol}):", min_value=1, value=1000 if "EGP" in currency_opt else 100)
         
     st.markdown("<br>", unsafe_allow_html=True)
     
     with st.container():
         st.markdown(f"""
         <div class="studio-card">
-            <h4 style="color: {t['accent']};">2. هيكلة المحتوى</h4>
+            <h4 style="color: {t['accent']};">2. هيكلة المحتوى (روابط يوتيوب)</h4>
         </div>
         """, unsafe_allow_html=True)
         
-        lesson_count = st.number_input("عدد الدروس المخطط لها:", min_value=1, max_value=50, value=5)
+        lesson_count = st.number_input("عدد الدروس المخطط لها:", min_value=1, max_value=50, value=3)
         
         for i in range(lesson_count):
             with st.expander(f"📖 الدرس رقم {i+1}"):
                 st.text_input(f"عنوان الدرس {i+1}:", key=f"l_title_{i}")
-                st.file_uploader(f"ارفع فيديو أو ملف الدرس {i+1}:", key=f"l_file_{i}")
-                st.text_area(f"ملخص سريع للدرس {i+1}:", key=f"l_desc_{i}")
+                yt_link = st.text_input(f"رابط فيديو اليوتيوب للدرس {i+1}:", placeholder="https://www.youtube.com/watch?v=...", key=f"l_link_{i}")
+                
+                if yt_link:
+                    try:
+                        st.video(yt_link)
+                        st.caption("✅ معاينة الفيديو نشطة")
+                    except:
+                        st.error("⚠️ رابط الفيديو غير صالح")
+                
+                st.text_area(f"ملخص سريع أو ملاحظات للدرس {i+1}:", key=f"l_desc_{i}")
 
     st.divider()
-    if st.button("🚀 إطلاق الدورة للمراجعة والنشر"):
-        with st.spinner("يتم الآن ضغط الوسائط وتجهيز النسخة الرقمية..."):
-            time.sleep(3)
-            st.success("تم إرسال دورتك بنجاح! سيتم فحصها ونشرها في المركز التجاري خلال 24 ساعة.")
+    if st.button("🚀 إطلاق الدورة للنشر العالمي"):
+        with st.spinner("جاري التحقق من الروابط وتنسيق العرض..."):
+            time.sleep(2)
+            st.success(f"تم إرسال دورتك بنجاح بسعر {c_price} {currency_symbol}! سيتم عرضها في المركز التجاري فوراً.")
             st.balloons()
 
 # --- Tab 2: أداء المحتوى ---
@@ -159,7 +174,7 @@ with tabs[1]:
         st.markdown(f"""
         <div class="studio-card">
             <p>أرباح المحتوى</p>
-            <div style="font-size: 2rem; color: {t['accent']};">$12,400</div>
+            <div style="font-size: 2rem; color: {t['accent']};">{c_price * 12} {currency_symbol}</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -173,20 +188,17 @@ with tabs[1]:
 
     st.markdown("#### 📈 الرسم البياني للمبيعات")
     st.line_chart([10, 25, 45, 30, 60, 85, 120])
-    st.caption("نمو مبيعات دوراتك خلال الـ 6 أشهر الماضية.")
 
 # --- Tab 3: مكتبة الوسائط ---
 with tabs[2]:
-    st.subheader("📦 أرشيف ملفاتك")
-    st.info("هنا يتم تخزين كافة الملفات واللقطات التي رفعتها لاستخدامها في دورات متعددة.")
+    st.subheader("📦 أرشيف الروابط والملفات")
+    st.info("هنا يتم حفظ كافة الروابط والملفات المرجعية لدوراتك.")
     
     files = [
-        {"الاسم": "مقدمة_القيادة.mp4", "الحجم": "450MB", "النوع": "Video"},
+        {"الاسم": "مقدمة_القيادة (YT)", "الرابط": "youtube.com/...", "النوع": "Video Link"},
         {"الاسم": "خطة_العمل.pdf", "الحجم": "2MB", "النوع": "Document"},
-        {"الاسم": "شعار_الدورة.png", "الحجم": "150KB", "النوع": "Image"},
     ]
     st.table(files)
-    st.button("➕ رفع ملفات جديدة للمكتبة")
 
 # --- Tab 4: نصائح الإبداع ---
 with tabs[3]:
@@ -195,12 +207,12 @@ with tabs[3]:
     st.markdown(f"""
     <div class="studio-card" style="border-color: {t['accent']};">
         <h4 style="color: {t['accent']};">قاعدة الـ 10 دقائق ⏱️</h4>
-        <p>الأبحاث تشير إلى أن تركيز المتدرب يبدأ في الانخفاض بعد 10 دقائق. اجعل دروسك مركزة، سريعة، ومليئة بالمعلومات العملية.</p>
+        <p>اجعل فيديوهات اليوتيوب الخاصة بك مقسمة لفقرات. المتدرب يفضل الفيديوهات القصيرة والمركزة.</p>
     </div>
     
     <div class="studio-card" style="border-color: #00FF88;">
-        <h4 style="color: #00FF88;">التفاعل هو المفتاح 🤝</h4>
-        <p>لا تكتفِ بالشرح؛ ضع تحدياً عملياً في نهاية كل درس. الدورات التي تحتوي على مهام عملية تحقق مبيعات أعلى بنسبة 40%.</p>
+        <h4 style="color: #00FF88;">العملة المحلية تزيد الثقة 💵</h4>
+        <p>استخدام الجنيه المصري (EGP) للجمهور المحلي يسهل عمليات الحجز والتحصيل ويزيد من معدل التحويل.</p>
     </div>
     """, unsafe_allow_html=True)
 
