@@ -105,8 +105,8 @@ col1, col2, col3, col4 = st.columns(4)
 metrics = [
     ("إجمالي القادة", "15,420", "👥"),
     ("أرباح المنظومة (EGP)", "2.4M", "💰"),
-    ("دورات قيد المراجعة", "14", "📝"),
-    ("معدل النمو", "+24%", "🚀")
+    ("روابط الإحالة النشطة", "8,210", "🔗"),
+    ("معدل التحويل", "12.5%", "⚡")
 ]
 
 for i, (label, val, icon) in enumerate(metrics):
@@ -120,7 +120,7 @@ for i, (label, val, icon) in enumerate(metrics):
 
 st.divider()
 
-tabs = st.tabs(["👥 إدارة المستخدمين", "🛒 مراقبة السوق", "💹 العمولات والمالية", "🏆 الأوسمة والترقيات"])
+tabs = st.tabs(["👥 إدارة القادة", "🛒 مراجعة المتجر", "💹 هندسة العمولات", "🔗 روابط الإحالة", "🏆 الترقيات"])
 
 # --- Tab 1: إدارة المستخدمين ---
 with tabs[0]:
@@ -128,76 +128,89 @@ with tabs[0]:
     
     col_search, col_filter = st.columns([3, 1])
     with col_search:
-        st.text_input("بحث عن مستخدم (ID, Email, Name):", placeholder="أدخل بيانات البحث...")
+        st.text_input("بحث عن مستخدم (ID, Email, Name):", placeholder="أدخل بيانات البحث...", key="user_search")
     with col_filter:
-        st.selectbox("الفلترة حسب الرتبة:", ["الكل", "أدمن", "مدرب", "متدرب", "قائد فريق"])
+        st.selectbox("الفلترة حسب الرتبة:", ["الكل", "أدمن", "مدرب", "متدرب", "قائد فريق"], key="rank_filter")
 
     user_data = [
         {"ID": "MR7-001", "الاسم": "أحمد علي", "الرتبة": "مدرب بلاتيني", "XP": "4500", "الحالة": "نشط ✅"},
         {"ID": "MR7-042", "الاسم": "سارة محمد", "الرتبة": "قائد ماسي", "XP": "2800", "الحالة": "نشط ✅"},
-        {"ID": "MR7-105", "الاسم": "ياسين كريم", "الرتبة": "متدرب ناشئ", "XP": "120", "الحالة": "محظور 🚫"},
     ]
     st.table(user_data)
-    
-    with st.expander("🛠️ إجراءات إدارية سريعة"):
-        u_id = st.text_input("أدخل ID المستخدم:")
-        action = st.selectbox("الإجراء:", ["ترقية الرتبة", "تعديل XP", "حظر الحساب", "إرسال تنبيه خاص"])
-        if st.button("تنفيذ الإجراء ⚡"):
-            st.success(f"تم تنفيذ {action} للمستخدم {u_id}")
 
-# --- Tab 2: مراقبة السوق (Marketplace Oversight) ---
+# --- Tab 2: مراجعة المتجر ---
 with tabs[1]:
-    st.subheader("🛒 مراجعة المنتجات والدورات")
-    st.info("هناك 14 دورة جديدة تنتظر الموافقة للنشر في السوق العالمي.")
+    st.subheader("🛒 مراجعة معروضات السوق")
+    st.info("إدارة جودة المنتجات والخدمات المقدمة من التجار.")
     
-    pending_courses = [
-        {"المدرب": "أحمد علي", "اسم الدورة": "هندسة التريليون", "السعر": "5000 EGP"},
-        {"المدرب": "ليلى محمود", "اسم الدورة": "أسرار الفانل البيعي", "السعر": "1200 EGP"},
-    ]
-    for course in pending_courses:
-        with st.expander(f"📋 مراجعة: {course['اسم الدورة']} - {course['المدرب']}"):
-            st.write(f"السعر المطلوب: {course['السعر']}")
-            st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # مثال لمعاينة الفيديو
-            c1, c2 = st.columns(2)
-            c1.button(f"✅ موافقة ونشر ({course['اسم الدورة']})")
-            c2.button(f"❌ رفض مع ملاحظات ({course['اسم الدورة']})")
+    with st.expander("📝 طلبات نشر جديدة (14)"):
+        st.write("- دورة 'هندسة التريليون' (المدرب: أحمد علي) - **[معاينة]**")
+        st.write("- باقة 'أدوات الانتشار' (التاجر: سارة) - **[معاينة]**")
+        st.button("الموافقة على جميع الطلبات المستوفية للشروط")
 
-# --- Tab 3: العمولات والمالية ---
+# --- Tab 3: هندسة العمولات (Commission Engineering) ---
 with tabs[2]:
-    st.subheader("💹 الرقابة المالية والتدفقات النقدية")
+    st.subheader("💹 إدارة نظام العمولات الذكي")
+    st.markdown("تحكم في نسب الأرباح والمكافآت لتجار وقادة المنظومة.")
     
-    col_fin1, col_fin2 = st.columns(2)
-    with col_fin1:
-        st.markdown(f"""
-        <div class="admin-card" style="border-color: #00FF88;">
-            <h4 style="color: #00FF88;">طلبات سحب الأرباح قيد الانتظار</h4>
-            <p style="font-size: 2rem; font-weight: 900;">120,500 EGP</p>
-            <button style="width:100%; height:40px; border-radius:10px; background:#00FF88; border:none; color:black; font-weight:bold;">تحويل جماعي الآن 💸</button>
-        </div>
-        """, unsafe_allow_html=True)
+    with st.container():
+        st.markdown("<div class='admin-card'>", unsafe_allow_html=True)
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown("#### إعدادات العمولة العامة")
+            gen_rate = st.number_input("نسبة العمولة الأساسية للمسوقين (%):", value=10)
+            vip_rate = st.number_input("نسبة العمولة للقادة الموثقين (%):", value=20)
+        with col_c2:
+            st.markdown("#### تخصيص حسب المنتج")
+            target_prod = st.selectbox("اختر المنتج لتخصيص عمولته:", ["باقة القائد البلاتيني", "دورة عقلية المليار", "اشتراك الوكيل الذكي"])
+            spec_rate = st.number_input(f"عمولة {target_prod} (%):", value=15)
+        
+        if st.button("💾 حفظ إعدادات العمولات الاستراتيجية"):
+            st.success("تم تحديث هيكلية العمولات في كامل المنظومة.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# --- Tab 4: روابط الإحالة (Referral Management) ---
+with tabs[3]:
+    st.subheader("🔗 مركز إدارة روابط الإحالة")
+    st.info("توليد وربط روابط التتبع بالمنتجات والمتاجر لتحفيز الانتشار.")
     
-    with col_fin2:
+    col_ref1, col_ref2 = st.columns([2, 1])
+    
+    with col_ref1:
+        st.markdown("#### إنشاء رابط إحالة مخصص (Deep Linking)")
+        ref_user = st.text_input("معرف المستخدم (User ID):", placeholder="مثلاً: MR7-550")
+        
+        link_type = st.radio("نوع الربط:", ["رابط للمتجر العام", "رابط لمنتج محدد", "رابط لمتجر تاجر معين"])
+        
+        if link_type == "رابط لمنتج محدد":
+            st.selectbox("اختر المنتج المستهدف:", ["دورة القيادة", "باقة التوسع", "أدوات الذكاء الاصطناعي"])
+        elif link_type == "رابط لمتجر تاجر معين":
+            st.text_input("معرف التاجر (Vendor ID):")
+            
+        if st.button("🚀 توليد رابط الإحالة"):
+            generated_url = f"https://mr7.com/ref={ref_user or 'XXXX'}&target={link_type.replace(' ', '_')}"
+            st.code(generated_url, language="text")
+            st.success("الرابط جاهز للنشر وتتبع المبيعات!")
+
+    with col_ref2:
+        st.markdown("#### إحصائيات الروابط")
         st.markdown(f"""
-        <div class="admin-card" style="border-color: {t['accent']};">
-            <h4 style="color: {t['accent']};">إجمالي عمولات النظام اليوم</h4>
-            <p style="font-size: 2rem; font-weight: 900;">42,300 EGP</p>
-            <p>صافي الربح بعد الضرائب والرسوم</p>
+        <div class="admin-card">
+            <p>أكثر الروابط تحويلاً</p>
+            <h4 style="color:{t['accent']};">MR7-VIP-001</h4>
+            <p>1,240 مبيعة</p>
         </div>
         """, unsafe_allow_html=True)
 
-# --- Tab 4: الأوسمة والترقيات (Master Gamification) ---
-with tabs[3]:
-    st.subheader("🏆 إدارة نظام الاستحقاق والجيميفيكيشن")
-    
-    with st.form("create_badge"):
-        st.markdown("### إنشاء وسام أو رتبة جديدة")
-        b_name = st.text_input("اسم الوسام:")
-        b_icon = st.selectbox("الأيقونة:", ["🥇", "🥈", "🥉", "💎", "👑", "🚀", "🧠"])
-        b_req = st.text_area("شروط الاستحقاق (XP, مبيعات، دورات):")
-        b_points = st.number_input("نقاط XP إضافية عند الحصول عليه:", min_value=0)
-        
-        if st.form_submit_button("إضافة الوسام للنظام العالمي 🎖️"):
-            st.success(f"تم إدراج وسام '{b_name}' بنجاح في المنظومة.")
+# --- Tab 5: الأوسمة والترقيات ---
+with tabs[4]:
+    st.subheader("🏆 نظام الاستحقاق والجيميفيكيشن")
+    with st.form("admin_badge_form"):
+        st.text_input("اسم الوسام الجديد:")
+        st.selectbox("أيقونة الوسام:", ["👑", "💎", "🚀", "⚡", "🔥"])
+        st.number_input("نقاط XP المطلوبة:", min_value=0)
+        if st.form_submit_button("إدراج الوسام في النظام"):
+            st.success("تم التحديث!")
 
 st.divider()
 
