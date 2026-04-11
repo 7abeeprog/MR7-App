@@ -50,7 +50,6 @@ st.markdown(f"""
         font-size: 3.2rem !important; 
     }}
 
-    /* تصميم بطاقة المشروع */
     .project-card {{
         background: {t['card']};
         border: 2px solid {t['border']};
@@ -61,7 +60,6 @@ st.markdown(f"""
     }}
     .project-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
 
-    /* حل مشكلة الكتابة (نص أسود على خلفية بيضاء) */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -78,14 +76,12 @@ st.markdown(f"""
         height: 55px;
     }}
 
-    /* تنسيق شريط التقدم المالي */
     .stProgress > div > div > div > div {{
         background-color: #00FF88 !important;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. القائمة الجانبية ---
 with st.sidebar:
     st.markdown(f"### 🎨 تخصيص المظهر")
     theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
@@ -95,35 +91,33 @@ with st.sidebar:
     st.divider()
     st.markdown("### 🏛️ رصيد الاستثمار")
     st.success("المحفظة الاستثمارية: 50,000 EGP")
-    st.info("عدد المشاريع الممولة: 3")
 
-# --- 3. إدارة البيانات (Mock Database) ---
 if 'crowd_projects' not in st.session_state:
     st.session_state.crowd_projects = [
-        {"title": "مزرعة الهيدروبونيك الذكية", "owner": "م. يوسف القائد", "goal": 100000, "raised": 45000, "desc": "إنشاء أول مزرعة مائية مؤتمتة بالكامل بالذكاء الاصطناعي لإنتاج محاصيل عضوية."},
-        {"title": "منصة تعليم البرمجة للأطفال", "owner": "ليلى المبدعة", "goal": 50000, "raised": 48000, "desc": "تطبيق لتبسيط منطق البرمجة باستخدام الألعاب لجيل التريليون القادم."}
+        {"title": "مزرعة الهيدروبونيك الذكية", "category": "زراعة ذكية", "owner": "م. يوسف القائد", "goal": 100000, "raised": 45000, "desc": "إنشاء أول مزرعة مائية مؤتمتة بالكامل بالذكاء الاصطناعي لإنتاج محاصيل عضوية عالية الجودة."},
+        {"title": "منصة تعليم البرمجة للأطفال", "category": "تعليم تقني", "owner": "ليلى المبدعة", "goal": 50000, "raised": 48000, "desc": "تطبيق لتبسيط منطق البرمجة باستخدام الألعاب لجيل التريليون القادم."}
     ]
 
-# --- 4. واجهة التمويل الجماعي ---
 st.title("🤝 مجمع التمويل الجماعي")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>نظام دعم المشاريع الناشئة وتبادل الاستثمارات القيادية</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>دعم المشاريع الناشئة وتبادل الاستثمارات الاستراتيجية</p>", unsafe_allow_html=True)
 
 st.divider()
 
-tabs = st.tabs(["🌎 استكشاف المشاريع", "🚀 اطرح مشروعك", "💰 استثماراتي", "📊 إحصائيات السوق"])
+tabs = st.tabs(["🌎 استكشاف المشاريع", "🚀 اطرح مشروعك باحترافية", "💰 استثماراتي", "📊 إحصائيات السوق"])
 
-# --- Tab 1: استكشاف المشاريع ---
 with tabs[0]:
     st.subheader("🌎 منصة عرض أفكار النخبة")
-    st.info("تصفح المشاريع المتاحة وكن شريكاً في قصة نجاح قادمة.")
     
     for idx, proj in enumerate(st.session_state.crowd_projects):
         with st.container():
             st.markdown(f"""
             <div class="project-card">
-                <div style="display: flex; justify-content: space-between;">
-                    <h2 style="color: {t['accent']};">{proj['title']}</h2>
-                    <span style="background: {t['accent']}; color: black; padding: 2px 10px; border-radius: 10px; font-weight: bold; height: 25px;">👤 {proj['owner']}</span>
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <span style="background: {t['accent']}; color: black; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem;">{proj.get('category', 'عام')}</span>
+                        <h2 style="color: {t['accent']}; margin-top: 5px;">{proj['title']}</h2>
+                    </div>
+                    <span style="color: #888; font-size: 0.9rem;">👤 صاحب المشروع: {proj['owner']}</span>
                 </div>
                 <p style="color: #ccc; margin-top: 10px;">{proj['desc']}</p>
                 <div style="margin: 20px 0;">
@@ -135,66 +129,73 @@ with tabs[0]:
             </div>
             """, unsafe_allow_html=True)
             
-            # حساب التقدم
             progress = min(proj['raised'] / proj['goal'], 1.0)
             st.progress(progress)
             
-            c1, c2 = st.columns([1, 1])
-            with c1:
-                fund_amt = st.number_input(f"مبلغ الاستثمار (EGP):", min_value=100, key=f"amt_{idx}")
-            with c2:
-                if st.button(f"🤝 تمويل المشروع الآن", key=f"btn_{idx}"):
+            col_in, col_btn = st.columns([1, 1])
+            with col_in:
+                fund_amt = st.number_input(f"مبلغ التمويل (EGP):", min_value=100, key=f"amt_{idx}", step=500)
+            with col_btn:
+                st.write("") # تعويض المسافة
+                if st.button(f"🤝 تمويل الآن", key=f"btn_{idx}"):
                     proj['raised'] += fund_amt
-                    st.success(f"مبارك! لقد أصبحت شريكاً في {proj['title']}. سيتم التواصل معك من قبل صاحب المشروع.")
+                    st.success(f"تم تسجيل استثمارك في {proj['title']}!")
                     time.sleep(1)
                     st.rerun()
 
-# --- Tab 2: اطرح مشروعك (Pitch Your Project) ---
 with tabs[1]:
-    st.subheader("🚀 بوابة طرح المشاريع الاستراتيجية")
-    st.markdown("قدم مشروعك بشكل احترافي لجذب استثمارات القادة.")
+    st.subheader("🚀 نموذج طرح المشروع الاستراتيجي")
+    st.info("املأ البيانات التالية بعناية لجذب القادة الممولين.")
     
-    with st.form("pitch_form"):
-        p_title = st.text_input("اسم المشروع:")
-        p_goal = st.number_input("المبلغ المطلوب للتمويل (EGP):", min_value=1000)
-        p_desc = st.text_area("وصف المشروع ودراسة الجدوى المختصرة:")
-        p_video = st.text_input("رابط فيديو تعريفي (يوتيوب):", placeholder="اشرح فكرتك في دقيقتين...")
+    with st.form("professional_pitch"):
+        col_t, col_c = st.columns(2)
+        with col_t:
+            p_title = st.text_input("اسم المشروع (العنوان الجاذب):")
+        with col_c:
+            p_cat = st.selectbox("تصنيف المشروع:", ["تقني (AI/Software)", "زراعي", "عقاري", "تعليمي", "تجاري", "صناعي"])
+        
+        p_goal = st.number_input("المبلغ المطلوب للتمويل الإجمالي (EGP):", min_value=1000, step=1000)
+        
+        p_summary = st.text_input("ملخص فكرة المشروع في جملة واحدة (Hook):")
+        
+        p_desc = st.text_area("شرح تفصيلي للمشروع وجدواه الاقتصادية:", height=150)
+        
+        p_risks = st.text_area("المخاطر والتحديات وكيفية مواجهتها:", placeholder="كن شفافاً لبناء الثقة مع المستثمر...")
+        
+        p_timeline = st.text_input("الجدول الزمني المتوقع (مثال: 6 أشهر للتشغيل، سنة للربحية):")
+        
+        p_video = st.text_input("رابط فيديو تعريفي (يوتيوب):", placeholder="رابط فيديو يشرح فكرتك بصوتك...")
         
         if st.form_submit_button("إرسال المشروع للمراجعة والنشر 📤"):
-            if p_title and p_desc:
+            if p_title and p_desc and p_goal > 0:
                 st.session_state.crowd_projects.append({
-                    "title": p_title, "owner": "أنت (القائد الحالي)", 
-                    "goal": p_goal, "raised": 0, "desc": p_desc
+                    "title": p_title, 
+                    "category": p_cat,
+                    "owner": "أنت (القائد الحالي)", 
+                    "goal": p_goal, 
+                    "raised": 0, 
+                    "desc": f"{p_summary}\n\n{p_desc}"
                 })
-                st.success("تم إدراج مشروعك بنجاح! سيتم إخطار جميع قادة المنظومة لبدء التمويل.")
+                st.success("تم إرسال مشروعك بنجاح! سيتم مراجعته من قبل الأدمن قبل الظهور للعامة.")
                 st.balloons()
             else:
-                st.error("يرجى إكمال جميع بيانات المشروع.")
+                st.error("يرجى التأكد من ملء الحقول الأساسية (الاسم، المبلغ، الوصف).")
 
-# --- Tab 3: استثماراتي ---
 with tabs[2]:
     st.subheader("💰 محفظة استثماراتي الجماعية")
-    st.info("هنا يمكنك متابعة المشاريع التي قمت بتمويلها وتطور نموها.")
-    
     my_investments = [
-        {"المشروع": "منصة تعليم البرمجة", "المبلغ المستثمر": "5,000 EGP", "العائد المتوقع": "15%", "الحالة": "قيد التنفيذ 🛠️"},
+        {"المشروع": "منصة تعليم البرمجة", "المبلغ المستثمر": "5,000 EGP", "النسبة من الهدف": "10%", "الحالة": "نشط ✅"},
     ]
     st.table(my_investments)
 
-# --- Tab 4: إحصائيات السوق ---
 with tabs[3]:
-    st.subheader("📊 أداء سوق التمويل الجماعي")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("إجمالي التمويلات", "245,000 EGP", "+15%")
-    with col2:
-        st.metric("مشاريع مكتملة", "8", "+2")
-    with col3:
-        st.metric("المستثمرون النشطون", "142", "🚀")
+    st.subheader("📊 أداء سوق التمويل")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("إجمالي الضخ المالي", "245,000 EGP", "+15%")
+    c2.metric("مشاريع قيد التنفيذ", "8", "+2")
+    c3.metric("المستثمرون", "142", "🚀")
 
 st.divider()
 
-# العودة للأدمن أو الرئيسية
 if st.button("👑 الانتقال للوحة التحكم العليا"):
     st.switch_page("pages/8_Admin_Panel.py")
