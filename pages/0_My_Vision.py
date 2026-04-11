@@ -1,92 +1,150 @@
+بدايةً، هذه رؤية تطويرية ممتازة! 🚀 تحويل الاختيارات إلى 4 مستويات بدلاً من 3 يضيف عمقاً أكبر للتحدي، وإضافة المؤثرات الصوتية والزرار المخصص لـ "تثبيت الهدف" سيعطي المستخدم إحساساً بجدية القرار وعظمته.
+
+سأقوم الآن بعرض التصميم الجديد لـ **"وحدة الرؤية المطورة"** في عرض تقديمي احترافي، يوضح فلسفة التصميم والجرافيكس المقترحة، ثم سأزودك بالكود المحدث لملف `0_My_Vision.py`.
+
+سأقوم أولاً بعرض التصميم الجديد لـ **"وحدة الرؤية المطورة"** في عرض تقديمي احترافي، يوضح فلسفة التصميم والجرافيكس المقترحة، ثم سأزودك بالكود المحدث لملف `0_My_Vision.py` الذي يتضمن 4 مستويات لكل هدف، والمؤثرات الصوتية، وزر "تثبيت الهدف".
+
+
+http://googleusercontent.com/immersive_entry_chip/0
+
+إليك الكود المطور لصفحة **`pages/0_My_Vision.py`** الذي يطبق كل ما اتفقنا عليه بصورة احترافية:
+
+```python
 import streamlit as st
 import time
 
-# 1. جدار الحماية (التأكد من تسجيل الدخول)
+# 1. إعدادات الصفحة والجرافيك (CSS المطور)
+st.markdown("""
+    <style>
+    .stButton>button {
+        width: 100%;
+        border-radius: 12px;
+        height: 60px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(80, 200, 120, 0.4);
+    }
+    .main-card {
+        background-color: #1A1A1A;
+        padding: 25px;
+        border-radius: 20px;
+        border: 1px solid #333;
+        margin-bottom: 20px;
+    }
+    .stRadio > div {
+        background-color: #1A1A1A;
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid #444;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# دالة لتشغيل صوت النجاح (Sound Effect)
+def play_sound():
+    sound_html = """
+    <audio autoplay>
+        <source src="https://www.soundjay.com/buttons/sounds/button-37a.mp3" type="audio/mpeg">
+    </audio>
+    """
+    st.components.v1.html(sound_html, height=0)
+
+# 2. جدار الحماية
 if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
     st.warning("الرجاء تسجيل الدخول من الصفحة الرئيسية أولاً.")
     st.stop()
 
-st.title("🎯 بوصلة القائد: حدد رؤيتك للتريليون")
-st.write("أهلاً بك يا قائد. العظمة تبدأ بقرار، والقرار يبدأ بهدف واضح.")
+st.title("🎯 بوصلة القائد 2.0: صناعة المستقبل")
+st.write("---")
 
-# إعداد حالة الجلسة للأهداف
+# إعداد حالة الجلسة
 if 'vision_step' not in st.session_state:
     st.session_state.vision_step = 1
     st.session_state.selected_category = None
+    st.session_state.temp_choice = None
 
 # --- شريط التقدم الذكي ---
-progress_value = 25 if st.session_state.vision_step == 1 else 75
-st.progress(progress_value)
-st.caption(f"مستوى إكمال الرؤية: {progress_value}%")
+progress_mapping = {1: 10, 2: 50, 3: 90}
+progress_val = progress_mapping.get(st.session_state.vision_step, 100)
+st.progress(progress_val)
+st.caption(f"مستوى صياغة الرؤية: {progress_val}%")
 
-st.divider()
-
-# --- المرحلة الأولى: اختيار التصنيف ---
+# --- المرحلة الأولى: اختيار التصنيف (4 خيارات) ---
 if st.session_state.vision_step == 1:
-    st.subheader("ما هو الجانب الذي تود التركيز عليه الآن؟")
-    
+    st.subheader("اختر ركيزة الانطلاق الأساسية:")
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        if st.button("💰 مالي", use_container_width=True):
+        if st.button("💰 مالي"):
             st.session_state.selected_category = "مالي"
             st.session_state.vision_step = 2
             st.rerun()
-            
     with col2:
-        if st.button("❤️ عاطفي", use_container_width=True):
+        if st.button("🎓 تعليمي"):
+            st.session_state.selected_category = "تعليمي"
+            st.session_state.vision_step = 2
+            st.rerun()
+    with col3:
+        if st.button("✈️ سفر"):
+            st.session_state.selected_category = "سفر"
+            st.session_state.vision_step = 2
+            st.rerun()
+    with col4:
+        if st.button("❤️ عاطفي"):
             st.session_state.selected_category = "عاطفي"
             st.session_state.vision_step = 2
             st.rerun()
 
-    with col3:
-        if st.button("✈️ سفر", use_container_width=True):
-            st.session_state.selected_category = "سفر"
-            st.session_state.vision_step = 2
-            st.rerun()
-
-    with col4:
-        if st.button("🎓 تعليمي", use_container_width=True):
-            st.session_state.selected_category = "تعليمي"
-            st.session_state.vision_step = 2
-            st.rerun()
-
-# --- المرحلة الثانية: تحديد مستوى الطموح (البطاقات الذكية) ---
+# --- المرحلة الثانية: تحديد مستوى الطموح (4 مستويات) ---
 elif st.session_state.vision_step == 2:
-    category = st.session_state.selected_category
-    st.subheader(f"رائع! لقد اخترت المسار الـ{category}. حدد الآن سقف طموحك:")
+    cat = st.session_state.selected_category
+    st.subheader(f"رائع! أنت الآن في مسار الـ {cat}. اختر سقف طموحك:")
 
-    options = []
-    if category == "مالي":
-        options = ["مليون دولار (بداية القائد) 🌱", "100 مليون دولار (تأثير إقليمي) 📈", "مليار دولار (نادي التريليون) 🌍"]
-    elif category == "تعليمي":
-        options = ["إتقان مهارة قيادية 🧠", "الحصول على دبلوم احترافي 📜", "تأليف منهج قيادي عالمي ✍️"]
-    elif category == "سفر":
-        options = ["رحلة استكشافية محلية 🧭", "زيارة قارة جديدة 🗺️", "جولة حول العالم لنشر الفكر ✈️"]
-    elif category == "عاطفي":
-        options = ["استقرار وتوازن عائلي ❤️", "بناء شبكة علاقات مؤثرة 🤝", "ترك إرث إنساني عالمي 🕊️"]
+    # تعريف الـ 4 مستويات لكل فئة
+    levels = {
+        "مالي": ["مليون دولار 🌱", "10 ملايين دولار 📈", "100 مليون دولار 🔥", "مليار دولار (نادي التريليون) 🌍"],
+        "تعليمي": ["إتقان مهارة قيادية 🧠", "دبلوم احترافي دولي 📜", "درجة خبير متخصص (PhD) 🎓", "تأليف منهج عالمي باسمك ✍️"],
+        "سفر": ["استكشاف محلي 🧭", "غزو قارة جديدة 🗺️", "جولة حول العالم ✈️", "رحلة مهمة عالمية لإرساء الفكر 🕊️"],
+        "عاطفي": ["استقرار وتوازن داخلي ❤️", "بناء شبكة علاقات النخبة 🤝", "صناعة أثر مجتمعي مستدام 🏛️", "ترك إرث إنساني خالد للعالم 🕊️"]
+    }
 
-    choice = st.radio("اختر مستواك المستهدف:", options)
-
-    if st.button("تثبيت الهدف وإطلاق الرؤية 🚀"):
-        with st.spinner("جاري تحليل طموحك وربطه بمسار التريليون..."):
-            time.sleep(2)
+    selected_level = st.radio("حدد هدفك بدقة:", levels[cat])
+    
+    st.write("---")
+    if st.button("✅ تثبيت الهدف المختار"):
+        play_sound() # تشغيل الصوت عند الضغط
+        st.session_state.temp_choice = selected_level
+        with st.spinner("يتم الآن توثيق هدفك في سجلات العظماء..."):
+            time.sleep(1.5)
             st.session_state.vision_step = 3
-            st.session_state.final_choice = choice
             st.rerun()
 
-# --- المرحلة الثالثة: رسالة الذكاء الاصطناعي والاحتفال ---
+# --- المرحلة الثالثة: الاحتفال والرسالة ---
 elif st.session_state.vision_step == 3:
     st.balloons()
-    st.success(f"تم اعتماد هدفك: {st.session_state.final_choice}")
+    st.success(f"تم تثبيت هدفك بنجاح: {st.session_state.temp_choice}")
     
-    # رسالة تحفيزية ذكية بناءً على الاختيار
-    st.info("🤖 **رسالة من وكيلك الذكي:**")
-    if "مليار" in st.session_state.final_choice or "عالمي" in st.session_state.final_choice:
-        st.write("> 'أنت لا تستهدف رقماً، أنت تستهدف تغيير وجه التاريخ. القادة العظام لا يطلبون الإذن، بل يصنعون الطريق. ابدأ اليوم كأنك تملك المليار بالفعل.'")
-    else:
-        st.write("> 'خطوة ممتازة في طريق الألف ميل. التوازن والتعلم هما وقود القائد الناجح. نحن معك في كل خطوة.'")
+    st.markdown(f"""
+    <div class="main-card">
+        <h3>🤖 رسالة الوكيل الذكي للقائد:</h3>
+        <p style='font-style: italic; font-size: 20px;'>
+        "اختيارك لـ '{st.session_state.temp_choice}' ليس مجرد رقم أو كلمة، إنه العقد الذي وقعته اليوم مع المستقبل. 
+        بصفتك جزءاً من MR7، نحن لا نعترف بالمستحيل. ابدأ الآن بتصرفات قائد يمتلك هذا الهدف بالفعل."
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    if st.button("العودة لتعديل الأهداف"):
+    if st.button("تعديل الرؤية أو البدء من جديد"):
         st.session_state.vision_step = 1
         st.rerun()
+
+بهذا الكود، أصبح التطبيق يتمتع بـ:
+1. **جرافيكس محسن** عبر CSS مخصص للبطاقات والأزرار.
+2. **4 مستويات** لكل فئة أهداف لتوفير تدرج احترافي.
+3. **مؤثر صوتي** يعمل لحظة "تثبيت الهدف".
+4. **زر "تثبيت الهدف"** كخطوة تأكيدية تزيد من تفاعل المستخدم.
+
+قم بتحديث ملف `0_My_Vision.py` بهذا الكود الجديد وجربه، ستشعر بفرق كبير في "فخامة" التجربة! 🦾✨
