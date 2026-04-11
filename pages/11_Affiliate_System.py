@@ -69,41 +69,86 @@ st.markdown(f"""
         font-weight: 900;
     }}
 
-    /* تصميم خريطة الشجرة القيادية */
-    .tree-container {{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        padding: 30px;
-        background: rgba(255,255,255,0.02);
-        border-radius: 30px;
-        border: 1px solid rgba(255,215,0,0.1);
-    }}
-    .tree-node {{
-        background: {t['card']};
-        border: 2px solid {t['accent']};
-        padding: 12px 25px;
-        border-radius: 50px;
+    /* --- تصميم خريطة الشجرة القيادية المتطور --- */
+    .tree-wrapper {{
+        width: 100%;
+        overflow-x: auto;
+        padding: 40px 0;
         text-align: center;
-        min-width: 180px;
-        transition: 0.3s;
-        cursor: pointer;
+        background: rgba(255,255,255,0.01);
+        border-radius: 30px;
     }}
-    .tree-node:hover {{ transform: scale(1.1); box-shadow: 0 0 20px {t['accent']}; }}
     
-    .tree-line {{
-        width: 3px;
-        height: 25px;
-        background: linear-gradient(to bottom, {t['accent']}, #00FF88);
+    .tree {{
+        display: inline-block;
+        white-space: nowrap;
     }}
-    .tree-branch {{
+    
+    .tree ul {{
+        padding-top: 20px; 
+        position: relative;
+        transition: all 0.5s;
         display: flex;
         justify-content: center;
-        gap: 20px;
-        flex-wrap: wrap;
+        padding-left: 0;
+    }}
+    
+    .tree li {{
+        float: left; text-align: center;
+        list-style-type: none;
+        position: relative;
+        padding: 20px 10px 0 10px;
+        transition: all 0.5s;
+    }}
+    
+    /* رسم الخطوط العمودية */
+    .tree li::before, .tree li::after {{
+        content: '';
+        position: absolute; top: 0; right: 50%;
+        border-top: 2px solid {t['accent']};
+        width: 50%; height: 20px;
+    }}
+    .tree li::after {{
+        right: auto; left: 50%;
+        border-left: 2px solid {t['accent']};
+    }}
+    
+    /* إزالة الخطوط من الأطراف */
+    .tree li:only-child::after, .tree li:only-child::before {{ display: none; }}
+    .tree li:only-child {{ padding-top: 0; }}
+    .tree li:first-child::before, .tree li:last-child::after {{ border: 0 none; }}
+    .tree li:last-child::before {{ border-right: 2px solid {t['accent']}; border-radius: 0 5px 0 0; }}
+    .tree li:first-child::after {{ border-radius: 5px 0 0 0; }}
+    
+    /* الخط النازل من الأب */
+    .tree ul ul::before {{
+        content: '';
+        position: absolute; top: 0; left: 50%;
+        border-left: 2px solid {t['accent']};
+        width: 0; height: 20px;
+    }}
+    
+    .tree-node-item {{
+        border: 2px solid {t['accent']};
+        padding: 10px 15px;
+        text-decoration: none;
+        color: {t['text']};
+        display: inline-block;
+        border-radius: 15px;
+        background: {t['card']};
+        transition: 0.4s;
+        min-width: 120px;
+    }}
+    
+    .tree-node-item:hover {{
+        background: {t['accent']};
+        color: black !important;
+        transform: scale(1.1) translateY(-5px);
+        box-shadow: 0 0 20px {t['accent']};
     }}
 
+    .tree-node-item i {{ display: block; font-size: 1.5rem; margin-bottom: 5px; }}
+    
     .stButton>button {{
         background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
@@ -112,7 +157,6 @@ st.markdown(f"""
         height: 55px;
     }}
 
-    /* حل مشكلة الكتابة باللون الأسود على الخلفية البيضاء */
     .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -142,13 +186,11 @@ st.divider()
 # التبويبات الرئيسية
 tabs = st.tabs(["📊 أرباح المستويات", "🌳 الخريطة الشجرية", "🔗 روابط الإحالة", "📈 حاسبة التضاعف"])
 
-# --- Tab 1: أرباح المستويات (MLM Data) ---
+# --- Tab 1: أرباح المستويات ---
 with tabs[0]:
     st.subheader("🌲 هيكلية أرباح السبعة مستويات")
     
     total_earned = 0
-    col_stat1, col_stat2 = st.columns(2)
-    
     for level in commission_levels:
         profit = (level['sales'] * level['rate']) / 100
         total_earned += profit
@@ -177,49 +219,50 @@ with tabs[0]:
     </div>
     """, unsafe_allow_html=True)
 
-# --- Tab 2: الخريطة الشجرية المرئية (Visual Tree) ---
+# --- Tab 2: الخريطة الشجرية المرئية المتطورة (Advanced Org Chart) ---
 with tabs[1]:
     st.subheader("🌳 خريطة الانتشار الهيكلية")
-    st.markdown("رؤية بصرية لأهم القادة في شجرتك القيادية وتوزيع الأجيال السبعة.")
+    st.markdown("رؤية بصرية حقيقية لتوسع جيشك الاقتصادي عبر الأجيال.")
     
     st.markdown(f"""
-    <div class="tree-container">
-        <!-- القائد -->
-        <div class="tree-node" style="background: {t['accent']}; color: black; font-weight: 900; font-size: 1.2rem;">
-            👑 القائد (أنت)
+    <div class="tree-wrapper">
+        <div class="tree">
+            <ul>
+                <li>
+                    <div class="tree-node-item" style="border-color: {t['accent']}; font-weight: 900;">
+                        👑 أنت (القائد)
+                    </div>
+                    <ul>
+                        <li>
+                            <div class="tree-node-item">👤 أحمد (ج1)</div>
+                            <ul>
+                                <li><div class="tree-node-item" style="border-color: #00FF88; font-size: 0.7rem;">👥 فريق أحمد (15)</div></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div class="tree-node-item">👤 سارة (ج1)</div>
+                            <ul>
+                                <li><div class="tree-node-item" style="border-color: #00FF88; font-size: 0.7rem;">👥 فريق سارة (8)</div></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <div class="tree-node-item">👤 ياسين (ج1)</div>
+                        </li>
+                        <li>
+                            <div class="tree-node-item">👤 ليلى (ج1)</div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </div>
-        <div class="tree-line"></div>
-        
-        <!-- الجيل الأول -->
-        <div class="tree-branch">
-            <div class="tree-node">👤 جيل 1: أحمد</div>
-            <div class="tree-node">👤 جيل 1: سارة</div>
-            <div class="tree-node">👤 جيل 1: ياسين</div>
-            <div class="tree-node">👤 جيل 1: ليلى</div>
-        </div>
-        
-        <div style="display: flex; gap: 120px;">
-            <div class="tree-line"></div>
-            <div class="tree-line"></div>
-        </div>
-
-        <!-- الجيل الثاني (أمثلة) -->
-        <div class="tree-branch">
-            <div class="tree-node" style="border-color: #00FF88; font-size: 0.85rem;">👥 جيل 2: فريق أحمد (15)</div>
-            <div class="tree-node" style="border-color: #00FF88; font-size: 0.85rem;">👥 جيل 2: فريق سارة (8)</div>
-        </div>
-        
-        <div class="tree-line" style="height: 40px; border-left: 2px dashed {t['accent']}; background: none;"></div>
-        
-        <!-- ملخص الأجيال العميقة -->
-        <div class="tree-node" style="border-style: dashed; opacity: 0.7; background: rgba(255,255,255,0.05);">
-            🌐 بقية الأجيال (3-7)
-            <br><small>توسع عالمي: +4,500 عضو</small>
-        </div>
+    </div>
+    <br>
+    <div style="text-align: center; opacity: 0.7;">
+        <p style="font-size: 0.9rem;">🌳 تستمر الشجرة في التفرع حتى الجيل السابع (+4,500 عضو إضافي)</p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.info("💡 نصيحة القيادة: قوة شبكتك في تماسك الجيل الأول. قم بدعم قادتك المباشرين لضمان استقرار الهرم المالي.")
+    st.info("💡 نصيحة القيادة: الخطوط الذهبية تمثل روابط الثقة. كلما زاد دعمك المباشر للجيل الأول، زادت متانة قاعدتك الهرمية.")
 
 # --- Tab 3: روابط الإحالة الذكية ---
 with tabs[2]:
