@@ -35,7 +35,7 @@ st.markdown(f"""
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
-    div[data-testid="stMarkdownContainer"] p, h2, h3, span, label, li {{ 
+    div[data-testid="stMarkdownContainer"] p, h2, h3, h4, span, label, li {{ 
         color: {t['text']} !important; 
         font-weight: 700 !important; 
     }}
@@ -67,12 +67,33 @@ st.markdown(f"""
         color: {t['accent']} !important;
     }}
 
+    /* تصميم شجرة التضاعف العشري */
+    .decade-tree {{
+        background: rgba(255, 215, 0, 0.05);
+        border: 2px dashed {t['accent']};
+        border-radius: 20px;
+        padding: 20px;
+        margin: 10px 0;
+    }}
+    .node-active {{ color: #00FF88 !important; font-size: 1.2rem; }}
+    .node-empty {{ color: #555 !important; font-size: 1.2rem; }}
+
+    /* فقاعات الدردشة */
+    .chat-bubble {{
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+        max-width: 80%;
+    }}
+    .chat-received {{ background: #222; border-right: 4px solid {t['accent']}; text-align: right; }}
+    .chat-sent {{ background: {t['accent']}; color: #000 !important; margin-left: auto; text-align: left; }}
+
     .stButton>button {{
         background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
         font-weight: 950 !important;
         border-radius: 15px !important;
-        height: 60px;
+        height: 55px;
     }}
 
     /* إصلاح القوائم المنسدلة */
@@ -89,119 +110,142 @@ with st.sidebar:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
-    st.markdown("### 🏆 رتبة القيادة")
+    st.markdown("### 🏆 حالتك القيادية")
     st.success("الرتبة: قائد ماسي 💎")
     st.info("قوة الفريق: 85% كفاءة")
+    st.progress(8.5/10)
+    st.caption("متبقي 2 من القادة للوصول لمستوى 'الإمبراطور'")
 
 # --- 3. واجهة إدارة الفرق ---
 st.title("👥 إدارة فرق النخبة MR7")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>قيادة الجيوش الاقتصادية نحو سيادة التريليون</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>نظام التضاعف العشري والسيادة الجماعية</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# ملخص الإحصائيات (Dashboard Stats)
-col_stat1, col_stat2, col_stat3 = st.columns(3)
-
-with col_stat1:
-    st.markdown(f"""
-    <div class="team-card">
-        <p>إجمالي الأعضاء</p>
-        <div class="stat-value">1,248</div>
-        <p style="color:#00FF88;">+12% هذا الأسبوع</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_stat2:
-    st.markdown(f"""
-    <div class="team-card">
-        <p>مبيعات الفريق</p>
-        <div class="stat-value">$842K</div>
-        <p style="color:#00FF88;">معدل نمو مرتفع 📈</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_stat3:
-    st.markdown(f"""
-    <div class="team-card">
-        <p>عمولات القيادة</p>
-        <div class="stat-value">$126K</div>
-        <p style="color:#FFD700;">جاهزة للسحب 💰</p>
-    </div>
-    """, unsafe_allow_html=True)
+# ملخص الإحصائيات الحية
+col1, col2, col3, col4 = st.columns(4)
+stats = [
+    ("إجمالي الفريق", "1,248", "👥"),
+    ("مبيعات الفريق", "$842K", "📈"),
+    ("عمولاتك", "$126K", "💰"),
+    ("هدف الـ 10", "8/10", "🎯")
+]
+for i, (label, val, icon) in enumerate(stats):
+    with [col1, col2, col3, col4][i]:
+        st.markdown(f"""
+        <div class="team-card" style="padding: 15px;">
+            <p style="font-size: 0.9rem;">{icon} {label}</p>
+            <div style="font-size: 1.8rem; font-weight: 900; color: {t['accent']};">{val}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.divider()
 
-tab1, tab2, tab3 = st.tabs(["📊 هيكلية الفريق", "🤝 قائمة القادة", "🛠️ أدوات القيادة"])
+# التبويبات المتطورة
+tabs = st.tabs(["🌳 شجرة التضاعف العشري", "💬 مركز التواصل", "🏆 الإنجازات", "❓ الدعم والأسئلة"])
 
-# --- Tab 1: هيكلية الفريق (Hierarchy) ---
-with tab1:
-    st.subheader("🌲 هيكل الانتشار الهرمي")
-    st.info("هذا الرسم يوضح توزع القوة داخل فريقك بين الأجيال المختلفة.")
-    
-    # محاكاة لهيكل شجري
-    st.markdown(f"""
-    - **أنت (القائد المؤسس)**
-        - 👤 الجيل الأول (15 قائد مباشر)
-            - 👥 الجيل الثاني (142 عضو)
-                - 🌐 الجيل الثالث (1091 مسوق)
+# --- Tab 1: شجرة التضاعف العشري ---
+with tabs[0]:
+    st.subheader("🌲 استراتيجية الـ 10: المعيار الذهبي للسيادة")
+    st.markdown("""
+    تعتمد فلسفة MR7 على **قانون الـ 10**. عندما تكتمل صفوفك العشرة الأولى، تبدأ الماكينة المالية في التضاعف تلقائياً.
+    - **المستوى 1 (مباشر):** 10 قادة (عمولة 20%)
+    - **المستوى 2:** 100 عضو (عمولة 10%)
+    - **المستوى 3:** 1,000 مسوق (عمولة 5%)
     """)
-    st.markdown("<br>", unsafe_allow_html=True)
+    
+    st.markdown("### 📊 مسار تضاعفك الحالي")
+    
+    # محاكاة بصرية للشجرة
+    cols = st.columns(10)
+    for i in range(10):
+        with cols[i]:
+            if i < 8:
+                st.markdown(f"<div style='text-align:center;' class='node-active'>👤<br><span style='font-size:10px;'>قائد {i+1}</span></div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div style='text-align:center;' class='node-empty'>⚪<br><span style='font-size:10px;'>شاغر</span></div>", unsafe_allow_html=True)
+    
     st.markdown(f"""
-    <div style="background: {t['card']}; padding: 20px; border-radius: 15px; border: 1px solid {t['accent']};">
-        <h4 style="color: {t['accent']};">تحليل استراتيجي:</h4>
-        <p>فريقك ينمو بشكل أكبر في الجيل الثالث. نوصي بتركيز التدريب لرفع كفاءة الجيل الأول لزيادة العمولات المباشرة.</p>
+    <div class="decade-tree">
+        <h4 style="color: {t['accent']}; text-align: center;">لقد حققت 80% من هدف "العشرة الذهبية"</h4>
+        <p style="text-align: center; font-size: 0.9rem;">بإضافة قائدين إضافيين، ستحصل على بونص "السيادة العشرية" بقيمة $5,000</p>
     </div>
     """, unsafe_allow_html=True)
 
-# --- Tab 2: قائمة القادة ---
-with tab2:
-    st.subheader("🤝 نخبة القادة في فريقك")
+# --- Tab 2: مركز التواصل (Chat & Media) ---
+with tabs[1]:
+    st.subheader("💬 غرفة عمليات التواصل")
     
-    search_member = st.text_input("🔍 ابحث عن قائد محدد بالاسم أو المعرف (ID)...")
+    col_chat_list, col_chat_view = st.columns([1, 2])
     
-    leaders_data = [
-        {"الاسم": "عمر الفاروق", "الرتبة": "ذهبي", "المبيعات": "$45,000", "الأعضاء": 120},
-        {"الاسم": "ليلى القائدة", "الرتبة": "بلاتيني", "المبيعات": "$82,000", "الأعضاء": 310},
-        {"الاسم": "ياسين الاستراتيجي", "الرتبة": "فضي", "المبيعات": "$12,000", "الأعضاء": 45},
+    with col_chat_list:
+        st.markdown("#### القنوات")
+        st.button("📢 الفريق العام (1.2K)")
+        st.button("💎 مجلس القادة (15)")
+        st.divider()
+        st.markdown("#### خاص")
+        st.button("👤 عمر الفاروق (نشط)")
+        st.button("👤 ليلى (غير نشط)")
+
+    with col_chat_view:
+        st.markdown(f"""
+        <div style="height: 300px; overflow-y: auto; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 15px;">
+            <div class="chat-bubble chat-received">عمر الفاروق: قائد، لقد أكملت أول 5 أعضاء في فريقي اليوم! 🚀</div>
+            <div class="chat-bubble chat-sent">أنت: ممتاز يا بطل! استمر حتى تصل للـ 10 لفتح عمولات الجيل الثاني.</div>
+            <div class="chat-bubble chat-received">ليلى: هل هناك اجتماع صوتي اليوم لمناقشة استراتيجية المليار؟</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        c_v1, c_v2, c_v3 = st.columns([3, 1, 1])
+        with c_v1:
+            st.text_input("اكتب رسالتك...", label_visibility="collapsed")
+        with c_v2:
+            st.button("🎙️") # صوت
+        with c_v3:
+            st.button("🎥") # فيديو
+
+# --- Tab 3: الإنجازات (Gamification) ---
+with tabs[2]:
+    st.subheader("🏆 لوحة أوسمة الاستحقاق")
+    col_a, col_b, col_c = st.columns(3)
+    
+    badges = [
+        ("🥇 باني الفريق", "إكمال أول 10 قادة مباشرين", "قيد الإنجاز"),
+        ("💎 المحرك المالي", "تحقيق مبيعات فريق بقيمة $500K", "تم الإنجاز ✅"),
+        ("🌍 عابر القارات", "توسع الفريق في أكثر من 5 دول", "تم الإنجاز ✅")
     ]
-    st.table(leaders_data)
     
-    if st.button("تحميل تقرير الأداء الكامل (PDF) 📄"):
-        st.toast("يتم الآن إنشاء التقرير...")
+    for i, (name, desc, status) in enumerate(badges):
+        with [col_a, col_b, col_c][i]:
+            st.markdown(f"""
+            <div class="team-card">
+                <div style="font-size: 40px;">{'🎖️' if 'تم' in status else '🔒'}</div>
+                <h4 style="margin: 10px 0;">{name}</h4>
+                <p style="font-size: 0.8rem; color: #aaa;">{desc}</p>
+                <p style="color: #00FF88;">{status}</p>
+            </div>
+            """, unsafe_allow_html=True)
 
-# --- Tab 3: أدوات القيادة ---
-with tab3:
-    st.subheader("🛠️ ترسانة أدوات الانتشار")
+# --- Tab 4: الدعم والأسئلة ---
+with tabs[3]:
+    st.subheader("❓ مساعدة فريق القيادة")
+    with st.expander("كيف يتم احتساب عمولات الجيل الثالث؟"):
+        st.write("يتم احتسابها بنسبة 5% من إجمالي مبيعات الأعضاء الذين انضموا عن طريق أعضاء جيلك الثاني، بشرط أن تكون قد أكملت 'العشرة الذهبية' الخاصة بك.")
     
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.markdown(f"""
-        <div class="team-card" style="border-color: #00FF88;">
-            <h3 style="color: #00FF88;">🔗 رابط الدعوة</h3>
-            <p style="font-size: 0.9rem;">استخدم هذا الرابط لضم قادة جدد مباشرة تحت قيادتك.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.code("https://mr7-app.com/join?ref=LEADER_ID", language="text")
-        st.button("نسخ الرابط وإرساله 📲", key="copy_link")
-
-    with col_b:
-        st.markdown(f"""
-        <div class="team-card" style="border-color: #FFD700;">
-            <h3 style="color: #FFD700;">📢 غرفة الاجتماعات</h3>
-            <p style="font-size: 0.9rem;">أرسل رسالة فورية لجميع قادة الجيل الأول.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        msg = st.text_input("نص الرسالة القيادية:")
-        if st.button("إرسال التوجيهات فوراً ⚡"):
-            st.success("تم إرسال الرسالة لـ 15 قائداً بنجاح.")
+    with st.expander("هل يمكنني نقل قائد من فريق لآخر؟"):
+        st.write("نظام MR7 يدعم الهيكلة الثابتة لضمان حقوق الجميع، ولكن يمكنك طلب استشارة من الأدمن للحالات الاستثنائية.")
+    
+    st.divider()
+    st.button("📝 فتح تذكرة دعم خاصة للفريق")
 
 st.divider()
 
-# العودة للمتجر أو العمولات
+# العودة
 c_back, c_next = st.columns(2)
 with c_back:
     if st.button("📊 مراجعة العمولات"):
         st.switch_page("pages/5_Commissions.py")
 with c_next:
     if st.button("🎨 استوديو بناء المحتوى"):
-        st.info("سيتم تفعيل هذه الصفحة في الخطوة القادمة!")
+        st.switch_page("pages/7_Creator_Studio.py")
