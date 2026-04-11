@@ -1,172 +1,141 @@
 import streamlit as st
 import time
 
-# --- 1. إعدادات التصميم الإبداعي (Elite Support UI) ---
-st.markdown("""
+# --- 1. محرك الأنماط (Theme Engine) ---
+# التأكد من وجود متغير النمط في ذاكرة الجلسة
+if 'app_theme' not in st.session_state:
+    st.session_state.app_theme = "غامق إمبراطوري 🖤"
+
+# تعريف الألوان لكل نمط
+themes = {
+    "غامق إمبراطوري 🖤": {
+        "bg": "#000000", "sidebar": "#050505", "text": "#FFFFFF", 
+        "accent": "#FFD700", "card": "rgba(30, 30, 30, 0.9)", "border": "#FFD700"
+    },
+    "فاتح ملكي ✨": {
+        "bg": "#F5F5F5", "sidebar": "#FFFFFF", "text": "#1A1A1A", 
+        "accent": "#B8860B", "card": "rgba(255, 255, 255, 0.95)", "border": "#B8860B"
+    },
+    "أزرق القيادة 💙": {
+        "bg": "#001F3F", "sidebar": "#001529", "text": "#FFFFFF", 
+        "accent": "#0074D9", "card": "rgba(0, 31, 63, 0.8)", "border": "#0074D9"
+    },
+    "أخضر الاستدامة 💚": {
+        "bg": "#002B1B", "sidebar": "#001A10", "text": "#FFFFFF", 
+        "accent": "#00FF88", "card": "rgba(0, 43, 27, 0.8)", "border": "#00FF88"
+    }
+}
+
+selected_theme = st.session_state.app_theme
+t = themes[selected_theme]
+
+# تطبيق التصميم بناءً على النمط المختار
+st.markdown(f"""
     <style>
-    /* تحسين الخلفية العامة للسواد المطلق */
-    .stApp {
-        background-color: #000000 !important;
-        color: #FFFFFF !important;
-    }
+    .stApp {{
+        background-color: {t['bg']} !important;
+        color: {t['text']} !important;
+    }}
     
-    /* هندسة القائمة الجانبية (Sidebar) */
-    [data-testid="stSidebar"] {
-        background-color: #050505 !important;
-        border-right: 2px solid #FFD700 !important;
-    }
+    [data-testid="stSidebar"] {{
+        background-color: {t['sidebar']} !important;
+        border-right: 2px solid {t['accent']} !important;
+    }}
 
-    /* ضمان وضوح النصوص باللون الأبيض الناصع */
-    div[data-testid="stMarkdownContainer"] p, h2, h3, span, label {
-        color: #FFFFFF !important;
+    div[data-testid="stMarkdownContainer"] p, h2, h3, span, label, li {{
+        color: {t['text']} !important;
         font-weight: 700 !important;
-        font-size: 1.1rem;
-    }
+    }}
 
-    /* العنوان الرئيسي الذهبي المتوهج */
-    h1 {
-        background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
+    h1 {{
+        background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']});
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 950 !important;
         text-align: center;
-        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
-        font-size: 3.5rem !important;
-        margin-bottom: 20px !important;
-    }
+        filter: drop-shadow(0 0 10px {t['accent']});
+        font-size: 3rem !important;
+    }}
 
-    /* بطاقة الوكيل الذكي - Glassmorphism */
-    .agent-card {
-        background: rgba(30, 30, 30, 0.9);
+    .agent-card {{
+        background: {t['card']};
         backdrop-filter: blur(20px);
         padding: 40px;
         border-radius: 35px;
-        border: 2px solid #00FF88;
-        box-shadow: 0 15px 45px rgba(0, 255, 136, 0.15);
+        border: 2px solid {t['border']};
+        box-shadow: 0 15px 45px rgba(0,0,0,0.5);
         margin-bottom: 30px;
         text-align: center;
-    }
+    }}
     
-    .agent-title {
-        color: #FFD700 !important;
-        font-size: 2rem !important;
-        font-weight: 900 !important;
-        margin-bottom: 10px;
-    }
-
-    /* تحسين حقول الإدخال */
-    .stTextArea textarea {
-        background-color: #111111 !important;
-        color: #FFFFFF !important;
-        border: 2px solid #444 !important;
+    .stTextArea textarea {{
+        background-color: rgba(255,255,255,0.05) !important;
+        color: {t['text']} !important;
+        border: 2px solid {t['border']} !important;
         border-radius: 20px !important;
-        font-size: 1.2rem !important;
-        padding: 20px !important;
-    }
-    .stTextArea textarea:focus {
-        border-color: #FFD700 !important;
-    }
+    }}
 
-    /* أزرار الإرسال الإمبراطورية */
-    .stButton>button {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
+    .stButton>button {{
+        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
         font-weight: 950 !important;
         border-radius: 20px !important;
-        height: 75px !important;
-        font-size: 24px !important;
+        height: 70px !important;
+        font-size: 22px !important;
         border: none !important;
-        transition: all 0.4s ease;
-        box-shadow: 0 10px 30px rgba(184, 134, 11, 0.4);
-    }
-    .stButton>button:hover {
-        transform: scale(1.03) translateY(-5px);
-        box-shadow: 0 20px 50px rgba(255, 215, 0, 0.6);
-    }
-
-    /* تصنيفات الوكيل */
-    .category-tag {
-        background: rgba(255, 215, 0, 0.1);
-        border: 1px solid #FFD700;
-        color: #FFD700 !important;
-        padding: 10px 20px;
-        border-radius: 12px;
-        font-weight: bold;
-        display: inline-block;
-        margin-top: 10px;
-    }
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }}
     </style>
-
-    <script>
-    function playSfx(url) {
-        const audio = new Audio(url);
-        audio.volume = 0.5;
-        audio.play().catch(e => console.log('Audio Blocked'));
-    }
-    </script>
     """, unsafe_allow_html=True)
 
-def play_support_sound(sound_key="send"):
-    sounds = {
-        "send": "https://www.soundjay.com/buttons/sounds/button-10.mp3",
-        "analyze": "https://www.soundjay.com/buttons/sounds/button-16.mp3"
-    }
-    st.components.v1.html(f"""
-        <audio autoplay><source src="{sounds[sound_key]}" type="audio/mpeg"></audio>
-    """, height=0)
+# --- 2. القائمة الجانبية لإعدادات النمط ---
+with st.sidebar:
+    st.markdown(f"### 🎨 تخصيص المظهر")
+    theme_choice = st.selectbox(
+        "اختر نمط الألوان المفضل لديك:",
+        options=list(themes.keys()),
+        index=list(themes.keys()).index(st.session_state.app_theme)
+    )
+    
+    if theme_choice != st.session_state.app_theme:
+        st.session_state.app_theme = theme_choice
+        st.rerun()
+    
+    st.divider()
 
-# --- 2. جدار الحماية ---
+# --- 3. جدار الحماية ---
 if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
     st.warning("الرجاء تسجيل الدخول أولاً للوصول إلى مركز القيادة.")
     st.stop()
 
-# --- 3. واجهة المستخدم ---
+# --- 4. واجهة المستخدم ---
 st.title("💬 مركز الدعم الذكي MR7")
-st.markdown("<p style='text-align:center; color:#FFD700; font-size:22px; font-weight:bold; margin-top:-20px;'>صوتك مسموع في قلب المنظومة</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:20px; font-weight:bold; margin-top:-20px;'>نحن هنا لخدمة رؤيتك وتذليل العقبات</p>", unsafe_allow_html=True)
 
 st.divider()
 
 # بطاقة الوكيل
-st.markdown("""
+st.markdown(f"""
 <div class="agent-card">
     <div style="font-size: 60px;">🤖</div>
-    <div class="agent-title">أهلاً بك يا قائد، أنا وكيلك الذكي</div>
-    <p style="color: #FFFFFF; font-size: 1.2rem;">صف مشكلتك أو طلبك، وسأقوم بتحليله فوراً وتوجيهه للقسم المختص لضمان سرعة التنفيذ.</p>
+    <div style="color: {t['accent']}; font-size: 2rem; font-weight: 900;">أهلاً بك، أنا وكيلك الذكي</div>
+    <p>صف مشكلتك وسنقوم بحلها فوراً لضمان استمرار رحلتك نحو التريليون.</p>
 </div>
 """, unsafe_allow_html=True)
 
 # منطقة كتابة المشكلة
-problem_text = st.text_area("اكتب تفاصيل التذكرة هنا (مثال: أحتاج مساعدة في سحب الأرباح أو استفسار عن مسار المليار):", height=200)
+problem_text = st.text_area("اكتب تفاصيل التذكرة هنا:", height=150)
 
-if st.button("🚀 إرسال التذكرة فوراً"):
+if st.button("🚀 إرسال الطلب فوراً"):
     if problem_text:
-        play_support_sound("analyze")
-        with st.spinner("الوكيل الذكي يقوم بتحليل النص وتحديد الأولويات..."):
-            time.sleep(2)
-            
-            # منطق تحليل التصنيف
-            category = "عامة 📝"
-            if any(word in problem_text for word in ["دفع", "فلوس", "محفظة", "رصيد", "سحب", "دولار", "أرباح"]):
-                category = "مالية 💰"
-            elif any(word in problem_text for word in ["دورة", "شهادة", "درس", "اختبار", "مسار", "مليار"]):
-                category = "استراتيجية 🎓"
-            elif any(word in problem_text for word in ["تطبيق", "بطيء", "شاشة", "حساب", "خطأ", "لا يعمل"]):
-                category = "تقنية ⚙️"
-            
-            play_support_sound("send")
-            st.success("تم استلام تذكرتك وتوثيقها في قاعدة بيانات MR7!")
-            
-            st.markdown(f"""
-            <div class="agent-card" style="border-color: #FFD700; padding: 30px;">
-                <h3 style="color: #FFFFFF;">تقرير الوكيل الذكي</h3>
-                <p>لقد تم تصنيف طلبك كعملية: <span class="category-tag">{category}</span></p>
-                <p style="font-size: 0.9rem; color: #aaa;">رقم المرجع العالمي: REQ-{int(time.time())}</p>
-            </div>
-            """, unsafe_allow_html=True)
+        with st.spinner("جاري التحليل..."):
+            time.sleep(1.5)
+            st.success("تم استلام تذكرتك بنجاح وتوثيقها في النظام!")
+            st.balloons()
     else:
-        st.warning("الرجاء كتابة تفاصيل المشكلة قبل الإرسال.")
+        st.warning("الرجاء كتابة تفاصيل الطلب.")
 
-# الانتقال للوحة التحكم
-st.markdown("<br><br>", unsafe_allow_html=True)
-if st.button("📊 العودة للوحة التحكم الرئيسية"):
+# العودة
+st.markdown("<br>", unsafe_allow_html=True)
+if st.button("📊 العودة للرئيسية"):
     st.switch_page("app.py")
