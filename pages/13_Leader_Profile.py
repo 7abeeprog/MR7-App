@@ -102,17 +102,41 @@ st.markdown(f"""
         font-weight: 900;
     }}
 
-    /* حل مشكلة الكتابة باللون الأسود */
-    .stTextInput input {{
+    /* حل شامل لمشكلة وضوح الكتابة: نص أسود صريح على خلفية بيضاء في كافة الحالات */
+    .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 2px solid {t['border']} !important;
+        border-radius: 12px !important;
+        font-weight: bold !important;
+        opacity: 1 !important;
+    }}
+
+    /* ضمان بقاء النص أسود عند الوقوف أو الكتابة (Hover & Focus) */
+    .stTextInput input:hover, .stTextInput input:focus, 
+    .stTextArea textarea:hover, .stTextArea textarea:focus,
+    .stNumberInput input:hover, .stNumberInput input:focus {{
+        color: #000000 !important;
+        background-color: #FFFFFF !important;
+    }}
+    
+    /* تنسيق زر رفع الملفات والنصوص بداخلها لضمان الوضوح */
+    [data-testid="stFileUploader"] section {{
+        background-color: #FFFFFF !important;
+        border: 2px dashed {t['accent']} !important;
+        border-radius: 15px !important;
+    }}
+    [data-testid="stFileUploader"] section div {{
         color: #000000 !important;
         font-weight: bold !important;
     }}
-    
-    /* تنسيق زر رفع الملفات */
-    section[data-testid="stFileUploadDropzone"] {{
-        background: rgba(255,255,255,0.05);
-        border: 2px dashed {t['accent']};
+
+    .stButton>button {{
+        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
+        color: #000000 !important;
+        font-weight: 950 !important;
+        border-radius: 15px !important;
+        height: 55px;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -142,7 +166,6 @@ with st.sidebar:
     # ميزة رفع الصورة الشخصية
     uploaded_file = st.file_uploader("رفع صورة البروفايل:", type=["jpg", "jpeg", "png"])
     if uploaded_file is not None:
-        # تحويل الصورة إلى Base64 لعرضها في الـ HTML
         bytes_data = uploaded_file.getvalue()
         base64_img = base64.b64encode(bytes_data).decode()
         st.session_state.profile_pic_base64 = f"data:image/png;base64,{base64_img}"
@@ -156,7 +179,6 @@ with st.sidebar:
 # --- 4. واجهة ملف القائد ---
 st.title("👤 الملف الشخصي للقائد")
 
-# اختيار مصدر الصورة (المرفوعة أو الافتراضية)
 display_avatar = st.session_state.profile_pic_base64 if st.session_state.profile_pic_base64 else f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
 
 # القسم العلوي: الهوية والبصمة
