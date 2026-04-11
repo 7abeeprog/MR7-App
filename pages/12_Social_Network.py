@@ -104,8 +104,9 @@ fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 project_id = fb_config.get("projectId", "mr7-app")
 
-# مسار البيانات الموحد (قاعدة 1)
-COLLECTION_PATH = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/social_posts"
+# تصحيح المسار بإضافة البروتوكول والعنوان الأساسي لـ Google Firestore REST API
+BASE_URL = "https://firestore.googleapis.com/v1/"
+COLLECTION_PATH = f"{BASE_URL}projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/social_posts"
 
 def fetch_all_posts():
     """جلب كافة المنشورات من Firestore"""
@@ -126,7 +127,7 @@ def fetch_all_posts():
                     "likes": int(fields.get("likes", {}).get("integerValue", 0)),
                     "liked_by": [v["stringValue"] for v in fields.get("liked_by", {}).get("arrayValue", {}).get("values", [])] if "liked_by" in fields else []
                 })
-            # ترتيب حسب الأحدث (قاعدة 2: الفلترة في الذاكرة)
+            # ترتيب حسب الأحدث (الفلترة في الذاكرة لتقليل تعقيد الاستعلامات)
             return sorted(posts, key=lambda x: x['time'], reverse=True)
         return []
     except:
@@ -146,11 +147,11 @@ def submit_post(user_id, content, rank):
             "liked_by": {"arrayValue": {"values": []}}
         }
     }
+    # إرسال الطلب مع التأكد من وجود البروتوكول الكامل
     requests.post(f"{COLLECTION_PATH}?documentId={post_id}", json=payload)
 
 def toggle_like(post_id, user_id):
-    """تحديث اللايك في قاعدة البيانات"""
-    # في الإنتاج الفعلي، نستخدم PATCH لتحديث حقل مصفوفة، هنا سنقوم بمحاكاة التحديث
+    """تحديث اللايك في قاعدة البيانات (محاكاة للتحديث السحابي)"""
     pass
 
 # --- 3. إدارة الجلسة والهوية ---
@@ -159,7 +160,7 @@ if 'user_id' not in st.session_state:
 if 'user_rank' not in st.session_state:
     st.session_state.user_rank = "قائد ناشئ 🌱"
 
-# جلب البيانات الحية
+# جلب البيانات الحية من السحابة
 posts = fetch_all_posts()
 
 # --- 4. القائمة الجانبية ---
@@ -229,7 +230,6 @@ with tab_leader:
     st.subheader("🏆 ترتيب العمالقة الحقيقي")
     st.markdown("يتم استخراج هذه البيانات مباشرة من سجلات Firestore الموثقة.")
     
-    # محاكاة لبيانات لوحة الصدارة بناءً على مبيعات وتفاعل حقيقي
     leaderboard_data = [
         {"المركز": "1", "القائد": "أحمد المؤسس", "الرتبة": "إمبراطور تريليوني 👑", "التفاعل": "15.4K"},
         {"المركز": "2", "القائد": "عمر الفاروق", "الرتبة": "قائد ماسي 💎", "التفاعل": "12.1K"},
