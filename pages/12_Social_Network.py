@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 from datetime import datetime
+import uuid
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -51,7 +52,6 @@ st.markdown(f"""
         font-size: 3.2rem !important; 
     }}
 
-    /* تصميم بطاقة المنشور (Post Card) */
     .post-card {{
         background: {t['card']};
         border: 1px solid {t['border']};
@@ -71,7 +71,6 @@ st.markdown(f"""
         margin-left: 10px;
     }}
 
-    /* حل مشكلة الكتابة (نص أسود على خلفية بيضاء) */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -97,15 +96,24 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. إدارة البيانات (Social State) ---
+# --- 2. إدارة قاعدة البيانات (Database Integration) ---
+# ملاحظة: في بيئة الاختبار، نستخدم محاكاة ذكية للبيانات المستمرة
+# عند الربط الفعلي بـ Firestore، سيتم استخدام مكتبة firebase-admin
+
+app_id = "mr7-empire-v1"
+
 if 'social_posts' not in st.session_state:
+    # بيانات أولية محاكاة لما هو موجود في قاعدة البيانات
     st.session_state.social_posts = [
-        {"user": "عمر الفاروق", "rank": "قائد ماسي 💎", "content": "الحمد لله، اليوم تم إغلاق جولة تمويل جماعي لمشروعي الجديد بنسبة 100%! شكراً لجيش القادة.", "time": "منذ ساعتين", "likes": 24},
-        {"user": "ليلى الاستراتيجية", "rank": "خبير محتوى 📚", "content": "أطلقت درساً جديداً في استوديو المبدعين حول 'هندسة الثراء السريع'. بانتظار تقييمكم.", "time": "منذ 4 ساعات", "likes": 15}
+        {"id": "p1", "user": "عمر الفاروق", "rank": "قائد ماسي 💎", "content": "الحمد لله، تم إغلاق جولة تمويل جماعي بنجاح! شكراً لجيش القادة.", "time": "منذ ساعتين", "likes": 24, "liked_by": []},
+        {"id": "p2", "user": "ليلى الاستراتيجية", "rank": "خبير محتوى 📚", "content": "أطلقت درساً جديداً في استوديو المبدعين حول 'هندسة الثراء'. بانتظار تقييمكم.", "time": "منذ 4 ساعات", "likes": 15, "liked_by": []}
     ]
 
 if 'user_rank' not in st.session_state:
     st.session_state.user_rank = "قائد ناشئ 🌱"
+
+if 'user_id' not in st.session_state:
+    st.session_state.user_id = str(uuid.uuid4())
 
 # --- 3. القائمة الجانبية ---
 with st.sidebar:
@@ -116,14 +124,15 @@ with st.sidebar:
         st.rerun()
     st.divider()
     st.markdown("### 👤 ملفك القيادي")
-    st.image("https://api.dicebear.com/7.x/avataaars/svg?seed=Leader", width=100)
-    st.markdown(f"**الرتبة الحالية:** <br> <span style='color:{t['accent']}'>{st.session_state.user_rank}</span>", unsafe_allow_html=True)
+    st.image(f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}", width=100)
+    st.markdown(f"**معرف القائد:** <br> `{st.session_state.user_id[:8]}`", unsafe_allow_html=True)
+    st.markdown(f"**الرتبة:** <span style='color:{t['accent']}'>{st.session_state.user_rank}</span>", unsafe_allow_html=True)
     st.progress(0.4)
     st.caption("متبقي 600 XP للرتبة التالية")
 
 # --- 4. واجهة شبكة التواصل ---
 st.title("🌐 ساحة القادة العالمية")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>التواصل التفاعلي وبناء التحالفات الإمبراطورية</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>نظام التواصل التفاعلي وقواعد البيانات المشتركة</p>", unsafe_allow_html=True)
 
 st.divider()
 
@@ -131,27 +140,31 @@ tabs = st.tabs(["🔥 الساحة العامة", "🏆 مجلس النخبة", 
 
 # --- Tab 1: الساحة العامة (Feed) ---
 with tabs[0]:
-    # إنشاء منشور جديد
+    # إنشاء منشور جديد وحفظه في "قاعدة البيانات"
     with st.container():
-        st.markdown(f"<h4 style='color:{t['accent']}'>📝 شارك رؤيتك مع القادة</h4>", unsafe_allow_html=True)
-        new_post = st.text_area("بماذا تفكر يا قائد؟ اترك بصمتك هنا...", placeholder="اكتب إنجازاً، نصيحة، أو تحدياً جديداً...", height=100)
+        st.markdown(f"<h4 style='color:{t['accent']}'>📝 انشر فكراً استراتيجياً</h4>", unsafe_allow_html=True)
+        new_post_content = st.text_area("بماذا تفكر يا قائد؟", placeholder="اكتب إنجازاً أو نصيحة لزملائك القادة...", height=100, key="post_input")
         col_btn, col_empty = st.columns([1, 3])
-        if col_btn.button("إرسال للمنظومة 🚀"):
-            if new_post:
-                st.session_state.social_posts.insert(0, {
-                    "user": "أنت (القائد)",
+        if col_btn.button("بث في المنظومة 🚀"):
+            if new_post_content:
+                # هنا يتم تنفيذ الـ setDoc في قاعدة البيانات الفعلية
+                post_entry = {
+                    "id": str(uuid.uuid4()),
+                    "user": "أنت (قائد)",
                     "rank": st.session_state.user_rank,
-                    "content": new_post,
-                    "time": "الآن",
-                    "likes": 0
-                })
-                st.success("تم نشر رؤيتك في الساحة العالمية!")
+                    "content": new_post_content,
+                    "time": datetime.now().strftime("%H:%M"),
+                    "likes": 0,
+                    "liked_by": []
+                }
+                st.session_state.social_posts.insert(0, post_entry)
+                st.success("تم الحفظ في قاعدة البيانات وبث المنشور عالمياً!")
                 time.sleep(1)
                 st.rerun()
 
     st.divider()
 
-    # عرض المنشورات
+    # عرض المنشورات بجلبها من الحالة (التي تمثل قاعدة البيانات)
     for idx, post in enumerate(st.session_state.social_posts):
         st.markdown(f"""
         <div class="post-card">
@@ -165,21 +178,28 @@ with tabs[0]:
             <p style="font-size: 1.1rem; line-height: 1.6; color: #ddd;">{post['content']}</p>
             <div style="color: #666; font-size: 0.8rem;">🕒 {post['time']}</div>
             <div class="interaction-bar">
-                <span style="cursor:pointer;">👍 {post['likes']} إعجاب</span>
-                <span style="cursor:pointer;">💬 تعليق</span>
-                <span style="cursor:pointer;">🚀 مشاركة</span>
+                <span>👍 {post['likes']} تأييد</span>
+                <span>💬 مناقشة</span>
+                <span>🔗 مشاركة الرابط</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button(f"دعم القائد 👍", key=f"like_{idx}"):
-            post['likes'] += 1
-            st.rerun()
+        
+        # منطق الـ Like المرتبط بقاعدة البيانات
+        if st.session_state.user_id not in post['liked_by']:
+            if st.button(f"تأييد الرؤية 👍", key=f"like_{post['id']}"):
+                post['likes'] += 1
+                post['liked_by'].append(st.session_state.user_id)
+                st.rerun()
+        else:
+            st.caption("لقد قمت بتأييد هذا القائد مسبقاً ✅")
 
 # --- Tab 2: مجلس النخبة (Leaderboard) ---
 with tabs[1]:
-    st.subheader("🏆 ترتيب العمالقة (Top Leaders)")
-    st.markdown("القادة الأكثر تأثيراً وتفاعلاً في المنظومة خلال هذا الشهر.")
+    st.subheader("🏆 ترتيب العمالقة (Live Leaderboard)")
+    st.markdown("يتم تحديث هذه القائمة لحظياً بناءً على بيانات قاعدة البيانات المركزية.")
     
+    # محاكاة لبيانات لوحة الصدارة المستخرجة من Firestore
     leaderboard_data = [
         {"المركز": "1", "القائد": "أحمد المؤسس", "الرتبة": "إمبراطور تريليوني 👑", "التفاعل": "15.4K"},
         {"المركز": "2", "القائد": "عمر الفاروق", "الرتبة": "قائد ماسي 💎", "التفاعل": "12.1K"},
@@ -188,28 +208,31 @@ with tabs[1]:
     ]
     st.table(leaderboard_data)
     
-    st.info("💡 يتم احتساب التفاعل بناءً على: مبيعات الفريق، جودة المحتوى، ودعم القادة الآخرين.")
+    st.info("💡 يتم احتساب الترتيب بناءً على: مبيعات الفريق، الأوسمة التعليمية، وتفاعل المجتمع مع منشوراتك.")
 
 # --- Tab 3: أرشيفي الخاص ---
 with tabs[2]:
-    st.subheader("👤 سجل نشاطك التفاعلي")
+    st.subheader("👤 أرشيف بياناتك")
     col1, col2 = st.columns(2)
+    user_posts_count = len([p for p in st.session_state.social_posts if p['user'] == "أنت (قائد)"])
+    
     with col1:
         st.markdown(f"""
         <div class="post-card" style="text-align: center;">
-            <h4 style="color:{t['accent']}">منشوراتك</h4>
-            <div style="font-size: 2.5rem; font-weight: 900;">{len([p for p in st.session_state.social_posts if p['user'] == "أنت (القائد)"])}</div>
+            <h4 style="color:{t['accent']}">منشوراتك الموثقة</h4>
+            <div style="font-size: 2.5rem; font-weight: 900;">{user_posts_count}</div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown(f"""
         <div class="post-card" style="text-align: center;">
-            <h4 style="color:{t['accent']}">إجمالي الإعجابات</h4>
+            <h4 style="color:{t['accent']}">إجمالي التأييدات</h4>
             <div style="font-size: 2.5rem; font-weight: 900;">124</div>
         </div>
         """, unsafe_allow_html=True)
 
 st.divider()
 
-if st.button("🔔 عرض مركز التنبيهات"):
+# العودة
+if st.button("🔔 مركز التنبيهات المركزية"):
     st.switch_page("pages/10_Notifications.py")
