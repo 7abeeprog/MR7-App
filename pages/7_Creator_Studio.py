@@ -58,18 +58,9 @@ st.markdown(f"""
         margin-bottom: 25px;
         transition: 0.4s ease;
     }}
-    .studio-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
 
-    .stButton>button {{
-        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
-        color: #000000 !important;
-        font-weight: 950 !important;
-        border-radius: 15px !important;
-        height: 60px;
-    }}
-
-    /* حل مشكلة الكتابة (أبيض على أبيض) - جعل الخلفية بيضاء والنص أسود */
-    .stTextInput input, .stTextArea textarea, .stNumberInput input {{
+    /* حل مشكلة الكتابة (نص أسود على خلفية بيضاء) */
+    .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
         border: 2px solid {t['border']} !important;
@@ -77,13 +68,53 @@ st.markdown(f"""
         font-weight: bold !important;
     }}
     
-    /* تحسين شكل القوائم المنسدلة */
-    div[data-baseweb="select"] > div {{ background-color: {t['select_bg']} !important; color: {t['select_text']} !important; }}
-    div[data-baseweb="popover"] li {{ color: {t['select_text']} !important; background-color: {t['select_bg']} !important; }}
+    /* تنسيق الرتب والأوسمة */
+    .rank-badge {{
+        background: linear-gradient(135deg, {t['accent']}, #FFFFFF);
+        color: #000 !important;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 900;
+        display: inline-block;
+        margin: 10px 0;
+        box-shadow: 0 0 15px {t['accent']};
+    }}
+
+    .badge-container {{
+        text-align: center;
+        padding: 20px;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid {t['border']};
+        transition: 0.3s;
+    }}
+    .badge-container:hover {{ transform: scale(1.05); border-color: #00FF88; }}
+
+    .stButton>button {{
+        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
+        color: #000000 !important;
+        font-weight: 950 !important;
+        border-radius: 15px !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. القائمة الجانبية ---
+# --- 2. إدارة البيانات (Gamification Stats) ---
+if 'creator_xp' not in st.session_state:
+    st.session_state.creator_xp = 1250
+if 'sections' not in st.session_state:
+    st.session_state.sections = [{"title": "القسم التمهيدي", "lessons": []}]
+
+# دالة لتحديد رتبة المبدع
+def get_rank(xp):
+    if xp < 500: return "مبدع ناشئ 🌱", "🥉"
+    if xp < 2000: return "خبير محتوى 📚", "🥈"
+    if xp < 5000: return "ماستر استراتيجي 💎", "🥇"
+    return "أسطورة التريليون 👑", "🌌"
+
+rank_name, rank_icon = get_rank(st.session_state.creator_xp)
+
+# --- 3. القائمة الجانبية ---
 with st.sidebar:
     st.markdown(f"### 🎨 تخصيص المظهر")
     theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
@@ -91,138 +122,140 @@ with st.sidebar:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
-    st.markdown("### 🛠️ حالة الاستوديو")
-    st.info("سعة التخزين: 10GB / 50GB")
-    st.success("حساب صانع محتوى موثق ✅")
+    st.markdown(f"### 🏆 مركز قوتك")
+    st.markdown(f"<div class='rank-badge'>{rank_icon} {rank_name}</div>", unsafe_allow_html=True)
+    st.progress(min(st.session_state.creator_xp / 5000, 1.0))
+    st.caption(f"نقاط الخبرة الحالية: {st.session_state.creator_xp} XP")
 
-# --- 3. واجهة استوديو بناء المحتوى ---
+# --- 4. واجهة الاستوديو ---
 st.title("🎬 استوديو بناء المحتوى")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>صمم دورتك، ارفع فيديوهاتك، واقبض بعملتك المحلية</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>نظام هندسة المناهج المتكامل والأوسمة القيادية</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# إدارة تبويبات الاستوديو
-tabs = st.tabs(["🏗️ بناء دورة جديدة", "📊 أداء المحتوى", "📦 مكتبة الوسائط", "💡 نصائح الإبداع"])
+tabs = st.tabs(["🏗️ هيكلة الدورة", "📝 الاختبارات", "📜 الشهادات والترقية", "📊 الأداء والجيميفيكيشن"])
 
-# --- Tab 1: بناء دورة جديدة ---
+# --- Tab 1: هيكلة الدورة ---
 with tabs[0]:
-    st.subheader("🏗️ مصنع الدورات الاستراتيجية")
+    st.subheader("🏗️ مصنع المناهج الاحترافي")
     
-    with st.container():
-        st.markdown(f"""
-        <div class="studio-card">
-            <h4 style="color: {t['accent']};">1. أساسيات الدورة والعملة</h4>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        c_name = st.text_input("عنوان الدورة الاستراتيجي:")
-        c_desc = st.text_area("وصف القيمة المضافة للمتدربين:")
-        
-        col_price, col_curr = st.columns([2, 1])
+    with st.expander("⚙️ إعدادات الهوية المالية", expanded=True):
+        c_title = st.text_input("اسم الدورة العالمي (للمتجر):")
+        col_curr, col_price = st.columns([1, 2])
         with col_curr:
-            currency_opt = st.selectbox("اختر عملة الحجز:", ["الجنيه المصري (EGP)", "الدولار (USD)", "الريال السعودي (SAR)", "الدرهم الإماراتي (AED)"])
-            currency_symbol = currency_opt.split('(')[1].replace(')', '')
+            currency = st.selectbox("العملة المحلية:", ["EGP (جنيه مصري)", "USD (دولار)", "SAR (ريال سعودي)"])
+            sym = currency.split(' ')[0]
         with col_price:
-            c_price = st.number_input(f"سعر الدورة المخطط له ({currency_symbol}):", min_value=1, value=1000 if "EGP" in currency_opt else 100)
-        
-    st.markdown("<br>", unsafe_allow_html=True)
+            st.number_input(f"سعر البيع المقترح ({sym}):", min_value=0)
+
+    st.markdown("---")
+    
+    for s_idx, section in enumerate(st.session_state.sections):
+        with st.container():
+            st.markdown(f"<div class='studio-card' style='border-right: 5px solid {t['accent']};'>", unsafe_allow_html=True)
+            section['title'] = st.text_input(f"عنوان القسم {s_idx + 1}:", value=section['title'], key=f"s_{s_idx}")
+            
+            for l_idx, lesson in enumerate(section['lessons']):
+                with st.expander(f"📖 الدرس {l_idx + 1}: {lesson.get('title', 'غير معنون')}"):
+                    lesson['title'] = st.text_input("عنوان الدرس:", key=f"lt_{s_idx}_{l_idx}")
+                    lesson['yt'] = st.text_input("رابط يوتيوب (Video ID or Link):", key=f"ly_{s_idx}_{l_idx}")
+                    if lesson['yt']:
+                        st.video(lesson['yt'])
+            
+            if st.button(f"➕ إضافة درس جديد للقسم {s_idx + 1}", key=f"al_{s_idx}"):
+                section['lessons'].append({"title": "درس جديد", "yt": ""})
+                st.session_state.creator_xp += 15
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    if st.button("➕ إضافة قسم استراتيجي جديد"):
+        st.session_state.sections.append({"title": "قسم جديد", "lessons": []})
+        st.session_state.creator_xp += 50
+        st.rerun()
+
+# --- Tab 2: الاختبارات ---
+with tabs[1]:
+    st.subheader("📝 تصميم اختبارات التميز")
+    st.info("قم بوضع أسئلة ذكية لقياس استيعاب المتدربين لعمق المنظومة.")
     
     with st.container():
-        st.markdown(f"""
-        <div class="studio-card">
-            <h4 style="color: {t['accent']};">2. هيكلة المحتوى (روابط يوتيوب)</h4>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div class='studio-card'>", unsafe_allow_html=True)
+        q_text = st.text_input("نص السؤال القيادي:")
+        c1, c2 = st.columns(2)
+        ans1 = c1.text_input("الخيار الأول:")
+        ans2 = c2.text_input("الخيار الثاني:")
+        correct = st.selectbox("حدد الإجابة الصحيحة لتفعيل التصحيح التلقائي:", [ans1, ans2])
         
-        lesson_count = st.number_input("عدد الدروس المخطط لها:", min_value=1, max_value=50, value=3)
-        
-        for i in range(lesson_count):
-            with st.expander(f"📖 الدرس رقم {i+1}"):
-                st.text_input(f"عنوان الدرس {i+1}:", key=f"l_title_{i}")
-                yt_link = st.text_input(f"رابط فيديو اليوتيوب للدرس {i+1}:", placeholder="https://www.youtube.com/watch?v=...", key=f"l_link_{i}")
-                
-                if yt_link:
-                    try:
-                        st.video(yt_link)
-                        st.caption("✅ معاينة الفيديو نشطة")
-                    except:
-                        st.error("⚠️ رابط الفيديو غير صالح")
-                
-                st.text_area(f"ملخص سريع أو ملاحظات للدرس {i+1}:", key=f"l_desc_{i}")
+        if st.button("📥 حفظ السؤال +30 XP"):
+            st.session_state.creator_xp += 30
+            st.success("تم إضافة السؤال وتحديث رصيد خبرتك!")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# --- Tab 3: الشهادات والترقية (Promotion System) ---
+with tabs[2]:
+    st.subheader("📜 نظام الشهادات والترقية التلقائي")
+    
+    col_st, col_inst = st.columns(2)
+    
+    with col_st:
+        st.markdown("#### 🎓 للمتدرب")
+        st.write("حدد شروط الحصول على وسام الإتمام:")
+        st.checkbox("اجتياز الاختبار بنسبة 80% فأكثر", value=True)
+        st.checkbox("مشاهدة 100% من فيديوهات الدورة")
+        if st.button("👁️ معاينة شهادة المتدرب"):
+            st.markdown(f"""
+            <div style="background: white; color: black; padding: 40px; border: 10px solid {t['accent']}; text-align: center; border-radius: 10px;">
+                <h1 style="color: black !important; font-size: 30px !important;">شهادة استحقاق MR7</h1>
+                <p>تمنح للمتدرب المثالي تقديراً لإتمامه:</p>
+                <h2 style="color: {t['accent']} !important;">{c_title if c_title else 'دورة القيادة'}</h2>
+                <p>توقيع الإدارة</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    with col_inst:
+        st.markdown("#### 👑 للمدرب (ترقية الرتبة)")
+        st.write("متطلبات الرتبة التالية:")
+        st.write("- **الهدف:** الوصول لـ 2000 XP")
+        st.write("- **المتبقي:** 750 XP")
+        st.write("- **الامتيازات:** ظهور دورتك في الصفحة الأولى للمتجر.")
+
+# --- Tab 4: الأداء والجيميفيكيشن (Badges) ---
+with tabs[3]:
+    st.subheader("📊 لوحة الأوسمة والإنجازات")
+    
+    # أوسمة المدرب
+    st.markdown("### 🎖️ أوسمة المبدع (Instructor Badges)")
+    c1, c2, c3, c4 = st.columns(4)
+    
+    with c1:
+        st.markdown("<div class='badge-container'>🥇<br><b>مؤسس المناهج</b><br><small>إنشاء أول دورة</small></div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown("<div class='badge-container'>👥<br><b>المعلم الملهم</b><br><small>100+ طالب</small></div>", unsafe_allow_html=True)
+    with c3:
+        st.markdown("<div class='badge-container' style='opacity: 0.3;'>💰<br><b>تاجر التريليون</b><br><small>أرباح $10k+</small></div>", unsafe_allow_html=True)
+    with c4:
+        st.markdown("<div class='badge-container'>⭐<br><b>الجودة الفائقة</b><br><small>تقييم 5 نجوم</small></div>", unsafe_allow_html=True)
 
     st.divider()
-    if st.button("🚀 إطلاق الدورة للنشر العالمي"):
-        with st.spinner("جاري التحقق من الروابط وتنسيق العرض..."):
-            time.sleep(2)
-            st.success(f"تم إرسال دورتك بنجاح بسعر {c_price} {currency_symbol}! سيتم عرضها في المركز التجاري فوراً.")
-            st.balloons()
-
-# --- Tab 2: أداء المحتوى ---
-with tabs[1]:
-    st.subheader("📊 إحصائيات صناعة التأثير")
-    col1, col2, col3 = st.columns(3)
     
-    with col1:
-        st.markdown(f"""
-        <div class="studio-card">
-            <p>إجمالي المتدربين</p>
-            <div style="font-size: 2rem; color: #00FF88;">452</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f"""
-        <div class="studio-card">
-            <p>أرباح المحتوى</p>
-            <div style="font-size: 2rem; color: {t['accent']};">{c_price * 12} {currency_symbol}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col3:
-        st.markdown(f"""
-        <div class="studio-card">
-            <p>تقييم الجودة</p>
-            <div style="font-size: 2rem; color: #00FF88;">4.9 / 5</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("#### 📈 الرسم البياني للمبيعات")
-    st.line_chart([10, 25, 45, 30, 60, 85, 120])
-
-# --- Tab 3: مكتبة الوسائط ---
-with tabs[2]:
-    st.subheader("📦 أرشيف الروابط والملفات")
-    st.info("هنا يتم حفظ كافة الروابط والملفات المرجعية لدوراتك.")
-    
-    files = [
-        {"الاسم": "مقدمة_القيادة (YT)", "الرابط": "youtube.com/...", "النوع": "Video Link"},
-        {"الاسم": "خطة_العمل.pdf", "الحجم": "2MB", "النوع": "Document"},
-    ]
-    st.table(files)
-
-# --- Tab 4: نصائح الإبداع ---
-with tabs[3]:
-    st.subheader("💡 أسرار إنتاج المحتوى الملياري")
-    
-    st.markdown(f"""
-    <div class="studio-card" style="border-color: {t['accent']};">
-        <h4 style="color: {t['accent']};">قاعدة الـ 10 دقائق ⏱️</h4>
-        <p>اجعل فيديوهات اليوتيوب الخاصة بك مقسمة لفقرات. المتدرب يفضل الفيديوهات القصيرة والمركزة.</p>
-    </div>
-    
-    <div class="studio-card" style="border-color: #00FF88;">
-        <h4 style="color: #00FF88;">العملة المحلية تزيد الثقة 💵</h4>
-        <p>استخدام الجنيه المصري (EGP) للجمهور المحلي يسهل عمليات الحجز والتحصيل ويزيد من معدل التحويل.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # أوسمة المتدرب (كيف يراها المدرب)
+    st.markdown("### 🎓 أوسمة المتدربين (Student Badges)")
+    st.info("هذه الأوسمة تمنح تلقائياً لطلابك لتحفيزهم على الإكمال.")
+    sc1, sc2, sc3 = st.columns(3)
+    with sc1:
+        st.markdown("<div class='badge-container'>🚀<br><b>المنطلق السريع</b><br><small>إكمال أول قسم في يوم</small></div>", unsafe_allow_html=True)
+    with sc2:
+        st.markdown("<div class='badge-container'>🧠<br><b>العقل الذهبي</b><br><small>100% في الاختبار</small></div>", unsafe_allow_html=True)
+    with sc3:
+        st.markdown("<div class='badge-container'>💬<br><b>القائد المتفاعل</b><br><small>أكثر من 10 تعليقات</small></div>", unsafe_allow_html=True)
 
 st.divider()
 
-# العودة أو الانتقال للأدمن
-c_back, c_next = st.columns(2)
-with c_back:
-    if st.button("👥 العودة لإدارة الفرق"):
-        st.switch_page("pages/6_Teams.py")
-with c_next:
-    if st.button("👑 لوحة التحكم العليا (Admin)"):
-        st.switch_page("pages/8_Admin_Panel.py")
+if st.button("🚀 نشر الدورة وتوزيع الأوسمة"):
+    with st.spinner("جاري برمجة نظام المكافآت ورفع المحتوى..."):
+        time.sleep(2)
+        st.balloons()
+        st.success("تم النشر بنجاح! دورتك الآن تدعم نظام الجيميفيكيشن بالكامل.")
+
+if st.button("👑 الانتقال للوحة التحكم العليا (Admin)"):
+    st.switch_page("pages/8_Admin_Panel.py")
