@@ -4,33 +4,57 @@ import time
 # --- 1. إعدادات التصميم الإبداعي (Ultra-High Contrast Elite UI) ---
 st.markdown("""
     <style>
-    /* تحسين الخلفية العامة وجعل الخطوط بيضاء تماماً */
-    .main {
+    /* تحسين الخلفية العامة وجعلها سوداء عميقة */
+    .stApp {
         background-color: #000000 !important;
-        color: #FFFFFF !important;
     }
     
-    /* جعل كل النصوص الافتراضية بيضاء باستثناء العنوان الرئيسي */
-    div[data-testid="stMarkdownContainer"] p, h2, h3, span {
+    /* ضبط ألوان القائمة الجانبية (Sidebar) */
+    [data-testid="stSidebar"] {
+        background-color: #0a0a0a !important;
+        border-right: 1px solid #333 !important;
+    }
+    [data-testid="stSidebar"] * {
+        color: #ffffff !important;
+    }
+    [data-testid="stSidebarNav"] {
+        background-color: #0a0a0a !important;
+    }
+
+    /* تحسين الخطوط العامة لتكون بيضاء ناصعة */
+    div[data-testid="stMarkdownContainer"] p, h2, h3, span, label {
         color: #FFFFFF !important;
     }
 
-    /* تصميم خاص للعنوان الرئيسي (st.title) ليصبح ذهبياً متوهجاً */
+    /* تصميم العنوان الرئيسي (st.title) - ذهبي ملكي متوهج وواضح جداً */
     h1 {
         background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 950 !important;
         text-align: center;
-        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
-        padding-bottom: 20px;
+        filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+        padding-top: 10px;
+        padding-bottom: 10px;
+        font-size: 3rem !important;
     }
 
-    /* بطاقة الرؤية - تصميم زجاجي بحدود ذهبية مضيئة */
+    /* تصميم الوصف الفرعي تحت العنوان */
+    .subtitle-text {
+        text-align: center;
+        font-size: 1.5rem !important;
+        color: #FFD700 !important;
+        font-weight: bold;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        margin-top: -20px;
+        margin-bottom: 30px;
+    }
+
+    /* بطاقة الرؤية - تصميم زجاجي */
     .vision-card {
         background: rgba(30, 30, 30, 0.9);
         backdrop-filter: blur(25px);
-        padding: 60px;
+        padding: 50px;
         border-radius: 40px;
         border: 2px solid #FFD700;
         box-shadow: 0 0 50px rgba(255, 215, 0, 0.25);
@@ -38,41 +62,40 @@ st.markdown("""
         text-align: center;
     }
     
-    /* نصوص براقة عالية التباين (أبيض مع توهج ذهبي) */
+    /* نصوص براقة عالية التباين */
     .glitter-text {
         background: linear-gradient(90deg, #FFFFFF, #FFD700, #FFFFFF);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 900;
-        font-size: 45px;
+        font-size: 40px;
         text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
     }
 
-    /* إصلاح ألوان الاختيارات (Radio Buttons) لتكون بيضاء وواضحة جداً */
+    /* إصلاح ألوان الاختيارات (Radio Buttons) لتعمل فوق الخلفية السوداء */
     .stRadio > div {
-        gap: 25px;
-        padding: 15px;
+        gap: 20px;
+        padding: 10px;
     }
     .stRadio label {
         background: #111111 !important;
         border: 2px solid #444 !important;
-        padding: 30px 45px !important;
+        padding: 25px 35px !important;
         border-radius: 20px !important;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        transition: all 0.3s ease !important;
         width: 100%;
         color: #FFFFFF !important; 
         font-weight: 900 !important;
-        font-size: 24px !important;
+        font-size: 20px !important;
         display: flex !important;
         align-items: center !important;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.8) !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.8) !important;
     }
     
     .stRadio label:hover {
         border-color: #00FF88 !important;
         background: #1A1A1A !important;
-        transform: scale(1.03) translateX(5px);
-        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3) !important;
+        transform: scale(1.02);
         color: #00FF88 !important;
     }
     
@@ -80,41 +103,37 @@ st.markdown("""
         border-color: #FFD700 !important;
         background: #222222 !important;
         color: #FFD700 !important;
-        box-shadow: 0 0 40px rgba(255, 215, 0, 0.4) !important;
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.3) !important;
     }
 
-    div[data-testid="stMarkdownContainer"] [data-testid="stWidgetLabel"] {
-        color: #FFFFFF !important;
-    }
-    
+    /* زر التثبيت العملاق */
     .stButton>button {
         background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
         color: #000000 !important;
         border: none !important;
-        height: 90px !important;
-        font-size: 30px !important;
+        height: 80px !important;
+        font-size: 26px !important;
         font-weight: 900 !important;
-        border-radius: 25px !important;
-        box-shadow: 0 20px 50px rgba(184, 134, 11, 0.5) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 15px 40px rgba(184, 134, 11, 0.5) !important;
         text-transform: uppercase;
-        letter-spacing: 2px;
     }
     .stButton>button:hover {
-        transform: translateY(-12px);
-        box-shadow: 0 30px 70px rgba(255, 215, 0, 0.7) !important;
-        filter: brightness(1.1);
+        transform: translateY(-10px);
+        box-shadow: 0 25px 60px rgba(255, 215, 0, 0.7) !important;
     }
 
+    /* شريط التقدم */
     .stProgress > div > div > div > div {
         background-color: #FFD700;
-        box-shadow: 0 0 30px #FFD700;
+        box-shadow: 0 0 20px #FFD700;
     }
     </style>
 
     <script>
     function playSfx(url) {
         const audio = new Audio(url);
-        audio.volume = 0.6;
+        audio.volume = 0.5;
         audio.play().catch(e => console.log('Audio Blocked:', e));
     }
 
@@ -137,55 +156,61 @@ def play_epic_sound(sound_key="select"):
         <audio autoplay><source src="{sounds[sound_key]}" type="audio/mpeg"></audio>
     """, height=0)
 
+# --- 2. التحقق من الدخول ---
 if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
     st.warning("الرجاء تسجيل الدخول من الصفحة الرئيسية أولاً.")
     st.stop()
 
+# --- 3. إدارة حالة الصفحة ---
 if 'v_step' not in st.session_state:
     st.session_state.v_step = 1
     st.session_state.v_cat = None
     st.session_state.v_goal = None
 
+# --- 4. واجهة المستخدم ---
 st.title("🏛️ مجمع الرؤية الاستراتيجية")
-st.markdown("<p style='text-align:center; font-size:26px; color:#FFD700; font-weight:bold; text-shadow: 0 0 10px rgba(255,215,0,0.4);'>صناعة الاستحقاق القيادي لمنظومة MR7</p>", unsafe_allow_html=True)
+st.markdown('<p class="subtitle-text">صناعة الاستحقاق القيادي لمنظومة MR7</p>', unsafe_allow_html=True)
 
+# شريط التقدم الذهبي
 p_val = {1: 15, 2: 60, 3: 100}.get(st.session_state.v_step, 100)
 st.progress(p_val)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
+# المرحلة الأولى: اختيار التصنيف
 if st.session_state.v_step == 1:
-    st.markdown("<h3 style='text-align:center; color: #FFFFFF;'>1️⃣ اختر قطاع السيادة الكوني</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center;'>1️⃣ اختر قطاع السيادة الكوني</h3>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     
     with c1:
-        if st.button("💰\nالمالي", key="btn_money_v4"):
+        if st.button("💰\nالمالي", key="btn_money_final"):
             play_epic_sound("select")
             st.session_state.v_cat = "مالي"
             st.session_state.v_step = 2
             st.rerun()
     with c2:
-        if st.button("🎓\nالتعليمي", key="btn_edu_v4"):
+        if st.button("🎓\nالتعليمي", key="btn_edu_final"):
             play_epic_sound("select")
             st.session_state.v_cat = "تعليمي"
             st.session_state.v_step = 2
             st.rerun()
     with c3:
-        if st.button("✈️\nالسفر", key="btn_travel_v4"):
+        if st.button("✈️\nالسفر", key="btn_travel_final"):
             play_epic_sound("select")
             st.session_state.v_cat = "سفر"
             st.session_state.v_step = 2
             st.rerun()
     with c4:
-        if st.button("❤️\nالعاطفي", key="btn_emo_v4"):
+        if st.button("❤️\nالعاطفي", key="btn_emo_final"):
             play_epic_sound("select")
             st.session_state.v_cat = "عاطفي"
             st.session_state.v_step = 2
             st.rerun()
 
+# المرحلة الثانية: اختيار مستوى الطموح
 elif st.session_state.v_step == 2:
     cat = st.session_state.v_cat
-    st.markdown(f"<h3 style='text-align:center; color: #FFFFFF;'>2️⃣ مسار الـ {cat}: حدد درجتك في الهرم</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align:center;'>2️⃣ مسار الـ {cat}: حدد درجتك في الهرم</h3>", unsafe_allow_html=True)
     
     levels = {
         "مالي": [
@@ -227,28 +252,28 @@ elif st.session_state.v_step == 2:
             st.session_state.v_step = 3
             st.rerun()
 
+# المرحلة الثالثة: النتيجة النهائية
 elif st.session_state.v_step == 3:
     st.balloons()
     st.markdown(f"""
     <div class="vision-card">
-        <div style='font-size: 100px; margin-bottom: 20px;'>✨</div>
+        <div style='font-size: 80px; margin-bottom: 20px;'>⚡</div>
         <h2 class="glitter-text">لقد وُلدت رؤية التريليون</h2>
-        <p style='font-size: 42px; color: #FFFFFF; font-weight: 900; text-shadow: 0 0 20px #FFD700;'>{st.session_state.v_goal}</p>
-        <div style='height: 6px; background: linear-gradient(90deg, transparent, #00FF88, transparent); margin: 40px 0;'></div>
-        <p style='color: #FFFFFF; font-size: 26px; line-height: 1.8; font-weight: 600; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px;'>
-        "من هذه اللحظة، أنت قائد يمتلك خارطة طريق كونية. 
-        لقد أعدنا ضبط بوصلة التطبيق لتوجهك نحو هذا الاستحقاق العظيم بكل قوة."
+        <p style='font-size: 38px; color: #FFFFFF; font-weight: 900; text-shadow: 0 0 20px #FFD700;'>{st.session_state.v_goal}</p>
+        <div style='height: 6px; background: linear-gradient(90deg, transparent, #00FF88, transparent); margin: 35px 0;'></div>
+        <p style='color: #FFFFFF; font-size: 24px; line-height: 1.8; font-weight: 600;'>
+        "من هذه اللحظة، أنت قائد يمتلك بوصلة كونية. لقد أعددنا ضبط أنظمة MR7 لخدمة هذا الهدف العظيم."
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    col_back, col_next = st.columns(2)
-    with col_back:
+    c_back, c_next = st.columns(2)
+    with c_back:
         if st.button("🔄 إعادة الصياغة"):
             play_epic_sound("select")
             st.session_state.v_step = 1
             st.rerun()
-    with col_next:
+    with c_next:
         if st.button("🚀 انطلق لمركز التدريب الآن"):
             play_epic_sound("next")
             st.switch_page("pages/1_Education.py")
