@@ -59,6 +59,15 @@ st.markdown(f"""
         text-align: center;
     }}
 
+    .level-box {{
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid {t['accent']};
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        text-align: center;
+    }}
+
     /* حل مشكلة الكتابة (نص أسود على خلفية بيضاء) لضمان الوضوح التام */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
@@ -148,57 +157,85 @@ with tabs[1]:
         st.write("- باقة 'أدوات الانتشار' (التاجر: سارة) - **[معاينة]**")
         st.button("الموافقة على جميع الطلبات المستوفية للشروط")
 
-# --- Tab 3: هندسة العمولات (Commission Engineering) ---
+# --- Tab 3: هندسة العمولات متعددة المستويات (MLM System) ---
 with tabs[2]:
-    st.subheader("💹 إدارة نظام العمولات الذكي")
-    st.markdown("تحكم في نسب الأرباح والمكافآت لتجار وقادة المنظومة.")
+    st.subheader("💹 هندسة العمولات متعددة المستويات")
+    st.markdown("قم بتصميم هيكلية الأرباح التضاعفية للمنظومة.")
     
-    with st.container():
-        st.markdown("<div class='admin-card'>", unsafe_allow_html=True)
-        col_c1, col_c2 = st.columns(2)
-        with col_c1:
-            st.markdown("#### إعدادات العمولة العامة")
-            gen_rate = st.number_input("نسبة العمولة الأساسية للمسوقين (%):", value=10)
-            vip_rate = st.number_input("نسبة العمولة للقادة الموثقين (%):", value=20)
-        with col_c2:
-            st.markdown("#### تخصيص حسب المنتج")
-            target_prod = st.selectbox("اختر المنتج لتخصيص عمولته:", ["باقة القائد البلاتيني", "دورة عقلية المليار", "اشتراك الوكيل الذكي"])
-            spec_rate = st.number_input(f"عمولة {target_prod} (%):", value=15)
-        
-        if st.button("💾 حفظ إعدادات العمولات الاستراتيجية"):
-            st.success("تم تحديث هيكلية العمولات في كامل المنظومة.")
-        st.markdown("</div>", unsafe_allow_html=True)
+    # اختيار نوع النظام
+    sys_type = st.radio("نوع إعدادات العمولات:", ["النظام الأساسي (الافتراضي)", "تخصيص حسب المنتج"], horizontal=True)
+    
+    if sys_type == "تخصيص حسب المنتج":
+        selected_prod = st.selectbox("اختر المنتج لتعديل عمولاته:", ["باقة القائد البلاتيني", "دورة عقلية المليار", "اشتراك الوكيل الذكي"])
+        st.info(f"أنت الآن تقوم بتخصيص عمولات: {selected_prod}")
 
-# --- Tab 4: روابط الإحالة (Referral Management) ---
+    # تحديد عدد المستويات
+    num_levels = st.number_input("حدد عدد مستويات العمولة:", min_value=1, max_value=15, value=7)
+    
+    # القيم الافتراضية للنظام الأساسي (7 مستويات)
+    default_rates = [10.0, 5.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    
+    st.markdown("#### ضبط نسب المستويات (%)")
+    level_cols = st.columns(4)
+    final_rates = []
+    
+    for i in range(num_levels):
+        col_idx = i % 4
+        with level_cols[col_idx]:
+            # استخدام القيمة الافتراضية إذا كان المستوى ضمن الـ 7 الأوائل
+            default_val = default_rates[i] if i < len(default_rates) else 0.5
+            rate = st.number_input(f"المستوى {i+1}", min_value=0.0, max_value=100.0, value=default_val, step=0.5, key=f"lvl_rate_{i}")
+            final_rates.append(rate)
+            
+    st.divider()
+    
+    # ملخص التوزيع المالي
+    total_commission = sum(final_rates)
+    st.markdown(f"""
+    <div style="background: rgba(0, 255, 136, 0.1); border: 2px solid #00FF88; padding: 20px; border-radius: 15px; text-align: center;">
+        <h3 style="color: #00FF88; margin: 0;">إجمالي نسبة التوزيع المالي: {total_commission}%</h3>
+        <p style="margin: 5px 0 0 0;">سيتم خصم هذه النسبة من سعر البيع لتوزيعها على شجرة الإحالة.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("💾 حفظ وتطبيق هيكلية العمولات"):
+        with st.spinner("جاري تحديث عقود العمولات الذكية..."):
+            time.sleep(1.5)
+            st.success(f"تم اعتماد نظام الـ {num_levels} مستويات بنجاح!")
+
+# --- Tab 4: روابط الإحالة وتتبع المتاجر (Referral & Deep Linking) ---
 with tabs[3]:
-    st.subheader("🔗 مركز إدارة روابط الإحالة")
-    st.info("توليد وربط روابط التتبع بالمنتجات والمتاجر لتحفيز الانتشار.")
+    st.subheader("🔗 مركز إدارة روابط الإحالة والانتشار")
+    st.info("توليد روابط ذكية مرتبطة بنظام المستويات المذكور في التبويب السابق.")
     
     col_ref1, col_ref2 = st.columns([2, 1])
     
     with col_ref1:
-        st.markdown("#### إنشاء رابط إحالة مخصص (Deep Linking)")
-        ref_user = st.text_input("معرف المستخدم (User ID):", placeholder="مثلاً: MR7-550")
+        st.markdown("#### توليد رابط إحالة استراتيجي")
+        ref_user_id = st.text_input("معرف القائد (Leader ID):", placeholder="MR7-XXXX")
         
-        link_type = st.radio("نوع الربط:", ["رابط للمتجر العام", "رابط لمنتج محدد", "رابط لمتجر تاجر معين"])
+        link_target = st.selectbox("ربط الإحالة بـ:", ["المتجر العالمي بالكامل", "منتج تعليمي محدد", "متجر متدرب (Vendor Store)"])
         
-        if link_type == "رابط لمنتج محدد":
-            st.selectbox("اختر المنتج المستهدف:", ["دورة القيادة", "باقة التوسع", "أدوات الذكاء الاصطناعي"])
-        elif link_type == "رابط لمتجر تاجر معين":
-            st.text_input("معرف التاجر (Vendor ID):")
+        if link_target == "منتج تعليمي محدد":
+            st.selectbox("اختر المنتج:", ["دورة القيادة", "باقة التوسع", "أدوات الذكاء الاصطناعي"])
+        elif link_target == "متجر متدرب (Vendor Store)":
+            st.text_input("معرف التاجر المستهدف (Vendor ID):")
             
-        if st.button("🚀 توليد رابط الإحالة"):
-            generated_url = f"https://mr7.com/ref={ref_user or 'XXXX'}&target={link_type.replace(' ', '_')}"
-            st.code(generated_url, language="text")
-            st.success("الرابط جاهز للنشر وتتبع المبيعات!")
+        if st.button("🚀 إنشاء رابط التتبع"):
+            # محاكاة الرابط
+            ref_code = ref_user_id or "MASTER"
+            final_url = f"https://mr7-app.com/marketplace?ref={ref_code}&source=admin_gen"
+            st.code(final_url, language="text")
+            st.success("الرابط نشط ومرتبط بنظام الـ 7 مستويات تلقائياً.")
 
     with col_ref2:
-        st.markdown("#### إحصائيات الروابط")
+        st.markdown("#### إحصائيات الروابط الذكية")
         st.markdown(f"""
         <div class="admin-card">
-            <p>أكثر الروابط تحويلاً</p>
-            <h4 style="color:{t['accent']};">MR7-VIP-001</h4>
-            <p>1,240 مبيعة</p>
+            <p>أكثر رابط تم تداوله</p>
+            <h4 style="color:{t['accent']};">MR7-GOLD-01</h4>
+            <p style="font-size: 1.5rem; font-weight: 900;">2,450 نقرة</p>
+            <p style="color: #00FF88;">معدل تحويل: 18%</p>
         </div>
         """, unsafe_allow_html=True)
 
