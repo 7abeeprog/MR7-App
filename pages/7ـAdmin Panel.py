@@ -13,7 +13,7 @@ st.set_page_config(
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 user_id = st.session_state.get('user_id', "MR7-ROOT-001")
 
-# --- 3. واجهة React المتقدمة (لوحة التحكم العليا السيادية v9.0 - محرك الحقن السحابي) ---
+# --- 3. واجهة React المتقدمة (لوحة التحكم العليا السيادية v10.0 - محرك الدعوات) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -199,20 +199,20 @@ react_html = r"""
 
             // --- 2. اللغات السبعة ---
             const translations = {
-                ar: { title: "غرفة التحكم العليا", radar: "الرادار العالمي", projects: "اعتماد المشاريع", courses: "تدقيق المناهج", injector: "محرك الحقن السحابي", dictionary: "قاموس السيادة", approve: "اعتماد", reject: "رفض" },
-                en: { title: "God Mode Control", radar: "Global Radar", projects: "Project Approvals", courses: "Course Audits", injector: "Cloud Data Injector", dictionary: "Sovereign Dictionary", approve: "Approve", reject: "Reject" },
-                fr: { title: "Contrôle Suprême", radar: "Radar Global", projects: "Projets", courses: "Cours", injector: "Injecteur Cloud", dictionary: "Dictionnaire", approve: "Approuver", reject: "Rejeter" },
-                es: { title: "Control Supremo", radar: "Radar Global", projects: "Proyectos", courses: "Cursos", injector: "Inyector Cloud", dictionary: "Diccionario", approve: "Aprobar", reject: "Rechazar" },
-                zh: { title: "最高控制室", radar: "全球雷达", projects: "项目审批", courses: "课程审核", injector: "云数据注入器", dictionary: "主权字典", approve: "批准", reject: "拒绝" },
-                fa: { title: "کنترل عالی", radar: "رادار جهانی", projects: "تایید پروژه‌ها", courses: "ممیزی دوره‌ها", injector: "تزریق داده‌های ابری", dictionary: "فرهنگ لغت", approve: "تایید", reject: "رد کردن" },
-                sw: { title: "Udhibiti Mkuu", radar: "Rada ya Dunia", projects: "Miradi", courses: "Kozi", injector: "Kichomezi cha Wingu", dictionary: "Kamusi", approve: "Idhinisha", reject: "Kataa" }
+                ar: { title: "غرفة التحكم العليا", radar: "الرادار العالمي", projects: "اعتماد المشاريع", invites: "نظام الدعوات", injector: "محرك الحقن السحابي", dictionary: "قاموس السيادة", approve: "اعتماد", reject: "رفض" },
+                en: { title: "God Mode Control", radar: "Global Radar", projects: "Project Approvals", invites: "Invitations", injector: "Cloud Data Injector", dictionary: "Sovereign Dictionary", approve: "Approve", reject: "Reject" },
+                fr: { title: "Contrôle Suprême", radar: "Radar Global", projects: "Projets", invites: "Invitations", injector: "Injecteur Cloud", dictionary: "Dictionnaire", approve: "Approuver", reject: "Rejeter" },
+                es: { title: "Control Supremo", radar: "Radar Global", projects: "Proyectos", invites: "Invitaciones", injector: "Inyector Cloud", dictionary: "Diccionario", approve: "Aprobar", reject: "Rechazar" },
+                zh: { title: "最高控制室", radar: "全球雷达", projects: "项目审批", invites: "邀请系统", injector: "云数据注入器", dictionary: "主权字典", approve: "批准", reject: "拒绝" },
+                fa: { title: "کنترل عالی", radar: "رادار جهانی", projects: "تایید پروژه‌ها", invites: "سیستم دعوت", injector: "تزریق داده‌های ابری", dictionary: "فرهنگ لغت", approve: "تایید", reject: "رد کردن" },
+                sw: { title: "Udhibiti Mkuu", radar: "Rada ya Dunia", projects: "Miradi", invites: "Mialiko", injector: "Kichomezi cha Wingu", dictionary: "Kamusi", approve: "Idhinisha", reject: "Kataa" }
             };
 
             const [lang, setLang] = useState('ar');
             const t = translations[lang] || translations['ar'];
 
             // --- States ---
-            const [activeTab, setActiveTab] = useState('injector'); // جعل الحقن هو الافتراضي للتجربة
+            const [activeTab, setActiveTab] = useState('invites'); // تم تغيير التبويب الافتراضي للدعوات
             const [toasts, setToasts] = useState([]);
             const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
             const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -226,7 +226,7 @@ react_html = r"""
             const [injectStatus, setInjectStatus] = useState('idle'); // idle, scanning, extracted, injected
             const [extractedPhases, setExtractedPhases] = useState([]);
 
-            // مصفوفة تعكس محتوى الـ PDF للـ 100 برنامج مقسمة لرحلة الـ 100 يوم
+            // مصفوفة تعكس محتوى الـ PDF للـ 100 برنامج
             const pdfDataMap = [
                 { phase: 1, days: "1-10", title: "القيادة والإدارة الاستراتيجية", count: 10, icon: "Crown", color: "#FFD700", sample: "القيادة التحويلية، التفكير الاستراتيجي، إدارة الأزمات" },
                 { phase: 2, days: "11-20", title: "الاستثمار والمالية", count: 10, icon: "TrendingUp", color: "#00FF88", sample: "أساسيات الاستثمار، تحليل الأسهم، التمويل الجماعي" },
@@ -240,11 +240,30 @@ react_html = r"""
                 { phase: 10, days: "91-100", title: "قطاعات MR7 المتخصصة", count: 10, icon: "Globe", color: "#7FDBFF", sample: "الزراعة الذكية، النقل الذكي، النقل اللوجستي، المجتمعات" }
             ];
 
+            // --- Invites State ---
+            const [inviteData, setInviteData] = useState({ targetName: '', organization: 'أمم متحدة (UN)', lang: 'ar', rank: 'سفير استراتيجي' });
+            const [generatedLink, setGeneratedLink] = useState('');
+
+            const handleGenerateInvite = (e) => {
+                e.preventDefault();
+                // توليد الرابط مع محاكاة المتغيرات
+                const baseUrl = "https://mr7-empire.streamlit.app/join";
+                const refId = "MR7-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+                const link = `${baseUrl}?ref=${refId}&org=${encodeURIComponent(inviteData.organization)}&lang=${inviteData.lang}&rank=${encodeURIComponent(inviteData.rank)}`;
+                
+                setGeneratedLink(link);
+                triggerAdminFeedback('success');
+                showToast(lang === 'ar' ? 'تم توثيق الرابط الدبلوماسي بنجاح' : 'Diplomatic link generated', 'success');
+            };
+
+            const copyToClipboard = () => {
+                navigator.clipboard.writeText(generatedLink);
+                showToast(lang === 'ar' ? 'تم نسخ الرابط للحافظة' : 'Copied to clipboard', 'success');
+            };
+
             const handleScanPDF = () => {
                 setInjectStatus('scanning');
                 triggerAdminFeedback('scan');
-                
-                // محاكاة عملية قراءة وتحليل الـ PDF
                 setTimeout(() => {
                     setExtractedPhases(pdfDataMap);
                     setInjectStatus('extracted');
@@ -255,8 +274,6 @@ react_html = r"""
 
             const handleInjectToCloud = () => {
                 setInjectStatus('injecting');
-                
-                // محاكاة الرفع لقواعد البيانات
                 setTimeout(() => {
                     setInjectStatus('injected');
                     triggerAdminFeedback('approve');
@@ -333,8 +350,9 @@ react_html = r"""
 
                         <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
                             {[
+                                {id: 'invites', icon: 'Link', label: t.invites}, // Tab الدعوات
+                                {id: 'injector', icon: 'DatabaseZap', label: t.injector, badge: 'جديد'}, 
                                 {id: 'radar', icon: 'Activity', label: t.radar},
-                                {id: 'injector', icon: 'DatabaseZap', label: t.injector, badge: 'جديد'}, // Tab الحقن الجديد
                                 {id: 'projects', icon: 'FolderKanban', label: t.projects, badge: pendingProjects.length},
                                 {id: 'dictionary', icon: 'BookA', label: t.dictionary}
                             ].map(btn => (
@@ -351,6 +369,94 @@ react_html = r"""
                     {/* --- Main Content --- */}
                     <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
                         
+                        {/* --- Tab: Invites (محرك الدعوات الدبلوماسية) --- */}
+                        {activeTab === 'invites' && (
+                            <div className="animate-view space-y-8 max-w-5xl mx-auto pt-5">
+                                <h2 className="text-3xl font-black flex items-center gap-3 mb-4"><Icon name="Link" className={theme.accent} size={32}/> نظام الدعوات الدبلوماسية</h2>
+                                <p className="text-gray-400 mb-8 leading-relaxed">قم بتوليد روابط دخول حصرية للمنظومة مهيأة مسبقاً بالشكل واللغة التي تناسب الجهات الرسمية (الأمم المتحدة، الاتحاد الأوروبي، الحكومات).</p>
+                                
+                                <div className={`glass-panel p-10 rounded-[3rem] border ${theme.borderLight}`}>
+                                    <form onSubmit={handleGenerateInvite} className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">اسم الشخص المستهدف (اختياري)</label>
+                                                <input 
+                                                    value={inviteData.targetName} 
+                                                    onChange={e => setInviteData({...inviteData, targetName: e.target.value})}
+                                                    placeholder="مثال: معالي السفير / مدير المشاريع" 
+                                                    className="w-full premium-input p-4 rounded-xl font-black text-sm" 
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">الجهة / المؤسسة</label>
+                                                <select 
+                                                    value={inviteData.organization} 
+                                                    onChange={e => setInviteData({...inviteData, organization: e.target.value})}
+                                                    className="w-full premium-input p-4 rounded-xl font-black text-sm bg-black"
+                                                >
+                                                    <option>أمم متحدة (UN)</option>
+                                                    <option>الاتحاد الأوروبي (EU)</option>
+                                                    <option>جامعة الدول العربية</option>
+                                                    <option>الاتحاد الأفريقي (AU)</option>
+                                                    <option>جهات حكومية (Gov)</option>
+                                                    <option>مستثمر خاص (VIP)</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">لغة العرض الافتراضية</label>
+                                                <select 
+                                                    value={inviteData.lang} 
+                                                    onChange={e => setInviteData({...inviteData, lang: e.target.value})}
+                                                    className="w-full premium-input p-4 rounded-xl font-black text-sm bg-black"
+                                                >
+                                                    <option value="ar">العربية (Arabic)</option>
+                                                    <option value="en">الإنجليزية (English)</option>
+                                                    <option value="fr">الفرنسية (French)</option>
+                                                    <option value="es">الإسبانية (Spanish)</option>
+                                                    <option value="multi">متعدد اللغات (Dynamic)</option>
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">الرتبة الممنوحة تلقائياً</label>
+                                                <select 
+                                                    value={inviteData.rank} 
+                                                    onChange={e => setInviteData({...inviteData, rank: e.target.value})}
+                                                    className="w-full premium-input p-4 rounded-xl font-black text-sm bg-black"
+                                                >
+                                                    <option>سفير استراتيجي 🌍</option>
+                                                    <option>مراقب دولي 👁️</option>
+                                                    <option>شريك مؤسسي 🤝</option>
+                                                    <option>قائد استراتيجي 💎</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="pt-8 mt-4 border-t border-white/10">
+                                            <button type="submit" className={`w-full ${theme.btn} ${theme.btnText} py-5 rounded-2xl font-black text-xl hover:scale-[1.02] transition-transform shadow-[0_10px_30px_rgba(255,75,75,0.3)] flex justify-center items-center gap-3`}>
+                                                <Icon name="Wand2" size={24}/> توليد الرابط السيادي
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    {/* عرض الرابط بعد التوليد */}
+                                    {generatedLink && (
+                                        <div className="mt-8 p-6 bg-black/40 rounded-2xl border border-[#00FF88]/30 animate-view">
+                                            <h4 className="text-[#00FF88] font-black mb-4 flex items-center gap-2"><Icon name="CheckCircle2" size={20}/> الرابط جاهز للإرسال</h4>
+                                            <div className="flex flex-col md:flex-row gap-4 items-center">
+                                                <div className="flex-1 w-full bg-white/5 p-4 rounded-xl font-mono text-sm text-gray-300 break-all border border-white/10 overflow-x-auto">
+                                                    {generatedLink}
+                                                </div>
+                                                <button onClick={copyToClipboard} className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-black transition-colors flex items-center justify-center gap-2">
+                                                    <Icon name="Copy" size={18}/> نسخ
+                                                </button>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-4 italic">ملاحظة: هذا الرابط مشفر ويحتوي على الصلاحيات والتوجيهات اللغوية التي حددتها.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* --- Tab: Data Injector (محرك الحقن السحابي) --- */}
                         {activeTab === 'injector' && (
                             <div className="animate-view space-y-8 max-w-7xl mx-auto pt-5">
