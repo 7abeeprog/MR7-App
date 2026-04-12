@@ -37,7 +37,7 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
-    /* الفلسفة التصميمية: سيادة، عمق، ووضوح Enterprise */
+    /* الفلسفة التصميمية: الهوية القيادية الموثقة */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
@@ -56,10 +56,10 @@ st.markdown(f"""
         font-size: 3.5rem !important; 
     }}
 
-    /* رأس البروفايل الملكي (Elite Dashboard Header) */
+    /* غلاف البروفايل الفاخر (Imperial Cover) */
     .profile-cover {{
-        height: 300px;
-        background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1510511459019-5dee997ddfdf?auto=format&fit=crop&q=80&w=2070') center/cover;
+        height: 280px;
+        background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1510511459019-5dee997ddfdf?auto=format&fit=crop&q=80&w=2070') center/cover;
         border-radius: 40px 40px 0 0;
         border: 2px solid {t['accent']};
         border-bottom: none;
@@ -89,16 +89,15 @@ st.markdown(f"""
         object-fit: cover;
     }}
 
-    /* بطاقات الميزات عالية الكثافة */
-    .feature-card {{
-        background: rgba(255,255,255,0.02);
+    .stat-tile {{
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 215, 0, 0.2);
         border-radius: 20px;
         padding: 25px;
-        margin-bottom: 20px;
+        text-align: center;
         transition: 0.3s;
     }}
-    .feature-card:hover {{ border-color: {t['accent']}; transform: translateY(-5px); background: rgba(255,215,0,0.05); }}
+    .stat-tile:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
 
     /* حل مشكلة الكتابة باللون الأسود في الحقول البيضاء */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
@@ -107,7 +106,6 @@ st.markdown(f"""
         border: 2px solid {t['border']} !important;
         border-radius: 12px !important;
         font-weight: bold !important;
-        opacity: 1 !important;
     }}
 
     .stButton>button {{
@@ -122,13 +120,16 @@ st.markdown(f"""
     """, unsafe_allow_html=True)
 
 # --- 2. إدارة البيانات والهوية المتقدمة ---
-if 'user_id' not in st.session_state: st.session_state.user_id = str(uuid.uuid4())
-if 'leader_name' not in st.session_state: st.session_state.leader_name = "إمبراطور السيادة"
-if 'discount_points' not in st.session_state: st.session_state.discount_points = 12500
-if 'reward_balance' not in st.session_state: st.session_state.reward_balance = 1250.00
-if 'profile_pic_b64' not in st.session_state: st.session_state.profile_pic_b64 = None
+if 'user_id' not in st.session_state:
+    st.session_state.user_id = str(uuid.uuid4())
+if 'leader_name' not in st.session_state:
+    st.session_state.leader_name = "القائد الإمبراطوري"
+if 'user_rank' not in st.session_state:
+    st.session_state.user_rank = "قائد استراتيجي 💎"
+if 'profile_pic_b64' not in st.session_state:
+    st.session_state.profile_pic_b64 = None
 
-# --- 3. القائمة الجانبية (أدوات القائد) ---
+# --- 3. الشريط الجانبي (إدارة الهوية) ---
 with st.sidebar:
     st.markdown(f"### 🎨 تخصيص المنظومة")
     theme_choice = st.selectbox("نمط الواجهة:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
@@ -137,115 +138,120 @@ with st.sidebar:
         st.rerun()
     st.divider()
     
-    with st.expander("👤 إدارة الهوية البصرية"):
+    with st.expander("👤 إدارة الهوية الرقمية"):
         st.session_state.leader_name = st.text_input("اسم الشهرة العالمي:", st.session_state.leader_name)
-        up_file = st.file_uploader("رفع ختم الصورة:", type=["png", "jpg", "jpeg"])
+        up_file = st.file_uploader("رفع ختم الصورة الشخصية:", type=["png", "jpg", "jpeg"])
         if up_file:
             st.session_state.profile_pic_b64 = f"data:image/png;base64,{base64.b64encode(up_file.getvalue()).decode()}"
-        if st.button("تأكيد الهوية"): st.success("تم التحديث!")
+        if st.button("تأكيد وتوثيق الهوية"):
+            st.success("تم تحديث السجلات الإمبراطورية!")
+            time.sleep(1)
+            st.rerun()
 
-# --- 4. واجهة ملف القائد (The Enterprise Hub) ---
+# --- 4. واجهة ملف القائد (The Masterpiece) ---
+# غلاف البروفايل
 st.markdown('<div class="profile-cover"></div>', unsafe_allow_html=True)
 
-avatar = st.session_state.profile_pic_b64 or f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
+# رأس البروفايل (Elite Header)
+display_avatar = st.session_state.profile_pic_b64 or f"https://api.dicebear.com/7.x/avataaars/svg?seed={st.session_state.user_id}"
 st.markdown(f"""
 <div class="elite-header">
-    <img src="{avatar}" class="avatar-glow">
+    <img src="{display_avatar}" class="avatar-glow">
     <h2 style="color: {t['accent']}; font-size: 3rem; margin-bottom: 5px;">{st.session_state.leader_name}</h2>
-    <p style="font-size: 1.1rem; opacity: 0.8;">Global Empire ID: <code>{st.session_state.user_id[:13]}</code></p>
+    <p style="font-size: 1.1rem; opacity: 0.8;">معرف القيادة الموحد: <code>{st.session_state.user_id[:13]}</code></p>
     <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
-        <span style="background: {t['accent']}; color: black; padding: 6px 20px; border-radius: 50px; font-weight: 950;">VIP GOLD LEADER 👑</span>
-        <span style="background: #00FF88; color: black; padding: 6px 20px; border-radius: 50px; font-weight: 950;">TRUST: 100% ✅</span>
+        <span style="background: {t['accent']}; color: black; padding: 6px 20px; border-radius: 50px; font-weight: 950;">{st.session_state.user_rank}</span>
+        <span style="background: #00FF88; color: black; padding: 6px 20px; border-radius: 50px; font-weight: 950;">موثق بالكامل ✅</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# لوحة مؤشرات الأداء (Alibaba Analytics Style)
+# القسم الثاني: إحصائيات السيادة اللحظية (KPIs)
+st.subheader("📈 لوحة مؤشرات السيادة")
 col_stat1, col_stat2, col_stat3, col_stat4 = st.columns(4)
-with col_stat1:
-    st.markdown(f'<div class="feature-card" style="text-align:center;"><small>إجمالي الأرباح</small><br><span style="font-size:1.8rem; color:#00FF88;">${st.session_state.reward_balance:,.2f}</span></div>', unsafe_allow_html=True)
-with col_stat2:
-    st.markdown(f'<div class="feature-card" style="text-align:center;"><small>نقاط الخصم</small><br><span style="font-size:1.8rem; color:{t["accent"]};">{st.session_state.discount_points:,}</span></div>', unsafe_allow_html=True)
-with col_stat3:
-    st.markdown(f'<div class="feature-card" style="text-align:center;"><small>جيش القادة</small><br><span style="font-size:1.8rem; color:#FFFFFF;">8,500</span></div>', unsafe_allow_html=True)
-with col_stat4:
-    st.markdown(f'<div class="feature-card" style="text-align:center;"><small>الترتيب العالمي</small><br><span style="font-size:1.8rem; color:#FF4B4B;">#14</span></div>', unsafe_allow_html=True)
 
-# تبويبات السيطرة (Enterprise Functions)
-tabs = st.tabs(["🚀 محرك الانتشار", "💎 الخزنة والولاء", "📩 مركز المراسلات", "🛠️ مهندس SEO/GEO"])
+with col_stat1:
+    st.markdown(f'<div class="stat-tile"><small>صافي الثروة</small><br><span style="font-size:1.8rem; color:#00FF88;">$1.25M</span></div>', unsafe_allow_html=True)
+with col_stat2:
+    st.markdown(f'<div class="stat-tile"><small>جيش القادة</small><br><span style="font-size:1.8rem; color:{t["accent"]};">12,450</span></div>', unsafe_allow_html=True)
+with col_stat3:
+    st.markdown(f'<div class="stat-tile"><small>قوة التأثير</small><br><span style="font-size:1.8rem;">98%</span></div>', unsafe_allow_html=True)
+with col_stat4:
+    st.markdown(f'<div class="stat-tile"><small>معدل التضاعف</small><br><span style="font-size:1.8rem; color:#FF4B4B;">X10</span></div>', unsafe_allow_html=True)
+
+st.divider()
+
+# التبويبات التفصيلية
+tabs = st.tabs(["🏛️ ميثاق الرؤية", "🏆 جدار الأوسمة", "💬 سجل النشاط الاستراتيجي", "⚙️ إعدادات SEO/GEO"])
 
 with tabs[0]:
-    st.subheader("🔗 مركز النمو العالمي (Affiliate Engine)")
-    aff_link = f"https://mr7-empire.com/join?ref={st.session_state.user_id[:8].upper()}"
-    st.code(aff_link, language="text")
-    if st.button("نسخ الرابط ونشره عالمياً 🚀"): st.toast("تم النسخ! انطلق لبناء إمبراطوريتك.")
+    st.markdown(f"""
+    <div style="background: {t['card']}; padding: 35px; border-radius: 30px; border: 2px solid {t['accent']};">
+        <h3 style="color: {t['accent']};">بوصلة التريليون الموثقة</h3>
+        <p style="font-size: 1.5rem; line-height: 1.8;">"أقسمت أن أقود فريقاً نحو الحرية المالية المطلقة، وبناء نظام تعليمي يغير وجه المنطقة العربية تجارياً، والوصول لرأس مال قدره 100 مليون دولار بحلول 2027."</p>
+        <hr style="opacity: 0.1;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; opacity: 0.7;">
+            <span>حالة الميثاق: <b>نشط ✅</b></span>
+            <span>تاريخ الانعقاد: <b>2026-04-12</b></span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🔄 تحديث ميثاق الرؤية"):
+        st.switch_page("pages/0_My_Vision.py")
 
 with tabs[1]:
-    st.subheader("💎 إدارة المكافآت والسيولة")
-    col_v1, col_v2 = st.columns([2, 1])
-    with col_v1:
-        st.markdown("#### 🎫 قسائم الخصم المفعلة")
-        st.table([{"الكود": "EMPIRE_77", "الخصم": "25%", "الحالة": "نشط"}])
-    with col_v2:
-        st.markdown(f"""
-        <div class="feature-card" style="background:rgba(0,255,136,0.05); text-align:center;">
-            <p>متاح للسحب</p>
-            <h2 style="color:#00FF88;">$500.00</h2>
-            <button style="width:100%; height:40px; background:#00FF88; border:none; border-radius:12px; font-weight:900;">سحب فوري 💸</button>
-        </div>
-        """, unsafe_allow_html=True)
+    st.subheader("🏅 خزنة الأوسمة والاستحقاقات")
+    col_b1, col_b2, col_b3 = st.columns(3)
+    badges = [
+        ("🥇 باني الإمبراطورية", "إتمام أول 1000 عضو في الفريق", "icon"),
+        ("🧠 مهندس العقول", "اجتياز اختبارات عقلية المليار", "icon"),
+        ("🌍 عابر الحدود", "بناء فريق في 3 دول (مصر، ليبيا، السودان)", "icon")
+    ]
+    for i, (name, desc, _) in enumerate(badges):
+        with [col_b1, col_b2, col_b3][i]:
+            st.markdown(f"""
+            <div style="text-align: center; padding: 25px; border: 1px solid {t['border']}; border-radius: 20px; background: rgba(255,215,0,0.02);">
+                <div style="font-size: 3.5rem;">🏅</div>
+                <h4 style="color: {t['accent']}; margin: 10px 0;">{name}</h4>
+                <p style="font-size: 0.8rem; opacity: 0.7;">{desc}</p>
+            </div>
+            """, unsafe_allow_html=True)
 
 with tabs[2]:
-    st.subheader("📩 مركز بريد القادة (Bulk Messenger)")
-    with st.container():
-        st.markdown('<div class="feature-card">', unsafe_allow_html=True)
-        target = st.selectbox("المستهدفين:", ["الجيل الأول", "جيش القادة بالكامل", "إدارة MR7"])
-        subj = st.text_input("موضوع البرقية:")
-        body = st.text_area("نص الرسالة القيادية:", height=150)
-        if st.button("بث الرسالة عبر الأقمار الصناعية ⚡"):
-            if body: 
-                with st.spinner("جاري التشفير والبث..."):
-                    time.sleep(2)
-                    st.success("تم إرسال الرسالة لكافة القادة بنجاح!")
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.subheader("💬 آخر ما بثت رؤيتك في الساحة")
+    st.info("سجل المنشورات التي شاركتها مع المجتمع العالمي للقادة.")
+    st.markdown("""
+    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 15px; border-right: 4px solid #00FF88; margin-bottom: 15px;">
+        <p style="font-weight: 800; margin-bottom: 5px;">"السيادة لا تمنح، بل تنتزع بقوة التضاعف العشري واتساع رقعة الفريق."</p>
+        <small style="color: #666;">منذ 3 ساعات • 154 تأييد 👍</small>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🌐 الانتقال للساحة العالمية"):
+        st.switch_page("pages/12_Social_Network.py")
 
 with tabs[3]:
-    st.subheader("⚙️ هندسة الظهور العالمي")
-    c_seo1, c_seo2 = st.columns(2)
-    with c_seo1:
-        st.markdown("#### 🌍 التواجد الجغرافي (GEO)")
-        st.text_input("قاعدة العمليات:", "Dubai, UAE")
-        st.multiselect("نطاق الظهور:", ["MENA", "Europe", "Global"], default=["MENA", "Global"])
-    with c_seo2:
-        st.markdown("#### 🔍 تحسين البحث (SEO)")
-        st.text_area("كلمات المفتاح:", "Empire, Wealth, Leadership, MR7")
+    st.subheader("⚙️ هندسة الظهور العالمي (Visibility)")
+    col_v1, col_v2 = st.columns(2)
+    with col_v1:
+        st.text_input("قاعدة العمليات الجغرافية (GEO):", "New Cairo, Egypt")
+        st.multiselect("نطاق البحث المفضل:", ["مصر", "ليبيا", "السودان", "عالمي"], default=["مصر", "عالمي"])
+    with col_v2:
+        st.text_area("الكلمات المفتاحية للبروفايل (SEO):", "Wealth Engineering, Global Leadership, MR7 Expert")
         st.progress(0.92)
-        st.caption("قوة أرشفة بروفايلك: 92% (فائقة)")
+        st.caption("قوة أرشفة البروفايل عالمياً: 92%")
 
 st.divider()
 
-# معرض الأصول التجارية
-st.subheader("🖼️ معرض أصول الإمبراطورية (Business Portfolio)")
-asset_cols = st.columns(3)
-assets = [
-    ("https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&q=80", "الاستثمار العقاري الذكي"),
-    ("https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=500&q=80", "أكاديمية تدريب النخبة"),
-    ("https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=500&q=80", "مركز أبحاث الـ AI")
-]
-for i, (img, title) in enumerate(assets):
-    with asset_cols[i]: st.image(img, caption=title, use_container_width=True)
-
-# خريطة الانتقال (تم إصلاح الروابط لمنع الـ Crash)
-st.divider()
+# خريطة الانتقال السريع (Imperial Navigation)
 st.markdown("### 🗺️ خريطة السيادة السريعة")
 c_nav1, c_nav2, c_nav3, c_nav4 = st.columns(4)
 with c_nav1:
-    if st.button("🛒 المتجر العالمي"): st.switch_page("pages/4_Marketplace.py")
-with c_nav2:
-    if st.button("🔗 نظام الأجيال"): st.switch_page("pages/11_Affiliate_System.py")
-with c_nav3:
     if st.button("💰 الخزنة المالية"): st.switch_page("pages/3_Wallet.py")
+with c_nav2:
+    if st.button("👥 جيش القادة"): st.switch_page("pages/6_Teams.py")
+with c_nav3:
+    if st.button("🛒 المتجر العالمي"): st.switch_page("pages/4_Marketplace.py")
 with c_nav4:
     if st.button("🏠 الرئيسية"): st.switch_page("app.py")
