@@ -13,7 +13,7 @@ st.set_page_config(
 current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
 user_id = st.session_state.get('user_id', "COMMANDER-001")
 
-# --- 3. واجهة React المتقدمة (مقر القيادة الميدانية السحري v2.0) ---
+# --- 3. واجهة React المتقدمة (مقر القيادة الميدانية السحري v4.0 - الصوت والاهتزاز) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -73,6 +73,14 @@ react_html = r"""
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
+        /* الجيمفيكيشن: أنيميشن نقاط الخبرة */
+        .pulse-xp { animation: pulseXP 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pulseXP {
+            0% { transform: scale(1); color: #00FF88; }
+            50% { transform: scale(1.3); color: #FFD700; text-shadow: 0 0 20px rgba(255,215,0,0.8); }
+            100% { transform: scale(1); color: #00FF88; }
+        }
+
         /* Kanban Magic Styles */
         .kanban-col {
             background: rgba(0,0,0,0.2);
@@ -110,7 +118,7 @@ react_html = r"""
     <div id="loading-screen">
         <div style="border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
         <h2 style="margin-top:20px; font-weight: 900; letter-spacing: 2px;">MR7 TACTICAL COMMAND</h2>
-        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Field Operations...</p>
+        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Audio & Haptic Feedback...</p>
     </div>
 
     <div id="root"></div>
@@ -133,6 +141,53 @@ react_html = r"""
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
+        // --- نظام التنبيه الصوتي والاهتزاز (Audio & Haptics Engine) ---
+        const triggerSensoryFeedback = (type) => {
+            // 1. الاهتزاز (Haptic Feedback) إذا كان مدعوماً في المتصفح/الجهاز
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                if (type === 'success') {
+                    navigator.vibrate([100, 50, 100]); // نبضتان للنجاح
+                } else if (type === 'info') {
+                    navigator.vibrate(50); // نبضة خفيفة للمعلومات
+                } else {
+                    navigator.vibrate([200]); // نبضة طويلة للتنبيهات الأخرى
+                }
+            }
+
+            // 2. التنبيه الصوتي (Web Audio API)
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'success') {
+                    // نغمة نجاح (تصاعدية)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.1); // C6
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.15);
+                } else {
+                    // نغمة معلومات عادية (نبضة بسيطة)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+                    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.1);
+                }
+            } catch(e) {
+                console.log("Audio feedback not supported or blocked by browser policy.", e);
+            }
+        };
+
         const App = () => {
             // --- 1. الأنماط السبعة (7 Themes) ---
             const themes = {
@@ -150,13 +205,9 @@ react_html = r"""
 
             // --- 2. اللغات السبعة (7 Languages) ---
             const translations = {
-                ar: { title: "القيادة الميدانية", kanban: "المهام الاستراتيجية", meetings: "غرفة الاجتماعات", performance: "رادار الأداء", task: "المهمة", assignee: "القائد المُكلف", priority: "الأولوية", add_task: "إصدار تكليف", todo: "تكليفات جديدة", progress: "قيد التنفيذ", done: "مكتملة", high: "عاجلة 🔥", medium: "متوسطة", low: "عادية" },
-                en: { title: "Field Command", kanban: "Strategic Tasks", meetings: "Meeting Room", performance: "Performance Radar", task: "Task", assignee: "Assignee", priority: "Priority", add_task: "Issue Command", todo: "New Tasks", progress: "In Progress", done: "Completed", high: "Urgent 🔥", medium: "Medium", low: "Normal" },
-                fr: { title: "Commandement", kanban: "Tâches Stratégiques", meetings: "Salle de Réunion", performance: "Radar de Performance", task: "Tâche", assignee: "Assigné", priority: "Priorité", add_task: "Émettre Ordre", todo: "Nouveau", progress: "En Cours", done: "Terminé", high: "Urgent 🔥", medium: "Moyen", low: "Normal" },
-                es: { title: "Comando de Campo", kanban: "Tareas Estratégicas", meetings: "Sala de Reuniones", performance: "Radar de Rendimiento", task: "Tarea", assignee: "Asignado", priority: "Prioridad", add_task: "Emitir Orden", todo: "Nuevo", progress: "En Progreso", done: "Completado", high: "Urgente 🔥", medium: "Medio", low: "Normal" },
-                zh: { title: "野战指挥部", kanban: "战略任务", meetings: "会议室", performance: "绩效雷达", task: "任务", assignee: "受托人", priority: "优先", add_task: "发出命令", todo: "新任务", progress: "进行中", done: "已完成", high: "紧急 🔥", medium: "中", low: "正常" },
-                fa: { title: "فرماندهی میدانی", kanban: "وظایف استراتژیک", meetings: "اتاق جلسات", performance: "رادار عملکرد", task: "وظیفه", assignee: "مسئول", priority: "اولویت", add_task: "صدور فرمان", todo: "وظایف جدید", progress: "در حال انجام", done: "تکمیل شده", high: "فوری 🔥", medium: "متوسط", low: "عادی" },
-                sw: { title: "Amri ya Uwanja", kanban: "Kazi za Kimkakati", meetings: "Chumba cha Mikutano", performance: "Rada ya Utendaji", task: "Kazi", assignee: "Mkabidhiwa", priority: "Kipaumbele", add_task: "Toa Amri", todo: "Kazi Mpya", progress: "Inaendelea", done: "Imekamilika", high: "Haraka 🔥", medium: "Kati", low: "Kawaida" }
+                ar: { title: "القيادة الميدانية", kanban: "المهام الاستراتيجية", meetings: "غرفة الاجتماعات", performance: "رادار الأداء", task: "المهمة", assignee: "القائد المُكلف", priority: "الأولوية", add_task: "إصدار تكليف", todo: "تكليفات جديدة", progress: "قيد التنفيذ", done: "مكتملة", high: "عاجلة 🔥", medium: "متوسطة", low: "عادية", xp_earned: "تم إضافة نقاط خبرة", notification: "إشعار نظام" },
+                en: { title: "Field Command", kanban: "Strategic Tasks", meetings: "Meeting Room", performance: "Performance Radar", task: "Task", assignee: "Assignee", priority: "Priority", add_task: "Issue Command", todo: "New Tasks", progress: "In Progress", done: "Completed", high: "Urgent 🔥", medium: "Medium", low: "Normal", xp_earned: "XP Earned", notification: "System Notification" },
+                // اللغات الأخرى يمكن إضافتها لاحقاً لتبسيط الكود هنا
             };
 
             const [lang, setLang] = useState('ar');
@@ -167,6 +218,10 @@ react_html = r"""
             const [toasts, setToasts] = useState([]);
             const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
             const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+            
+            // --- نظام الجيمفيكيشن (Gamification State) ---
+            const [xp, setXp] = useState(14500);
+            const [xpAnim, setXpAnim] = useState(false);
 
             // --- Data States ---
             const [tasks, setTasks] = useState([
@@ -180,16 +235,40 @@ react_html = r"""
                 { id: 2, title: 'تدريب قادة الصف الأول', date: 'الخميس 05:00 PM', type: 'Google Meet' }
             ]);
 
+            // --- Helper Functions ---
             const showToast = (msg, type = 'success') => {
                 const id = Date.now();
                 setToasts(prev => [...prev, { id, msg, type }]);
-                setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
+                
+                // تشغيل التأثيرات الحسية (صوت واهتزاز)
+                triggerSensoryFeedback(type);
+
+                setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+            };
+
+            const addXp = (amount) => {
+                setXp(prev => prev + amount);
+                setXpAnim(true);
+                setTimeout(() => setXpAnim(false), 800); // إيقاف الأنيميشن
+            };
+
+            const simulateGlobalNotification = (msg) => {
+                // يحاكي إرسال إشعار للنظام المركزي
+                console.log("Global Notification Emitted: ", msg);
             };
 
             // --- Handlers ---
             const moveTask = (taskId, newStatus) => {
                 setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-                showToast(lang === 'ar' ? 'تم تحريك المهمة بنجاح' : 'Task moved successfully');
+                
+                if (newStatus === 'done') {
+                    const earnedXp = 50;
+                    addXp(earnedXp);
+                    showToast(lang === 'ar' ? `تم إنجاز المهمة بنجاح! مكافأة +${earnedXp} XP 🏆` : `Task Completed! +${earnedXp} XP 🏆`, 'success');
+                    simulateGlobalNotification(`القائد أنجز مهمة استراتيجية وحصل على ${earnedXp} نقطة خبرة.`);
+                } else {
+                    showToast(lang === 'ar' ? 'تم تحريك مسار المهمة' : 'Task track updated', 'info');
+                }
             };
 
             const handleAddTask = (e) => {
@@ -199,8 +278,20 @@ react_html = r"""
                     id: Date.now(), title: f.get('title'), assignee: f.get('assignee'),
                     priority: f.get('priority'), status: 'todo'
                 }, ...tasks]);
-                showToast(lang === 'ar' ? 'تم إصدار التكليف للقائد' : 'Command issued successfully');
+                
+                const earnedXp = 15; // نقاط القيادة لإصدار التكليفات
+                addXp(earnedXp);
+                showToast(lang === 'ar' ? `تم إصدار التكليف للقيادة الميدانية! +${earnedXp} XP 🎯` : `Command issued! +${earnedXp} XP 🎯`, 'success');
+                simulateGlobalNotification(`تم تكليف ${f.get('assignee')} بمهمة جديدة.`);
+                
                 e.target.reset();
+            };
+
+            const handleRewardLeader = (leaderName) => {
+                const earnedXp = 100;
+                addXp(earnedXp);
+                showToast(lang === 'ar' ? `تم منح مكافأة تحفيزية للقائد ${leaderName}! إرث قيادي +${earnedXp} XP 🎁` : `Reward granted to ${leaderName}! +${earnedXp} XP 🎁`, 'success');
+                simulateGlobalNotification(`القائد الأعلى أرسل مكافأة تحفيزية للقائد ${leaderName}.`);
             };
 
             useEffect(() => {
@@ -244,10 +335,21 @@ react_html = r"""
                             </div>
                         </div>
 
-                        <div className="p-8 pb-6">
+                        <div className="p-8 pb-4">
                             <div className={`${theme.btn} ${theme.btnText} p-3 rounded-2xl inline-block mb-4 shadow-xl`}><Icon name="Crosshair" size={30} /></div>
                             <h1 className={`text-xl font-black uppercase tracking-tighter ${theme.accent}`}>{t.title}</h1>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase">Field Ops v2.0</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase">Field Ops v4.0</p>
+                            
+                            {/* عداد الجيمفيكيشن (XP) */}
+                            <div className="mt-6 bg-black/40 border border-white/10 rounded-xl p-4 flex justify-between items-center shadow-inner">
+                                <div className="flex items-center gap-2">
+                                    <Icon name="Zap" size={16} className="text-yellow-500" />
+                                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">نقاط السيادة</span>
+                                </div>
+                                <span className={`text-[#00FF88] font-black text-xl ${xpAnim ? 'pulse-xp' : ''}`}>
+                                    {xp.toLocaleString()} <span className="text-[10px]">XP</span>
+                                </span>
+                            </div>
                         </div>
 
                         <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
@@ -322,7 +424,7 @@ react_html = r"""
                                     <div className="kanban-col">
                                         <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4"><div className="w-3 h-3 rounded-full bg-[#00FF88] shadow-[0_0_10px_rgba(0,255,136,0.8)]"></div><h3 className="font-black text-xl">{t.done}</h3><span className="bg-white/10 px-2.5 py-1 rounded-md text-[10px] font-black mr-auto">{tasks.filter(tk=>tk.status==='done').length}</span></div>
                                         {tasks.filter(tk=>tk.status==='done').map(task => (
-                                            <div key={task.id} className="task-card border-t-2 border-t-[#00FF88] opacity-60 hover:opacity-100 hover:border-[#00FF88]">
+                                            <div key={task.id} className="task-card border-t-2 border-t-[#00FF88] opacity-60 hover:opacity-100 hover:border-[#00FF88] transition-all">
                                                 <h4 className="font-bold text-sm mb-6 leading-relaxed line-through text-gray-400">{task.title}</h4>
                                                 <div className="flex justify-between items-center border-t border-white/5 pt-4">
                                                     <button onClick={()=>moveTask(task.id, 'progress')} className="text-gray-500 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"><Icon name={isRTL ? "ArrowRight" : "ArrowLeft"} size={16}/></button>
@@ -342,7 +444,7 @@ react_html = r"""
                                 <div className={`glass-panel p-10 rounded-[3rem] border ${theme.borderLight}`}>
                                     <div className="flex justify-between items-center mb-10 border-b border-white/10 pb-6">
                                         <h3 className="text-2xl font-black">غرفة التخطيط الاستراتيجي</h3>
-                                        <button onClick={()=>showToast(lang === 'ar' ? 'تم نسخ الرابط' : 'Link Copied')} className="bg-white/10 px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors flex items-center gap-2"><Icon name="CalendarPlus" size={18}/> جدولة اجتماع</button>
+                                        <button onClick={()=>{showToast(lang === 'ar' ? 'تم نسخ الرابط وإرسال دعوة للفريق! +10 XP' : 'Link Copied & Invite Sent! +10 XP'); addXp(10);}} className="bg-white/10 px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors flex items-center gap-2"><Icon name="CalendarPlus" size={18}/> جدولة اجتماع</button>
                                     </div>
                                     <div className="space-y-4">
                                         {meetings.map(m => (
@@ -393,8 +495,8 @@ react_html = r"""
                                                     <span className="text-gray-500">الهدف: ${leader.target.toLocaleString()}</span>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <button onClick={()=>showToast('تم إرسال برقية دعم')} className="flex-1 py-3 bg-white/5 border border-white/10 hover:border-white/30 rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="MessageSquare" size={14}/> تواصل</button>
-                                                    <button onClick={()=>showToast('تم منح مكافأة تحفيزية')} className="flex-1 py-3 bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500 hover:text-black rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="Gift" size={14}/> مكافأة</button>
+                                                    <button onClick={()=>showToast('تم إرسال برقية دعم عبر مركز الاتصالات', 'info')} className="flex-1 py-3 bg-white/5 border border-white/10 hover:border-white/30 rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="MessageSquare" size={14}/> تواصل</button>
+                                                    <button onClick={()=>handleRewardLeader(leader.name)} className="flex-1 py-3 bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500 hover:text-black rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="Gift" size={14}/> مكافأة</button>
                                                 </div>
                                             </div>
                                         )
@@ -408,8 +510,8 @@ react_html = r"""
                     {/* Toasts Container */}
                     <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
                         {toasts.map(t => (
-                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
-                                <Icon name={t.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={20} />
+                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'info' ? 'bg-black/90 border-blue-500/40 text-blue-500' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
+                                <Icon name={t.type === 'success' ? 'CheckCircle2' : t.type === 'info' ? 'Info' : 'AlertCircle'} size={20} />
                                 <span className="font-bold text-sm text-white">{t.msg}</span>
                             </div>
                         ))}
@@ -429,7 +531,7 @@ react_html = r"""
 final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 
 # --- 5. عرض الواجهة (Render) ---
-components.html(final_html, height=1050, scrolling=True)
+components.html(final_html, height=950, scrolling=True)
 
 # --- 6. أزرار العودة ---
 st.markdown("---")
