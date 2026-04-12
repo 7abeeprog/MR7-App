@@ -15,8 +15,9 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (مستقرة ومصفحة بالكامل) ---
-react_html = """
+# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% - تم حل الانهيار) ---
+# إضافة حرف r قبل النص ليمنع بايثون من العبث بالرموز
+react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
 <head>
@@ -25,10 +26,9 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- استخدام سيرفرات cdnjs الأسرع والأكثر استقراراً -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
@@ -38,6 +38,7 @@ react_html = """
             overflow-x: hidden; 
             scroll-behavior: smooth;
             transition: background-color 0.5s, color 0.5s;
+            background-color: #030303;
         }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -87,14 +88,35 @@ react_html = """
         html[dir="ltr"] .dir-invert { flex-direction: row-reverse; }
         html[dir="ltr"] .text-dir { text-align: left; }
         html[dir="rtl"] .text-dir { text-align: right; }
+
+        /* شاشة التحميل المبدئية لمنع الشاشة البيضاء */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #000; color: #FFD700; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 99999;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .loader-spinner {
+            border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700;
+            border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <div id="loading-screen">
+        <div class="loader-spinner"></div>
+        <h2 style="margin:0;">جاري تهيئة مركز العمليات السيادي...</h2>
+        <p style="color:#888; font-size:14px; margin-top:10px;">MR7 Ecosystem Initialization</p>
+    </div>
+
     <div id="root"></div>
 
     <script type="text/babel">
-        // 1. نظام التقاط الأخطاء العالمي لمنع الشاشة البيضاء
+        // 1. نظام التقاط الأخطاء العالمي 
         window.onerror = function(msg, url, line, col, error) {
+            document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('root').innerHTML = `
                 <div style="padding:40px; background:#220000; color:#FF5555; text-align:left; direction:ltr; min-height:100vh;">
                     <h2 style="font-family:sans-serif;">⚠️ نظام الحماية: تم رصد خطأ تقني</h2>
@@ -104,7 +126,8 @@ react_html = """
             `;
         };
 
-        const { useState, useEffect, useCallback, useRef } = React;
+        // الدالة المفقودة useMemo تم إضافتها هنا!
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
         // 2. درع حماية React (Error Boundary)
         class ErrorBoundary extends React.Component {
@@ -116,7 +139,8 @@ react_html = """
                 return { hasError: true };
             }
             componentDidCatch(error, errorInfo) {
-                this.setState({ errorInfo: error.toString() + "\\n" + errorInfo.componentStack });
+                this.setState({ errorInfo: error.toString() + "\n" + errorInfo.componentStack });
+                document.getElementById('loading-screen').style.display = 'none';
             }
             render() {
                 if (this.state.hasError) {
@@ -135,13 +159,12 @@ react_html = """
 
             useEffect(() => {
                 if (iconRef.current && window.lucide) {
-                    iconRef.current.innerHTML = ''; // تنظيف الحاوية
+                    iconRef.current.innerHTML = ''; 
                     const i = document.createElement('i');
                     i.setAttribute('data-lucide', name);
                     if (className) i.setAttribute('class', className);
                     i.setAttribute('fill', fill);
                     iconRef.current.appendChild(i);
-                    
                     window.lucide.createIcons({ root: iconRef.current });
                 }
             }, [name, size, className, fill]);
@@ -149,7 +172,7 @@ react_html = """
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- قاموس الترجمة الشامل (Multi-Language Dictionary) ---
+        // --- قاموس الترجمة الشامل ---
         const translations = {
             ar: {
                 dashboardTitle: "لوحة التاجر",
@@ -315,6 +338,12 @@ react_html = """
         };
 
         const App = () => {
+            // إخفاء شاشة التحميل بمجرد بدء تطبيق React
+            useEffect(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.style.display = 'none';
+            }, []);
+
             // --- 7 الأنماط الديناميكية (7 Dynamic Themes) ---
             const themes = {
                 "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#E5B80B" },
@@ -336,7 +365,6 @@ react_html = """
             const t = translations[lang];
 
             useEffect(() => {
-                // الفارسية والعربية من اليمين لليسار، الباقي من اليسار لليمين
                 document.documentElement.dir = (lang === 'ar' || lang === 'fa') ? 'rtl' : 'ltr';
             }, [lang]);
 
@@ -364,7 +392,6 @@ react_html = """
                     showToast('يرجى استكمال البيانات الأساسية', 'warning');
                     return;
                 }
-                // تحويل السعر إلى رقم لضمان عدم حدوث تعارض في السلة
                 const p_price = parseFloat(newProd.price);
                 setProducts([{...newProd, price: p_price, id: Date.now(), sales: 0, views: 0, status: 'قيد المراجعة'}, ...products]);
                 setNewProd({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
@@ -383,7 +410,6 @@ react_html = """
                 </div>
             );
 
-            // تحديد ما إذا كانت اللغة الحالية RTL لضبط الانحياز
             const isRTL = lang === 'ar' || lang === 'fa';
 
             return (
@@ -392,9 +418,8 @@ react_html = """
                     {/* --- Sidebar --- */}
                     <div className={`w-full md:w-72 md:min-h-screen ${activeTheme.card} border-b md:border-b-0 md:border-l ${activeTheme.borderLight} flex flex-col transition-colors duration-500`}>
                         
-                        {/* Global Controls (Theme & Lang) */}
+                        {/* Global Controls */}
                         <div className="p-6 pb-2 flex justify-between items-center dir-invert">
-                            {/* Theme Picker Floating Button */}
                             <div className="relative z-[200]">
                                 <button 
                                     onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)} 
@@ -418,7 +443,6 @@ react_html = """
                                 )}
                             </div>
 
-                            {/* Language Picker */}
                             <div className="relative z-[200]">
                                 <button 
                                     onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
@@ -535,13 +559,13 @@ react_html = """
                                 <form onSubmit={handleAddProduct} className={`${activeTheme.card} p-8 md:p-10 rounded-[3rem] border ${activeTheme.borderLight} shadow-2xl transition-colors`}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                         <div className="space-y-3">
-                                            <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder={lang === 'ar' ? 'اسم الأصل...' : 'Asset Name...'} />
+                                            <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'اسم الأصل...' : 'Asset Name...'} />
                                         </div>
                                         <div className="space-y-3">
-                                            <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder={lang === 'ar' ? 'السعر ($)' : 'Price ($)'} />
+                                            <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'السعر ($)' : 'Price ($)'} />
                                         </div>
                                         <div className="md:col-span-2 space-y-3">
-                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border} text-dir`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder={lang === 'ar' ? 'الوصف...' : 'Description...'}></textarea>
+                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border} text-dir`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'الوصف...' : 'Description...'}></textarea>
                                         </div>
                                     </div>
                                     <button type="submit" className={`w-full py-6 rounded-[2rem] font-black text-xl ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic flex items-center justify-center gap-3`}>
@@ -595,7 +619,6 @@ react_html = """
             );
         };
 
-        // تغليف التطبيق بدرع الأخطاء لمنع الشاشة البيضاء نهائياً
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<ErrorBoundary><App /></ErrorBoundary>);
     </script>
@@ -604,6 +627,7 @@ react_html = """
 """
 
 # --- 4. حقن المتغيرات السحابية بشكل آمن ---
+# استخدام Replace لحماية الكود من تعارضات f-string
 final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 final_html = final_html.replace("LEADER_BALANCE_PLACEHOLDER", str(current_balance))
 
