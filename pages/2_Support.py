@@ -65,6 +65,21 @@ st.markdown(f"""
         margin-bottom: 30px;
     }}
 
+    .ticket-card {{
+        background: rgba(255, 255, 255, 0.03);
+        border-right: 5px solid {t['accent']};
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 10px;
+    }}
+
+    .status-badge {{
+        padding: 2px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 900;
+    }}
+
     /* حل مشكلة الكتابة باللون الأسود في الحقول البيضاء */
     .stTextArea textarea {{
         background-color: #FFFFFF !important;
@@ -103,11 +118,32 @@ def submit_ticket_to_cloud(message):
             "message": {"stringValue": message},
             "status": {"stringValue": "open"},
             "timestamp": {"stringValue": datetime.now().isoformat()},
-            "priority": {"stringValue": "عالية"}
+            "priority": {"stringValue": "عالية"},
+            "reply": {"stringValue": "في انتظار مراجعة القادة..."}
         }
     }
     res = requests.post(f"{BASE_URL}{TICKETS_PATH}?documentId={doc_id}", json=payload)
     return res.status_code == 200
+
+def fetch_user_tickets():
+    """جلب تذاكر المستخدم الحالي فقط من السحابة العامة"""
+    try:
+        res = requests.get(f"{BASE_URL}{TICKETS_PATH}")
+        if res.status_code == 200:
+            docs = res.json().get("documents", [])
+            user_tickets = []
+            for doc in docs:
+                f = doc.get("fields", {})
+                if f.get("user_id", {}).get("stringValue") == st.session_state.user_id:
+                    user_tickets.append({
+                        "msg": f.get("message", {}).get("stringValue", ""),
+                        "status": f.get("status", {}).get("stringValue", "open"),
+                        "time": f.get("timestamp", {}).get("stringValue", ""),
+                        "reply": f.get("reply", {}).get("stringValue", "لا يوجد رد بعد")
+                    })
+            return sorted(user_tickets, key=lambda x: x['time'], reverse=True)
+        return []
+    except: return []
 
 # --- 3. واجهة غرفة العمليات الذكية ---
 st.title("💬 غرفة العمليات الذكية")
@@ -134,6 +170,7 @@ if st.button("🚀 إرسال التذكرة للسحابة فوراً"):
                 st.success("تم إرسال التذكرة بنجاح! فريق العمليات سيقوم بمعالجتها خلال دقائق. ✅")
                 st.balloons()
                 time.sleep(2)
+                st.rerun()
             else:
                 st.error("حدث خطأ في الاتصال بالسحابة. يرجى المحاولة لاحقاً.")
     else:
@@ -141,9 +178,27 @@ if st.button("🚀 إرسال التذكرة للسحابة فوراً"):
 
 st.divider()
 
-# قسم متابعة التذاكر (Placeholder)
-with st.expander("📜 تاريخ تذاكر الدعم الخاصة بك"):
-    st.info("سيتم عرض حالة التذاكر المرسلة هنا فور معالجتها من قبل الأدمن في السحابة.")
+# قسم متابعة التذاكر (Live Updates)
+with st.expander("📜 سجل تذاكر الدعم الخاصة بك ومتابعة الحلول"):
+    my_tickets = fetch_user_tickets()
+    if not my_tickets:
+        st.info("لا توجد تذاكر مسجلة باسمك حالياً.")
+    else:
+        for ticket in my_tickets:
+            status_color = "#00FF88" if ticket['status'] == "closed" else "#FFD700"
+            st.markdown(f"""
+            <div class="ticket-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.9rem; opacity: 0.7;">📅 {ticket['time'][:10]}</span>
+                    <span class="status-badge" style="background: {status_color}; color: black;">{ticket['status'].upper()}</span>
+                </div>
+                <p style="margin: 10px 0; font-size: 1.1rem;"><b>سؤالك:</b> {ticket['msg']}</p>
+                <div style="background: rgba(255,215,0,0.05); padding: 10px; border-radius: 10px; margin-top: 5px;">
+                    <small style="color: {t['accent']};"><b>رد الإدارة:</b></small><br>
+                    {ticket['reply']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
 if st.button("🏠 العودة لمركز القيادة الرئيسي"):
     st.switch_page("app.py")
