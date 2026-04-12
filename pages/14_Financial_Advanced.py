@@ -2,6 +2,8 @@ import streamlit as st
 import time
 import pandas as pd
 import numpy as np
+import json
+import requests
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -78,11 +80,39 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. إدارة الحالة المالية (State Integration) ---
+# --- 2. محرك الاتصال بالسحابة (Live Cloud Integration) ---
+fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
+app_id = st.secrets.get("__app_id", "mr7-empire-v1")
+project_id = fb_config.get("projectId", "mr7-app")
+BASE_URL = "https://firestore.googleapis.com/v1/"
+PROJECTS_PATH = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/crowd_projects"
+
+def fetch_approved_projects():
+    """جلب المشاريع المعتمدة فقط لحساب الأرباح الحية"""
+    try:
+        res = requests.get(f"{BASE_URL}{PROJECTS_PATH}")
+        if res.status_code == 200:
+            docs = res.json().get("documents", [])
+            approved = []
+            for doc in docs:
+                f = doc.get("fields", {})
+                if f.get("status", {}).get("stringValue") == "approved":
+                    approved.append({
+                        "id": doc["name"].split("/")[-1],
+                        "title": f.get("title", {}).get("stringValue", "غير مسمى"),
+                        "country": f.get("country", {}).get("stringValue", "مجهول"),
+                        "roi": f.get("roi", {}).get("stringValue", "0%"),
+                        "raised": int(f.get("raised", {}).get("integerValue", "0"))
+                    })
+            return approved
+        return []
+    except: return []
+
+# --- 3. إدارة الحالة المالية (State Integration) ---
 if 'cash_balance' not in st.session_state:
     st.session_state.cash_balance = 1250000.00
 
-# --- 3. محرك الحسابات المالية المتقدمة ---
+# --- 4. واجهة الحسابات المتقدمة ---
 st.title("📈 نظام الحسابات المتقدم")
 st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>محاكي التضاعف المالي والعوائد السيادية المركبة</p>", unsafe_allow_html=True)
 
@@ -127,45 +157,57 @@ with tabs[0]:
     
     st.line_chart(df.set_index("السنة"))
 
-# --- Tab 2: توزيع أرباح المشاريع (Regional Projects) ---
+# --- Tab 2: توزيع أرباح المشاريع (Regional Projects - Live) ---
 with tabs[1]:
-    st.subheader("🏢 عوائد المشاريع الإقليمية (مصر، ليبيا، السودان)")
-    st.markdown("تحليل العوائد المباشرة من المشاريع السيادية النشطة في الأقاليم.")
+    st.subheader("🏢 عوائد المشاريع الإقليمية الحية")
+    st.markdown("يتم استرداد هذه البيانات مباشرة من قاعدة البيانات السحابية.")
     
-    # بيانات المشاريع مع قيم رقمية للمعالجة
-    project_data = [
-        {"المشروع": "مجمع السيارات الكهربائية (مصر)", "العائد الحالي": "24%", "حصة القائد": "$5,000", "val": 1200},
-        {"المشروع": "مبادرة الـ 20 ألف مشروع (ليبيا)", "العائد الحالي": "12%", "حصة القائد": "$2,000", "val": 240},
-        {"المشروع": "سلة غذاء العرب (السودان)", "العائد الحالي": "19%", "حصة القائد": "$3,000", "val": 570}
-    ]
+    live_projects = fetch_approved_projects()
     
-    # عرض الجدول
-    display_df = pd.DataFrame(project_data).drop(columns=['val'])
-    display_df['الربح الموزع'] = [f"${p['val']:,}" for p in project_data]
-    st.table(display_df)
-    
-    total_transfer = sum(p['val'] for p in project_data)
-    
-    st.markdown(f"""
-    <div style="text-align: center; padding: 20px; background: rgba(0, 255, 136, 0.05); border-radius: 20px; border: 1px dashed #00FF88; margin-bottom: 20px;">
-        <span style="font-size: 1.1rem;">إجمالي الأرباح المستحقة للترحيل: </span>
-        <b style="font-size: 1.8rem; color: #00FF88;">${total_transfer:,}</b>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if st.button("💰 ترحيل الأرباح إلى المحفظة المركزية"):
-        with st.spinner("جاري تدقيق الحصص وتحديث الخزنة الإمبراطورية..."):
-            time.sleep(2)
-            st.session_state.cash_balance += total_transfer
-            st.success(f"تم ترحيل ${total_transfer:,} بنجاح! رصيدك الكلي الآن: ${st.session_state.cash_balance:,.2f} ✅")
-            st.balloons()
-            time.sleep(1)
-            st.rerun()
+    if not live_projects:
+        st.warning("لا توجد مشاريع استثمارية معتمدة حالياً لجلب أرباحها.")
+    else:
+        # حساب الربح التقريبي بناءً على النسبة المئوية المسجلة (مثلاً 24%)
+        total_p = 0
+        p_list = []
+        for p in live_projects:
+            # استخراج الرقم من نص مثل "24%"
+            rate_val = int(p['roi'].replace('%', '')) / 100
+            # افتراض حصة القائد هي 1% من المبلغ المجموع للتوضيح
+            my_share = p['raised'] * 0.01 
+            profit_val = my_share * rate_val
+            total_p += profit_val
+            p_list.append({
+                "المشروع": p['title'],
+                "الدولة": p['country'],
+                "العائد": p['roi'],
+                "حصتك في الأصول": f"${my_share:,.0f}",
+                "الربح المستحق": f"${profit_val:,.2f}",
+                "val": profit_val
+            })
+            
+        st.table(pd.DataFrame(p_list).drop(columns=['val']))
+        
+        st.markdown(f"""
+        <div style="text-align: center; padding: 20px; background: rgba(0, 255, 136, 0.05); border-radius: 20px; border: 1px dashed #00FF88; margin-bottom: 20px;">
+            <span style="font-size: 1.1rem;">إجمالي الأرباح المستحقة للترحيل الفوري: </span>
+            <b style="font-size: 1.8rem; color: #00FF88;">${total_p:,.2f}</b>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("💰 ترحيل الأرباح السحابية إلى الخزنة"):
+            with st.spinner("جاري مزامنة السجلات المالية العالمية..."):
+                time.sleep(2)
+                st.session_state.cash_balance += total_p
+                st.success(f"تم ترحيل ${total_p:,.2f} بنجاح! رصيدك الكلي الآن: ${st.session_state.cash_balance:,.2f}")
+                st.balloons()
+                time.sleep(1)
+                st.rerun()
 
 # --- Tab 3: تحليل التدفقات النقدية ---
 with tabs[2]:
-    st.subheader("📊 مراقبة تدفق السيولة العالمية")
-    st.markdown("توزيع السيولة النقدية في محفظة القائد حسب القطاعات الجغرافية.")
+    st.subheader("📊 مراقبة تدفق السيولة الجغرافية")
+    st.markdown("توزيع السيولة النقدية بناءً على الأقاليم النشطة.")
     
     source_data = pd.DataFrame({
         "الدولة": ["مصر", "ليبيا", "السودان", "عالمي"],
@@ -173,7 +215,7 @@ with tabs[2]:
     })
     st.bar_chart(source_data.set_index("الدولة"))
     
-    st.info("💡 ملاحظة استراتيجية: إقليم مصر يمثل 45% من تدفقاتك النقدية الحالية نظراً لنمو قطاع التصنيع الثقيل.")
+    st.info("💡 تحليل MR7: إقليم مصر يقود التدفقات بنسبة 45% نتيجة لنمو المشاريع الصناعية.")
 
 st.divider()
 
