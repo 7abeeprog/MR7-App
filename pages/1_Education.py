@@ -1,14 +1,10 @@
 import streamlit as st
 import time
-from datetime import datetime, date
-# --- كود محرك الأنماط الشامل (Theme Engine) ---
-# انسخ هذا الجزء وضعه في بداية أي صفحة بعد سطر الاستدعاء (import)
 
-# 1. التأكد من وجود متغير النمط في ذاكرة الجلسة
+# --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
     st.session_state.app_theme = "غامق إمبراطوري 🖤"
 
-# 2. تعريف الألوان والخصائص لكل نمط (Themes Dictionary)
 themes = {
     "غامق إمبراطوري 🖤": {
         "bg": "#000000", "sidebar": "#050505", "text": "#FFFFFF", 
@@ -34,244 +30,202 @@ themes = {
 
 t = themes[st.session_state.app_theme]
 
-# 3. حقن تنسيقات CSS بناءً على النمط المختار
 st.markdown(f"""
     <style>
-    /* الخلفية العامة */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
-    
-    /* القائمة الجانبية */
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
+    
+    div[data-testid="stMarkdownContainer"] p, h2, h3, h4, span, label, li {{ 
+        color: {t['text']} !important; 
+        font-weight: 700 !important; 
+    }}
+    
+    h1 {{ 
+        background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']}); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        font-weight: 950 !important; 
+        text-align: center; 
+        filter: drop-shadow(0 0 10px {t['accent']}); 
+        font-size: 3.2rem !important; 
+    }}
 
-    /* النصوص والعناوين */
-    div[data-testid="stMarkdownContainer"] p, h2, h3, span, label, li {{ color: {t['text']} !important; font-weight: 700 !important; }}
-    h1 {{ background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 950 !important; text-align: center; filter: drop-shadow(0 0 10px {t['accent']}); font-size: 3rem !important; }}
+    /* تصميم بطاقة المرحلة (The Rank Card) */
+    .rank-card {{
+        background: {t['card']};
+        border: 2px solid {t['border']};
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: 0.3s ease;
+        text-align: center;
+    }}
+    .rank-card:hover {{ transform: scale(1.05); border-color: #00FF88; box-shadow: 0 0 20px rgba(0,255,136,0.3); }}
 
-    /* حل مشكلة القوائم المنسدلة (Selectbox) لضمان وضوح النص */
-    div[data-baseweb="select"] > div {{ background-color: {t['select_bg']} !important; color: {t['select_text']} !important; }}
-    div[data-baseweb="popover"] ul {{ background-color: {t['select_bg']} !important; }}
-    div[data-baseweb="popover"] li {{ color: {t['select_text']} !important; background-color: {t['select_bg']} !important; }}
-    div[data-baseweb="popover"] li:hover {{ background-color: {t['accent']} !important; color: #000000 !important; }}
+    /* شريط التقدم الزمني لرحلة الـ 100 يوم */
+    .journey-bar {{
+        background: #222;
+        border-radius: 50px;
+        height: 30px;
+        width: 100%;
+        margin: 20px 0;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid {t['accent']};
+    }}
+    .journey-fill {{
+        background: linear-gradient(90deg, {t['accent']}, #00FF88);
+        height: 100%;
+        width: 15%; /* مثال للتقدم */
+    }}
 
-    /* تنسيق الأزرار */
-    .stButton>button {{ background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important; color: #000000 !important; font-weight: 950 !important; border-radius: 20px !important; }}
+    /* حقول الإدخال */
+    .stTextInput input, .stSelectbox div[data-baseweb="select"] {{
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+    }}
+
+    .stButton>button {{
+        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
+        color: #000000 !important;
+        font-weight: 950 !important;
+        border-radius: 20px !important;
+        height: 50px;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# 4. القائمة الجانبية للتحكم في النمط
+# --- 2. إدارة الرتب (The 8 Ranks of MR7) ---
+if 'user_rank' not in st.session_state:
+    st.session_state.user_rank = "Dreamer"
+
+ranks = {
+    "Dreamer": {"icon": "🥚", "goal": "دفع $10 وبدء المسار", "reward": "$0", "next": "Adventurer"},
+    "Adventurer": {"icon": "🧭", "goal": "بناء فريق من 10 أعضاء", "reward": "$10", "next": "Knight"},
+    "Knight": {"icon": "🛡️", "goal": "الوصول لـ 100 عضو في الفريق", "reward": "$50", "next": "Warlord"},
+    "Warlord": {"icon": "👑", "goal": "الوصول لـ 1,000 عضو في الفريق", "reward": "$100", "next": "Alchemist"},
+    "Alchemist": {"icon": "🔮", "goal": "الوصول لـ 10,000 عضو", "reward": "$1,000", "next": "Visionary"},
+    "Visionary": {"icon": "🔭", "goal": "الوصول لـ 100,000 عضو", "reward": "$10,000", "next": "Game Changer"},
+    "Game Changer": {"icon": "⚡", "goal": "الوصول لـ 1,000,000 عضو", "reward": "$100,000", "next": "Legend"},
+    "Legend": {"icon": "🌌", "goal": "الوصول لـ 10,000,000 عضو", "reward": "$1,000,000", "next": "Maxed"}
+}
+
+# --- 3. واجهة الأكاديمية (MR7 Education Engine) ---
+st.title("🧠 مصنع قادة التريليون")
+st.markdown(f"<p style='text-align:center; font-size:1.4rem; margin-top:-20px;'>رحلة الـ 100 يوم من $0 إلى $1,000,000</p>", unsafe_allow_html=True)
+
+# شريط الرحلة (The 100-Day Bootcamp Progress)
+st.markdown("### ⏳ مسار الـ 100 يوم للسيادة")
+st.markdown("""
+<div class="journey-bar">
+    <div class="journey-fill"></div>
+</div>
+""", unsafe_allow_html=True)
+col_j1, col_j2 = st.columns([1, 1])
+col_j1.caption("بداية الرحلة: يوم 1")
+col_j2.markdown("<p style='text-align:left;'>المستهدف: يوم 100 (أسطورة)</p>", unsafe_allow_html=True)
+
+st.divider()
+
+# عرض الرتبة الحالية والمسار
 with st.sidebar:
-    st.markdown(f"### 🎨 تخصيص المظهر")
-    theme_choice = st.selectbox(
-        "اختر نمط الألوان المفضل لديك:",
-        options=list(themes.keys()),
-        index=list(themes.keys()).index(st.session_state.app_theme)
-    )
+    st.markdown("### 👤 ملف القائد")
+    current = ranks[st.session_state.user_rank]
+    st.markdown(f"""
+    <div class="rank-card">
+        <div style="font-size: 3rem;">{current['icon']}</div>
+        <h2 style="margin: 0; color: {t['accent']} !important;">{st.session_state.user_rank}</h2>
+        <p style="font-size: 0.9rem;">الهدف القادم: {current['next']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.write(f"**المهمة:** {current['goal']}")
+    st.write(f"**المكافأة المالية:** {current['reward']}")
+    
+    st.divider()
+    st.markdown("### 🎨 تخصيص المظهر")
+    theme_choice = st.selectbox("النمط:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
     if theme_choice != st.session_state.app_theme:
         st.session_state.app_theme = theme_choice
         st.rerun()
-    st.divider()
-# --- 1. إعدادات التصميم الفائق (Ultra-Visibility & Journey UI) ---
-st.markdown("""
-    <style>
-    /* تحسين الخلفية العامة وجعلها سوداء عميقة جداً */
-    .stApp {
-        background-color: #000000 !important;
-        color: #FFFFFF !important;
-    }
 
-    /* ضمان أن كل النصوص باللون الأبيض الناصع أو الذهبي للوضوح */
-    div[data-testid="stMarkdownContainer"] p, li, span {
-        color: #FFFFFF !important;
-        font-weight: 600 !important;
-        font-size: 1.1rem;
-    }
+# التبويبات التعليمية (Systems Analysis)
+tabs = st.tabs(["🚀 بوت كامب الـ 100 يوم", "🧬 الأنظمة الثمانية", "🧪 استوديو المبدعين", "📜 أرشيف الاعتمادات"])
 
-    /* العنوان الرئيسي - ذهبي متوهج */
-    h1 {
-        background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 950 !important;
-        text-align: center;
-        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
-        font-size: 3.5rem !important;
-        margin-bottom: 0px !important;
-    }
+# --- Tab 1: رحلة التحول السريع ---
+with tabs[0]:
+    st.subheader("🔥 مسار التحول الرقمي الفائق")
+    st.info("نحن لا نبني مجرد مجتمع، نحن ندير مصنعاً للقيادة يضاعف قدراتك كل 10 أيام.")
     
-    /* عداد رحلة الـ 100 يوم - تصميم Neon */
-    .journey-counter {
-        background: linear-gradient(145deg, #111, #050505);
-        border: 2px solid #FFD700;
-        border-radius: 25px;
-        padding: 30px;
-        text-align: center;
-        margin: 20px 0;
-        box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
-    }
-    .days-number {
-        font-size: 5rem !important;
-        font-weight: 900 !important;
-        color: #FFD700 !important;
-        line-height: 1;
-        text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    }
-    .days-label {
-        font-size: 1.5rem !important;
-        color: #FFFFFF !important;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-    }
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"""
+        <div class="rank-card" style="border-color: #00FF88;">
+            <h3>🧠 عقلية المليار</h3>
+            <p>المستوى 1: التأسيس الذاتي</p>
+            <button style="width:100%; height:40px; background:#00FF88; border:none; border-radius:10px; font-weight:bold;">دخول الدرس 📖</button>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"""
+        <div class="rank-card">
+            <h3>📈 هندسة التضاعف</h3>
+            <p>قانون الـ 10: كيف تضاعف فريقك؟</p>
+            <button style="width:100%; height:40px; background:{t['accent']}; border:none; border-radius:10px; font-weight:bold; color:black;">دخول الدرس 📖</button>
+        </div>
+        """, unsafe_allow_html=True)
 
-    /* بطاقات المسارات التعليمية */
-    .course-card {
-        background: rgba(25, 25, 25, 0.95);
-        padding: 40px;
-        border-radius: 35px;
-        border: 2px solid #00FF88;
-        box-shadow: 0 10px 40px rgba(0, 255, 136, 0.1);
-        margin-bottom: 30px;
-    }
-
-    /* تحسين تسميات الحقول (Labels) لتكون واضحة باللون الأخضر النيون */
-    label {
-        color: #00FF88 !important;
-        font-weight: 900 !important;
-        font-size: 1.4rem !important;
-        text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
-    }
+# --- Tab 2: الأنظمة الثمانية المتكاملة ---
+with tabs[1]:
+    st.subheader("🧬 الأنظمة الذكية لإدارة الإمبراطورية")
+    st.write("تعلم كيفية التحكم في الأنظمة الثمانية التي تدير اقتصاد MR7:")
     
-    /* أزرار الإطلاق */
-    .stButton>button {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
-        color: #000000 !important;
-        font-weight: 900 !important;
-        border-radius: 20px !important;
-        height: 75px !important;
-        font-size: 24px !important;
-        border: none !important;
-        transition: all 0.3s ease;
-    }
-    .stButton>button:hover {
-        transform: scale(1.02) translateY(-5px);
-        box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
-    }
+    systems = [
+        ("🧠 العقل المركزي (AI Brain)", "تحليل البيانات والابتكار المستمر"),
+        ("📂 محرك التعليم (Education)", "المحتوى التفاعلي والأكاديمية الرقمية"),
+        ("👥 إدارة الفرق (Team Core)", "مراقبة الأداء والكفاءة"),
+        ("🏆 التحفيز (Incentives Hub)", "المسابقات والجوائز القيادية"),
+        ("🌐 شبكة الانتشار (Network)", "بناء المجتمع والنمو الجماعي"),
+        ("💰 النظام المالي (Finance)", "المحافظ الرقمية والعمليات الذكية"),
+        ("🛒 المتجر العالمي (E-Commerce)", "منصة البيع والشراء السلسة"),
+        ("🤝 التمويل الجماعي (Crowdfunding)", "دعم المشاريع الناشئة والاقتصاد التشاركي")
+    ]
+    
+    for name, desc in systems:
+        with st.expander(f"⚙️ {name}"):
+            st.write(desc)
+            st.button(f"بدء تدريب {name}", key=f"sys_{name}")
 
-    /* شريط التقدم */
-    .stProgress > div > div > div > div {
-        background-color: #00FF88 !important;
-        box-shadow: 0 0 20px #00FF88;
-    }
-    </style>
-
-    <script>
-    function playSfx(url) {
-        const audio = new Audio(url);
-        audio.volume = 0.5;
-        audio.play().catch(e => console.log('Audio Blocked'));
-    }
-    </script>
-    """, unsafe_allow_html=True)
-
-def play_edu_sound(sound_key="recommend"):
-    sounds = {
-        "recommend": "https://www.soundjay.com/buttons/sounds/button-16.mp3",
-        "start": "https://www.soundjay.com/buttons/sounds/button-10.mp3"
-    }
-    st.components.v1.html(f"""
-        <audio autoplay><source src="{sounds[sound_key]}" type="audio/mpeg"></audio>
-    """, height=0)
-
-# --- 2. جدار الحماية ---
-if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-    st.warning("الرجاء تسجيل الدخول أولاً للوصول إلى مركز المعرفة.")
-    st.stop()
-
-# --- 3. حسابات رحلة الـ 100 يوم ---
-# نفترض أن الرحلة بدأت قبل 15 يوماً كمثال
-start_date = date(2026, 3, 27) 
-today = date.today()
-days_passed = (today - start_date).days
-days_left = 100 - days_passed
-
-# --- 4. واجهة المستخدم ---
-st.title("🎓 مركز التميز القيادي")
-st.markdown("<p style='color:#FFD700; font-size:24px; text-align:center; font-weight:bold; margin-top:-20px;'>نحو هندسة عقلية المليار دولار</p>", unsafe_allow_html=True)
-
-# عداد رحلة الـ 100 يوم
-st.markdown(f"""
-<div class="journey-counter">
-    <div class="days-label">يوم متبقي في رحلة الـ 100 يوم للسيادة</div>
-    <div class="days-number">{max(0, days_left)}</div>
-    <div style="color: #00FF88; font-weight: 800; font-size: 1.2rem; margin-top: 10px;">
-        تم اجتياز {days_passed}% من المسار التاريخي
+# --- Tab 3: استوديو المبدعين ---
+with tabs[2]:
+    st.subheader("🧪 كن جزءاً من المحرك المعرفي")
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, {t['accent']}, #00FF88); color: black; padding: 25px; border-radius: 20px; text-align: center;">
+        <h2 style="color: black !important;">أنت لست مجرد متدرب، أنت مهندس!</h2>
+        <p style="font-weight: 700;">ارفع محتواك التعليمي، حدد سعرك، وابدأ في تحقيق دخل سلبي من معرفتك.</p>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+    
+    if st.button("🎨 الانتقال لاستوديو بناء المحتوى"):
+        st.switch_page("pages/7_Creator_Studio.py")
+
+# --- Tab 4: الشهادات والتقدم الحقيقي ---
+with tabs[3]:
+    st.subheader("📜 سجل السيادة المعرفية")
+    st.markdown("""
+    <div style="text-align: center; padding: 40px; border: 2px dashed #444; border-radius: 20px;">
+        <p style="font-size: 1.5rem; opacity: 0.5;">لا توجد شهادات صادرة بعد</p>
+        <p>أكمل مسار 'Adventurer' بنجاح لتوليد أول شهادة موثقة.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.divider()
 
-# شريط التقدم التعليمي
-st.markdown("### 📈 مستوى تطورك القيادي الموثق")
-st.progress(35)
-st.markdown("<p style='color:#FFFFFF; font-size:1.2rem; font-weight:bold;'>لقد أنجزت <span style='color:#00FF88; font-size:1.6rem;'>35%</span> من مسار 'تأسيس القيادة الإمبراطورية'.</p>", unsafe_allow_html=True)
+# وحدة التضاعف العشري (The Formula)
+st.markdown("### 🧮 معادلة التضاعف العشري")
+with st.expander("كيف نصل لـ 100 مليون دولار في 100 يوم؟"):
+    st.write("تبدأ الرحلة بـ 1,000 حالم (Dreamers) يتضاعفون تدريجياً عبر قانون الـ 10 ليصلوا لـ 10 مليون مشترك، محققين ناتجاً اقتصادياً يتجاوز المليار دولار.")
+    st.image("http://googleusercontent.com/image_collection/image_retrieval/6449232857341181720") # صورة تعبيرية للنمو المالي
 
-st.markdown("<br>", unsafe_allow_html=True)
-
-# وكيل التوصيات الذكي
-with st.container():
-    st.markdown("""
-    <div class="course-card" style="border-color: #FFD700;">
-        <h2 style="color: #FFD700; font-weight: 950; font-size: 2.2rem; margin-bottom: 15px;">🤖 وكيل التوصيات الذكي</h2>
-        <p style="color: #FFFFFF; font-size: 1.3rem; line-height: 1.6;">
-        بناءً على هدفك العظيم (<b>المليار دولار</b>) ومرحلتك في <b>رحلة الـ 100 يوم</b>، قمت بتحليل الفجوات واقتراح المسار الأمثل:
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    interest = st.selectbox(
-        "ما هو التحدي الاستراتيجي الذي يواجهك اليوم؟",
-        ["اختر تحدياً من قائمة القادة...", "إدارة فرق عمل عابرة للقارات", "رفع كفاءة التدفقات النقدية والسيولة", "التوسع والاستحواذ في أسواق ناشئة"]
-    )
-
-    if interest != "اختر تحدياً من قائمة القادة...":
-        play_edu_sound("recommend")
-        if "إدارة فرق عمل" in interest:
-            st.success("🎯 وكيل MR7 يقترح: 'ماستر كلاس القيادة الهرمية المرنة'.")
-        elif "التدفقات النقدية" in interest:
-            st.success("🎯 وكيل MR7 يقترح: 'دبلوم الهندسة المالية لأصحاب المليارات'.")
-        elif "التوسع" in interest:
-            st.success("🎯 وكيل MR7 يقترح: 'استراتيجيات الاختراق العالمي السريع'.")
-
-st.divider()
-
-# عرض المسارات التعليمية
-st.subheader("🚀 مسارات التعلم النشطة")
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("""
-    <div class="course-card">
-        <h3 style='color:#FFD700; margin-bottom:15px; font-size: 1.8rem;'>عقلية المليار 🧠</h3>
-        <p style='color:#FFFFFF; font-size:1.1rem;'>12 درس مرئي عالي الجودة - 5 مشاريع تطبيقية</p>
-        <p style='color:#00FF88; font-weight:900; font-size:1.5rem; margin-top:10px;'>معدل الإنجاز: 60%</p>
-    </div>
-    """, unsafe_allow_html=True)
-    if st.button("متابعة بناء العقلية 📖", key="course_1"):
-        play_edu_sound("start")
-
-with col2:
-    st.markdown("""
-    <div class="course-card">
-        <h3 style='color:#FFD700; margin-bottom:15px; font-size: 1.8rem;'>القيادة الخضراء 🌍</h3>
-        <p style='color:#FFFFFF; font-size:1.1rem;'>8 دروس استراتيجية - مشروع تقليل الانبعاثات</p>
-        <p style='color:#FF4B4B; font-weight:900; font-size:1.5rem; margin-top:10px;'>لم يتم البدء بعد</p>
-    </div>
-    """, unsafe_allow_html=True)
-    if st.button("بدء المسار البيئي 🚀", key="course_2"):
-        play_edu_sound("start")
-
-# الانتقال للمحفظة
-st.markdown("<br><br>", unsafe_allow_html=True)
-if st.button("💰 عرض أرباح القائد واستلام العمولات"):
-    play_edu_sound("recommend")
-    st.switch_page("pages/3_Wallet.py")
+if st.button("🤝 استكشاف فرص التمويل الجماعي للمشاريع"):
+    st.switch_page("pages/9_Crowdfunding.py")
