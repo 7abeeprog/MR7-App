@@ -1,6 +1,9 @@
 import streamlit as st
 import time
 from datetime import datetime
+import json
+import requests
+import uuid
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -33,7 +36,6 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
-    /* الفلسفة التصميمية: مركز القيادة والتحكم (The Command Center) */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
@@ -48,8 +50,8 @@ st.markdown(f"""
         -webkit-text-fill-color: transparent; 
         font-weight: 950 !important; 
         text-align: center; 
-        filter: drop-shadow(0 0 10px {t['accent']}); 
-        font-size: 3.2rem !important; 
+        filter: drop-shadow(0 0 12px {t['accent']}); 
+        font-size: 3.5rem !important; 
     }}
 
     .admin-stat-card {{
@@ -71,7 +73,6 @@ st.markdown(f"""
         border-right: 5px solid {t['accent']};
     }}
 
-    /* تصميم بطاقات الذكاء الاصطناعي */
     .ai-insight-card {{
         background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0,0,0,0.8) 100%);
         border: 1px solid #00FF88;
@@ -80,7 +81,6 @@ st.markdown(f"""
         margin-top: 15px;
     }}
 
-    /* حل مشكلة الكتابة بالأسود */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -100,9 +100,42 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. إدارة البيانات (Master Admin State) ---
-if 'crowd_projects' not in st.session_state:
-    st.session_state.crowd_projects = []
+# --- 2. محرك قاعدة البيانات (Firestore Logic) ---
+# جلب الإعدادات من secrets البيئة
+fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
+app_id = st.secrets.get("__app_id", "mr7-empire-v1")
+project_id = fb_config.get("projectId", "mr7-app")
+
+BASE_URL = "https://firestore.googleapis.com/v1/"
+PROJECT_PATH = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/crowd_projects"
+
+def fetch_pending_projects():
+    """جلب المشاريع التي تنتظر المراجعة"""
+    try:
+        res = requests.get(f"{BASE_URL}{PROJECT_PATH}")
+        if res.status_code == 200:
+            docs = res.json().get("documents", [])
+            pending = []
+            for doc in docs:
+                fields = doc.get("fields", {})
+                if fields.get("status", {}).get("stringValue") == "pending":
+                    pending.append({
+                        "id": doc["name"].split("/")[-1],
+                        "title": fields.get("title", {}).get("stringValue", "غير مسمى"),
+                        "country": fields.get("country", {}).get("stringValue", "غير محدد"),
+                        "goal": fields.get("goal", {}).get("integerValue", "0"),
+                        "user": fields.get("owner", {}).get("stringValue", "مجهول")
+                    })
+            return pending
+        return []
+    except: return []
+
+def update_project_status(p_id, new_status):
+    """تحديث حالة المشروع في قاعدة البيانات"""
+    url = f"{BASE_URL}{PROJECT_PATH}/{p_id}?updateMask.fieldPaths=status"
+    payload = {"fields": {"status": {"stringValue": new_status}}}
+    res = requests.patch(url, json=payload)
+    return res.status_code == 200
 
 # --- 3. الشريط الجانبي ---
 with st.sidebar:
@@ -114,7 +147,8 @@ with st.sidebar:
     st.divider()
     st.markdown("### 👑 رتبة الوصول")
     st.warning("Root Admin: MR7-GOD-MODE")
-    st.success("حالة السيرفر: 99.9% Up-time")
+    if st.button("🔄 تحديث البيانات الحية"):
+        st.rerun()
 
 # --- 4. واجهة لوحة التحكم العليا ---
 st.title("👑 لوحة التحكم العليا")
@@ -129,7 +163,7 @@ with col_m1:
 with col_m2:
     st.markdown(f'<div class="admin-stat-card"><small>جيش القادة</small><br><span style="font-size:1.8rem; color:{t["accent"]};">1.2M</span></div>', unsafe_allow_html=True)
 with col_m3:
-    st.markdown(f'<div class="admin-stat-card"><small>طلبات معلقة</small><br><span style="font-size:1.8rem;">42</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="admin-stat-card"><small>طلبات معلقة</small><br><span style="font-size:1.8rem;">{len(fetch_pending_projects())}</span></div>', unsafe_allow_html=True)
 with col_m4:
     st.markdown(f'<div class="admin-stat-card"><small>معدل النمو</small><br><span style="font-size:1.8rem; color:#FF4B4B;">+22%</span></div>', unsafe_allow_html=True)
 
@@ -138,30 +172,37 @@ st.divider()
 # التبويبات الإدارية (The 5 Pillars of Admin)
 tabs = st.tabs(["🏗️ المشاريع الجغرافية", "🎬 جودة المحتوى", "💹 نظام العمولات", "👥 الهويات السيادية", "🧠 الذكاء الاستراتيجي"])
 
-# --- Tab 1: تدقيق المشاريع ---
+# --- Tab 1: تدقيق المشاريع (Live Logic) ---
 with tabs[0]:
-    st.subheader("📍 مراجعة طلبات الضخ المالي الإقليمي")
-    pending_projects = [
-        {"title": "توسعة مزارع السودان", "country": "السودان", "goal": "$500,000", "user": "القائد إدريس"},
-        {"title": "مركز لوجستي في بنغازي", "country": "ليبيا", "goal": "$250,000", "user": "القائد صالح"},
-        {"title": "مصنع تجميع EV", "country": "مصر", "goal": "$1,200,000", "user": "القائد أحمد"}
-    ]
+    st.subheader("📍 مراجعة طلبات الضخ المالي الحية")
+    pending_list = fetch_pending_projects()
     
-    for proj in pending_projects:
-        with st.container():
-            st.markdown(f"""
-            <div class="approval-box">
-                <div style="display: flex; justify-content: space-between;">
-                    <h4>{proj['title']} - {proj['country']}</h4>
-                    <span style="color:#00FF88;">المستهدف: {proj['goal']}</span>
+    if not pending_list:
+        st.info("لا توجد طلبات مشاريع معلقة حالياً. المنظومة تعمل بكفاءة.")
+    else:
+        for proj in pending_list:
+            with st.container():
+                st.markdown(f"""
+                <div class="approval-box">
+                    <div style="display: flex; justify-content: space-between;">
+                        <h4>{proj['title']} - {proj['country']}</h4>
+                        <span style="color:#00FF88;">المستهدف: ${int(proj['goal']):,}</span>
+                    </div>
+                    <p style="font-size:0.8rem; opacity:0.7;">بواسطة: {proj['user']}</p>
                 </div>
-                <p style="font-size:0.8rem; opacity:0.7;">بواسطة: {proj['user']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            c1, c2, c3 = st.columns([1, 1, 2])
-            c1.button("✅ موافقة", key=f"app_{proj['title']}")
-            c2.button("❌ رفض", key=f"rej_{proj['title']}")
-            c3.text_input("ملاحظات التدقيق:", key=f"note_{proj['title']}")
+                """, unsafe_allow_html=True)
+                c1, c2, c3 = st.columns([1, 1, 2])
+                if c1.button("✅ موافقة", key=f"app_{proj['id']}"):
+                    if update_project_status(proj['id'], "approved"):
+                        st.success(f"تم اعتماد مشروع {proj['title']}!")
+                        time.sleep(1)
+                        st.rerun()
+                if c2.button("❌ رفض", key=f"rej_{proj['id']}"):
+                    if update_project_status(proj['id'], "rejected"):
+                        st.error("تم رفض المشروع وإخطار القائد.")
+                        time.sleep(1)
+                        st.rerun()
+                c3.text_input("ملاحظات التدقيق:", key=f"note_{proj['id']}")
 
 # --- Tab 2: مراقبة المحتوى ---
 with tabs[1]:
@@ -197,7 +238,7 @@ with tabs[3]:
         {"UUID": "2b1a-...", "الاسم": "صالح الليبي", "الرتبة": "قائد استراتيجي", "الحالة": "موثق ✅"}
     ])
 
-# --- Tab 5: الذكاء الاستراتيجي (New Opinion Upgrade) ---
+# --- Tab 5: الذكاء الاستراتيجي ---
 with tabs[4]:
     st.subheader("🧠 وكيل التحليل الاستراتيجي (MR7-AI)")
     st.markdown("""
