@@ -4,6 +4,7 @@ from datetime import datetime, date
 import json
 import requests
 import uuid
+import pandas as pd
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -54,6 +55,18 @@ st.markdown(f"""
         font-size: 3.5rem !important; 
     }}
 
+    .rank-badge {{
+        background: linear-gradient(135deg, {t['accent']}, #FFFFFF);
+        color: #000 !important;
+        padding: 10px 25px;
+        border-radius: 50px;
+        font-weight: 900;
+        display: inline-block;
+        margin: 10px 0;
+        box-shadow: 0 0 20px {t['accent']};
+        font-size: 1.2rem;
+    }}
+
     .journey-counter {{
         background: {t['card']};
         border: 2px solid {t['border']};
@@ -61,22 +74,19 @@ st.markdown(f"""
         padding: 30px;
         text-align: center;
         margin: 20px 0;
-        box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
     }}
     .days-number {{
-        font-size: 5rem !important;
+        font-size: 4rem !important;
         font-weight: 900 !important;
         color: {t['accent']} !important;
-        line-height: 1;
     }}
 
     .course-card {{
         background: rgba(25, 25, 25, 0.95);
-        padding: 40px;
-        border-radius: 35px;
+        padding: 35px;
+        border-radius: 30px;
         border: 2px solid #00FF88;
-        box-shadow: 0 10px 40px rgba(0, 255, 136, 0.1);
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         transition: 0.3s;
     }}
     .course-card:hover {{ transform: translateY(-5px); border-color: {t['accent']}; }}
@@ -86,13 +96,27 @@ st.markdown(f"""
         color: #000000 !important;
         font-weight: 950 !important;
         border-radius: 20px !important;
-        height: 70px;
-        font-size: 1.2rem;
+        height: 65px;
+        font-size: 1.1rem;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. محرك السحابة (Education Cloud Integration) ---
+# --- 2. محرك الرتب والذكاء التعليمي (Rank Logic) ---
+def get_rank_info(xp):
+    """تحديد الرتبة والتقدم بناءً على نقاط الخبرة"""
+    if xp < 1000:
+        return "قائد متدرب 🌱", "المستكشف", 1000, 0.2
+    elif xp < 5000:
+        return "استراتيجي صاعد 📈", "القائد الميداني", 5000, 0.5
+    elif xp < 15000:
+        return "مهندس إمبراطورية 🏗️", "جنرال السيادة", 15000, 0.7
+    elif xp < 50000:
+        return "أسطورة المعرفة 👑", "الحكيم الملياري", 50000, 0.9
+    else:
+        return "باني حضارات 🌌", "مؤسس التريليون", 1000000, 1.0
+
+# --- 3. محرك السحابة (Education Cloud Integration) ---
 fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 project_id = fb_config.get("projectId", "mr7-app")
@@ -122,37 +146,56 @@ def update_edu_progress(new_xp, new_prog):
         "fields": {
             "xp": {"integerValue": str(new_xp)},
             "progress": {"integerValue": str(new_prog)},
-            "last_active": {"stringValue": datetime.now().isoformat()}
+            "last_active": {"stringValue": datetime.now().isoformat()},
+            "start_date": {"stringValue": "2026-03-27"}
         }
     }
-    requests.patch(f"{BASE_URL}{path}?updateMask.fieldPaths=xp&updateMask.fieldPaths=progress", json=payload)
+    requests.patch(f"{BASE_URL}{path}?updateMask.fieldPaths=xp&updateMask.fieldPaths=progress&updateMask.fieldPaths=last_active&updateMask.fieldPaths=start_date", json=payload)
 
-# --- 3. واجهة الأكاديمية التعليمية ---
+# --- 4. واجهة الأكاديمية التعليمية ---
 st.title("🎓 مركز التميز القيادي")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.5rem; margin-top:-20px;'>نحو هندسة عقلية المليار دولار</p>", unsafe_allow_html=True)
 
-# جلب البيانات الحية
+# جلب البيانات الحية وحساب الرتبة
 edu_data = get_user_edu_data()
+rank_title, rank_desc, next_target, rank_prog = get_rank_info(edu_data['xp'])
+
+# عرض الرتبة والتقدم بشكل فخم
+col_r1, col_r2 = st.columns([2, 1])
+with col_r1:
+    st.markdown(f"### الحالة الحالية: <div class='rank-badge'>{rank_title}</div>", unsafe_allow_html=True)
+    st.write(f"لقب الاستحقاق: **{rank_desc}**")
+with col_r2:
+    st.markdown(f"<div style='text-align:right;'><small>التقدم للرتبة التالية</small></div>", unsafe_allow_html=True)
+    st.progress(min(1.0, edu_data['xp'] / next_target))
+    st.markdown(f"<div style='text-align:right;'><small>{edu_data['xp']:,} / {next_target:,} XP</small></div>", unsafe_allow_html=True)
+
+st.divider()
 
 # حساب رحلة الـ 100 يوم
 s_date = datetime.strptime(edu_data['start_date'], "%Y-%m-%d").date()
 days_passed = (date.today() - s_date).days
 days_left = max(0, 100 - days_passed)
 
-st.markdown(f"""
-<div class="journey-counter">
-    <div style="text-transform: uppercase; letter-spacing: 2px;">يوم متبقي في رحلة الـ 100 يوم للسيادة</div>
-    <div class="days-number">{days_left}</div>
-    <div style="color: #00FF88; font-weight: 800; margin-top: 10px;">تم اجتياز {days_passed}% من المسار التاريخي</div>
-</div>
-""", unsafe_allow_html=True)
+col_info1, col_info2 = st.columns(2)
+with col_info1:
+    st.markdown(f"""
+    <div class="journey-counter">
+        <small>يوم متبقي للسيادة</small>
+        <div class="days-number">{days_left}</div>
+    </div>
+    """, unsafe_allow_html=True)
+with col_info2:
+    st.markdown(f"""
+    <div class="journey-counter">
+        <small>إجمالي نقاط الخبرة (XP)</small>
+        <div class="days-number" style="color:#00FF88 !important;">{edu_data['xp']:,}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.divider()
-
-# شريط التقدم التعليمي
-st.subheader("📈 مستوى تطورك القيادي الموثق")
+# شريط التقدم التعليمي العام
+st.subheader("📈 تقدم المنهج الموثق")
 st.progress(edu_data['progress'] / 100)
-st.markdown(f"<p style='font-size:1.2rem;'>لقد أنجزت <span style='color:#00FF88; font-size:1.6rem;'>{edu_data['progress']}%</span> من مسار 'تأسيس القيادة الإمبراطورية'.</p>", unsafe_allow_html=True)
+st.caption(f"تم إنجاز {edu_data['progress']}% من المسار التأسيسي.")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -162,31 +205,54 @@ col_c1, col_c2 = st.columns(2)
 with col_c1:
     st.markdown(f"""
     <div class="course-card">
-        <h3 style='color:#FFD700; margin-bottom:15px; font-size: 1.8rem;'>عقلية المليار 🧠</h3>
-        <p>12 درس مرئي - 5 مشاريع تطبيقية</p>
-        <p style='color:#00FF88; font-weight:900; font-size:1.5rem;'>XP المتوفر: {edu_data['xp']}</p>
+        <h3 style='color:#FFD700;'>عقلية المليار 🧠</h3>
+        <p>دروس هندسة القيمة الذاتية وتجاوز حدود الممكن.</p>
+        <p style='color:#00FF88; font-weight:900;'>+150 XP لكل درس</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("متابعة بناء العقلية 📖"):
-        with st.spinner("جاري حفظ التقدم في السحابة..."):
+    if st.button("متابعة الدرس الحالي 📖", key="btn_course_1"):
+        with st.spinner("جاري توثيق الحضور وتحديث الرتبة..."):
             update_edu_progress(edu_data['xp'] + 150, min(100, edu_data['progress'] + 5))
-            st.success("تم تسجيل حضورك! +150 XP")
+            st.success("أحسنت! +150 XP. تقدمك في السحابة محفوظ.")
             time.sleep(1)
             st.rerun()
 
 with col_c2:
     st.markdown(f"""
     <div class="course-card" style="border-color: #FFD700;">
-        <h3 style='color:#FFD700; margin-bottom:15px; font-size: 1.8rem;'>القيادة الخضراء 🌍</h3>
-        <p>8 دروس استراتيجية - أثر مستدام</p>
-        <p style='color:#FF4B4B; font-weight:900; font-size:1.5rem;'>لم يتم البدء بعد</p>
+        <h3 style='color:#FFD700;'>القيادة الخضراء 🌍</h3>
+        <p>التوسع الجغرافي المستدام وأثر مشاريع السودان ومصر.</p>
+        <p style='color:#FF4B4B; font-weight:900;'>فتح عند 5000 XP</p>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("بدء المسار البيئي 🚀"):
-        st.info("سيتم فتح المسار قريباً...")
+    disabled = edu_data['xp'] < 5000
+    if st.button("بدء المسار الاستراتيجي 🚀", disabled=disabled, key="btn_course_2"):
+        st.success("انطلق يا قائد!")
 
 st.divider()
 
-# العودة
+# وحدة استخراج البيانات السيادية
+with st.expander("📊 وحدة استخراج تقارير الأداء"):
+    report_data = {
+        "المعرف": st.session_state.user_id[:8],
+        "الرتبة": rank_title,
+        "اللقب": rank_desc,
+        "XP المجموع": edu_data['xp'],
+        "نسبة الإنجاز": f"{edu_data['progress']}%",
+        "تاريخ البدء": edu_data['start_date']
+    }
+    report_df = pd.DataFrame([report_data])
+    st.table(report_df)
+    
+    csv = report_df.to_csv(index=False).encode('utf-8-sig')
+    st.download_button(
+        label="📥 تحميل شهادة الأداء المؤقتة (CSV)",
+        data=csv,
+        file_name=f"MR7_Leader_Report_{st.session_state.user_id[:8]}.csv",
+        mime='text/csv',
+    )
+
+st.divider()
+
 if st.button("🏠 العودة لمركز القيادة الرئيسي"):
     st.switch_page("app.py")
