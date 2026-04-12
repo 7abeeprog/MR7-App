@@ -1,15 +1,13 @@
 import streamlit as st
-from datetime import datetime
 import time
+from datetime import datetime
+import json
+import requests
 
-# --- كود محرك الأنماط الشامل (Theme Engine) ---
-# انسخ هذا الجزء وضعه في بداية أي صفحة بعد سطر الاستدعاء (import)
-
-# 1. التأكد من وجود متغير النمط في ذاكرة الجلسة
+# --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
     st.session_state.app_theme = "غامق إمبراطوري 🖤"
 
-# 2. تعريف الألوان والخصائص لكل نمط (Themes Dictionary)
 themes = {
     "غامق إمبراطوري 🖤": {
         "bg": "#000000", "sidebar": "#050505", "text": "#FFFFFF", 
@@ -35,237 +33,161 @@ themes = {
 
 t = themes[st.session_state.app_theme]
 
-# 3. حقن تنسيقات CSS بناءً على النمط المختار
 st.markdown(f"""
     <style>
-    /* الخلفية العامة */
+    /* الفلسفة التصميمية: الشفافية والسيادة المالية المطلقة */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
-    
-    /* القائمة الجانبية */
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
-
-    /* النصوص والعناوين */
-    div[data-testid="stMarkdownContainer"] p, h2, h3, span, label, li {{ color: {t['text']} !important; font-weight: 700 !important; }}
-    h1 {{ background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 950 !important; text-align: center; filter: drop-shadow(0 0 10px {t['accent']}); font-size: 3rem !important; }}
-
-    /* حل مشكلة القوائم المنسدلة (Selectbox) لضمان وضوح النص */
-    div[data-baseweb="select"] > div {{ background-color: {t['select_bg']} !important; color: {t['select_text']} !important; }}
-    div[data-baseweb="popover"] ul {{ background-color: {t['select_bg']} !important; }}
-    div[data-baseweb="popover"] li {{ color: {t['select_text']} !important; background-color: {t['select_bg']} !important; }}
-    div[data-baseweb="popover"] li:hover {{ background-color: {t['accent']} !important; color: #000000 !important; }}
-
-    /* تنسيق الأزرار */
-    .stButton>button {{ background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important; color: #000000 !important; font-weight: 950 !important; border-radius: 20px !important; }}
-    </style>
-    """, unsafe_allow_html=True)
-
-# 4. القائمة الجانبية للتحكم في النمط
-with st.sidebar:
-    st.markdown(f"### 🎨 تخصيص المظهر")
-    theme_choice = st.selectbox(
-        "اختر نمط الألوان المفضل لديك:",
-        options=list(themes.keys()),
-        index=list(themes.keys()).index(st.session_state.app_theme)
-    )
-    if theme_choice != st.session_state.app_theme:
-        st.session_state.app_theme = theme_choice
-        st.rerun()
-    st.divider()
-# --- 1. إعدادات التصميم الإمبراطوري (High-Contrast Financial UI) ---
-st.markdown("""
-    <style>
-    /* تحسين الخلفية العامة للسواد المطلق لضمان التباين */
-    .stApp {
-        background-color: #000000 !important;
-        color: #FFFFFF !important;
-    }
     
-    /* هندسة القائمة الجانبية (Sidebar) */
-    [data-testid="stSidebar"] {
-        background-color: #050505 !important;
-        border-right: 2px solid #FFD700 !important;
-    }
-    [data-testid="stSidebar"] * {
-        color: #ffffff !important;
-    }
+    div[data-testid="stMarkdownContainer"] p, h2, h3, h4, span, label, li {{ 
+        color: {t['text']} !important; 
+        font-weight: 700 !important; 
+    }}
+    
+    h1 {{ 
+        background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']}); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        font-weight: 950 !important; 
+        text-align: center; 
+        filter: drop-shadow(0 0 15px {t['accent']}); 
+        font-size: 3.5rem !important; 
+    }}
 
-    /* ضمان وضوح النصوص المالية باللون الأبيض الناصع */
-    div[data-testid="stMarkdownContainer"] p, h2, h3, span, label, th, td {
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-        font-size: 1.1rem;
-    }
-
-    /* العنوان الرئيسي الذهبي المتوهج */
-    h1 {
-        background: linear-gradient(90deg, #FFD700, #FFFFFF, #FFD700);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 950 !important;
-        text-align: center;
-        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
-        font-size: 3.5rem !important;
-        margin-bottom: 30px !important;
-    }
-
-    /* بطاقات الأرصدة - تصميم Glassmorphism فخم بتباين عالٍ */
-    .balance-card {
-        background: rgba(30, 30, 30, 0.95);
-        border: 2px solid #FFD700;
+    .balance-card {{
+        background: {t['card']};
+        border: 2px solid {t['border']};
         border-radius: 35px;
-        padding: 45px;
+        padding: 40px;
         text-align: center;
-        box-shadow: 0 20px 50px rgba(255, 215, 0, 0.2);
-        margin-bottom: 30px;
-    }
-    
-    .balance-value {
-        font-size: 4rem !important;
-        font-weight: 950 !important;
-        color: #00FF88 !important; /* أخضر نيون للوضوح التام */
-        text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
-    }
-    
-    .balance-label {
-        color: #FFD700 !important;
-        font-size: 1.6rem !important;
-        font-weight: 800 !important;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-top: 15px;
-    }
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        margin-bottom: 25px;
+    }}
 
-    /* جداول العمليات (Audit Trail) بتباين فائق */
-    .stTable {
-        background-color: #111111 !important;
-        border-radius: 25px !important;
-        border: 2px solid #444 !important;
-        overflow: hidden;
-    }
-    .stTable th {
-        background-color: #222 !important;
-        color: #FFD700 !important;
-        font-size: 1.2rem !important;
-    }
+    .income-source {{
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-right: 4px solid #00FF88;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }}
 
-    /* أزرار التحويل والعمليات */
-    .stButton>button {
-        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%) !important;
+    /* حل مشكلة الكتابة باللون الأسود */
+    .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 2px solid {t['border']} !important;
+        border-radius: 12px !important;
+        font-weight: bold !important;
+    }}
+
+    .stButton>button {{
+        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
         font-weight: 950 !important;
-        border-radius: 22px !important;
-        height: 80px !important;
-        font-size: 26px !important;
-        border: none !important;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 15px 40px rgba(184, 134, 11, 0.4);
-    }
-    .stButton>button:hover {
-        transform: scale(1.05) translateY(-8px);
-        box-shadow: 0 25px 60px rgba(255, 215, 0, 0.7);
-    }
-
-    /* حقول الإدخال لتكون واضحة باللون الأبيض */
-    .stTextInput input, .stNumberInput input {
-        background-color: #1a1a1a !important;
-        color: #FFFFFF !important;
-        border: 2px solid #555 !important;
-        border-radius: 18px !important;
+        border-radius: 20px !important;
         height: 60px;
-        font-size: 1.2rem !important;
-    }
-    .stTextInput input:focus {
-        border-color: #FFD700 !important;
-    }
+        font-size: 1.1rem;
+    }}
     </style>
-
-    <script>
-    // نظام المؤثرات الصوتية المالية
-    function playSfx(url) {
-        const audio = new Audio(url);
-        audio.volume = 0.6;
-        audio.play().catch(e => console.log('Audio Blocked'));
-    }
-    </script>
     """, unsafe_allow_html=True)
 
-def play_wallet_sound(sound_key="success"):
-    sounds = {
-        "success": "https://assets.mixkit.co/active_storage/sfx/2020/2020-preview.mp3", # صوت ملحمي للنجاح المالي
-        "click": "https://www.soundjay.com/buttons/sounds/button-16.mp3"
-    }
-    st.components.v1.html(f"""
-        <audio autoplay><source src="{sounds[sound_key]}" type="audio/mpeg"></audio>
-    """, height=0)
-
-# --- 2. جدار الحماية (التأكد من تسجيل الدخول) ---
-if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
-    st.warning("الرجاء تسجيل الدخول أولاً للوصول إلى الخزنة الإمبراطورية.")
-    st.stop()
-
-# --- 3. بيانات المحفظة المحاكية لرحلة التريليون ---
+# --- 2. إدارة البيانات المالية (Global Cash Flow) ---
 if 'cash_balance' not in st.session_state:
-    st.session_state.cash_balance = 1250000.00 
-    st.session_state.points_balance = 54200
+    st.session_state.cash_balance = 1250000.00
+if 'pending_commissions' not in st.session_state:
+    st.session_state.pending_commissions = 2450.75
 
-# --- 4. واجهة المستخدم ---
+# --- 3. واجهة الخزنة الإمبراطورية ---
 st.title("💰 الخزنة الإمبراطورية MR7")
-st.markdown("<p style='text-align:center; color:#FFD700; font-size:24px; font-weight:bold; margin-top:-20px;'>إدارة الثروة والسيادة المالية للقادة</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>إدارة السيولة الكونية والتدفقات النقدية العابرة للأقاليم</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# عرض الأرصدة بتصميم البطاقات الفخم وعالي التباين
-col_cash, col_points = st.columns(2)
-
-with col_cash:
-    st.markdown(f"""
-    <div class="balance-card">
-        <div class="balance-label">رصيد الكاش القابل للسحب</div>
-        <div class="balance-value">${st.session_state.cash_balance:,.2f}</div>
-        <div style="color: #FFFFFF; font-size: 1.1rem; margin-top: 15px; font-weight: bold;">الحالة: مؤمن تماماً 🔐</div>
+# عرض الرصيد الرئيسي
+st.markdown(f"""
+<div class="balance-card">
+    <p style="color: {t['accent']} !important; font-size: 1.2rem; letter-spacing: 2px;">إجمالي الرصيد القابل للسحب</p>
+    <h1 style="font-size: 4.5rem !important; margin: 10px 0;">${st.session_state.cash_balance:,.2f}</h1>
+    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px;">
+        <span style="color: #00FF88;">عمولات معلقة: ${st.session_state.pending_commissions:,.2f}</span>
+        <span style="color: {t['accent']};">|</span>
+        <span style="color: #FFFFFF;">قوة الشراء: فائقة</span>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-with col_points:
-    st.markdown(f"""
-    <div class="balance-card" style="border-color: #00FF88;">
-        <div class="balance-label" style="color: #00FF88 !important;">نقاط الاستحقاق (هجين)</div>
-        <div class="balance-value" style="color: #FFFFFF !important;">{st.session_state.points_balance:,.0f} PTS</div>
-        <div style="color: #00FF88; font-size: 1.1rem; margin-top: 15px; font-weight: bold;">المستوى: قائد إمبراطوري 💎</div>
-    </div>
-    """, unsafe_allow_html=True)
+tabs = st.tabs(["📊 تدفقات الأقاليم", "💸 سحب وإيداع", "📜 سجل التدقيق المالي", "🔮 توقعات التضاعف"])
 
-st.divider()
-
-# سجل العمليات المالية (Audit Trail)
-st.subheader("📜 سجل التدقيق المالي الموثق")
-ledger_data = [
-    {"التاريخ": "2026-04-11", "العملية": "عمولة مبيعات شبكة النخبة", "المبلغ": "+$5,200.00", "الحالة": "موثق ✅"},
-    {"التاريخ": "2026-04-10", "العملية": "مكافأة إكمال ماراثون القيادة", "المبلغ": "+$1,000.00", "الحالة": "موثق ✅"},
-    {"التاريخ": "2026-04-09", "العملية": "أرباح ذكاء اصطناعي مؤتمتة", "المبلغ": "+$450.00", "الحالة": "موثق ✅"},
-]
-st.table(ledger_data)
-
-st.divider()
-
-# وحدة التحويل الآمنة بين القادة
-st.subheader("🔐 وحدة التحويل الاستراتيجي")
-with st.expander("إجراء عملية تحويل فوري ومؤمن"):
-    recipient = st.text_input("أدخل معرف القائد المستهدف (Elite ID):")
-    amount = st.number_input("المبلغ المطلوب تحويله ($):", min_value=10.0, step=100.0)
+# --- Tab 1: تدفقات الأقاليم (Regional Sync) ---
+with tabs[0]:
+    st.subheader("📍 مصادر الدخل السيادي الحية")
+    st.markdown("توزيع الأرباح بناءً على المشاريع النشطة في مصر وليبيا والسودان.")
     
-    if st.button("🚀 إطلاق عملية التحويل"):
-        if amount <= st.session_state.cash_balance:
-            play_wallet_sound("success")
-            st.session_state.cash_balance -= amount
-            st.success(f"تم تنفيذ التحويل بنجاح إمبراطوري! رقم العملية: MR7-TXN-{datetime.now().strftime('%Y%m%d%H%M%S')}")
-            time.sleep(2.5)
+    regional_incomes = [
+        {"المنطقة": "🇪🇬 مصر (مجمع السيارات)", "الربح المحقق": "$5,240.00", "الحالة": "جاهز للسحب"},
+        {"المنطقة": "🇱🇾 ليبيا (مشاريع صغرى)", "الربح المحقق": "$1,120.50", "الحالة": "قيد المزامنة"},
+        {"المنطقة": "🇸🇩 السودان (سلة الغذاء)", "الربح المحقق": "$850.00", "الحالة": "جاهز للسحب"},
+        {"الالمنطقة": "🌎 التجارة العالمية (المتجر)", "الربح المحقق": "$12,400.00", "الحالة": "تم الإيداع ✅"}
+    ]
+    
+    for item in regional_incomes:
+        st.markdown(f"""
+        <div class="income-source">
+            <span>{item['المنطقة']}</span>
+            <span style="color: #00FF88; font-weight: 900;">{item['الربح المحقق']}</span>
+            <small style="opacity: 0.6;">{item['الحالة']}</small>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    if st.button("🔄 مزامنة كافة أرباح الأقاليم الآن"):
+        with st.spinner("جاري التواصل مع المحركات المالية الإقليمية..."):
+            time.sleep(2)
+            st.success("تمت مزامنة الأرباح! الرصيد المتاح زاد بقيمة $6,090")
+            st.session_state.cash_balance += 6090
             st.rerun()
-        else:
-            st.error("⚠️ فشل العملية: رصيد الخزنة لا يغطي هذا الطموح المالي.")
 
-# زر الانتقال للدعم الفني
-st.markdown("<br><br>", unsafe_allow_html=True)
-if st.button("💬 طلب استشارة مالية من الخبير الذكي"):
-    play_wallet_sound("click")
-    st.switch_page("pages/2_Support.py")
+# --- Tab 2: سحب وإيداع ---
+with tabs[1]:
+    st.subheader("💸 إدارة السيولة النقدية")
+    col_w1, col_w2 = st.columns(2)
+    with col_w1:
+        st.markdown("#### إيداع استراتيجي")
+        st.number_input("المبلغ المطلوب ضخه ($):", min_value=10, step=100)
+        st.button("💳 شحن عبر البوابة العالمية")
+    with col_w2:
+        st.markdown("#### سحب الأرباح")
+        st.number_input("المبلغ المطلوب سحبه ($):", min_value=10, max_value=int(st.session_state.cash_balance), step=100)
+        st.button("🏦 تحويل للحساب البنكي الموثق")
+
+# --- Tab 3: سجل التدقيق المالي ---
+with tabs[2]:
+    st.subheader("📜 كشف حساب الإمبراطورية")
+    ledger = [
+        {"التاريخ": "2026-04-12", "العملية": "أرباح مجمع سيارات مصر", "القيمة": "+$5,240", "الرصيد": "$1.25M"},
+        {"التاريخ": "2026-04-11", "العملية": "عمولة شبكة (الجيل الأول)", "القيمة": "+$450", "الرصيد": "$1.24M"},
+    ]
+    st.table(ledger)
+
+# --- Tab 4: توقعات التضاعف (Financial Advanced Bridge) ---
+with tabs[3]:
+    st.subheader("🔮 رؤية النمو المالي")
+    st.markdown("تحليل ذكاء اصطناعي لمستقبل محفظتك بناءً على الأداء الحالي.")
+    st.info("بناءً على نشاطك في إقليم 'مصر'، يتوقع النظام نمواً في رصيدك بنسبة 24% خلال الـ 6 أشهر القادمة.")
+    if st.button("📉 فتح المحاكي المالي المتقدم"):
+        st.switch_page("pages/14_Financial_Advanced.py")
+
+st.divider()
+
+# خريطة الانتقال
+st.markdown("### 🗺️ خريطة السيادة السريعة")
+c_b1, c_b2, c_b3 = st.columns(3)
+with c_b1:
+    if st.button("👥 جيش القادة"): st.switch_page("pages/6_Teams.py")
+with c_b2:
+    if st.button("🤝 التمويل الجماعي"): st.switch_page("pages/9_Crowdfunding.py")
+with c_b3:
+    if st.button("🏠 العودة للرئيسية"): st.switch_page("app.py")
