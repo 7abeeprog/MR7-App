@@ -1,0 +1,241 @@
+import streamlit as st
+import time
+from datetime import datetime
+
+# --- 1. محرك الأنماط الشامل (Theme Engine) ---
+if 'app_theme' not in st.session_state:
+    st.session_state.app_theme = "غامق إمبراطوري 🖤"
+
+themes = {
+    "غامق إمبراطوري 🖤": {
+        "bg": "#000000", "sidebar": "#050505", "text": "#FFFFFF", 
+        "accent": "#FFD700", "card": "rgba(30, 30, 30, 0.9)", "border": "#FFD700",
+        "select_text": "#FFFFFF", "select_bg": "#1A1A1A"
+    },
+    "فاتح ملكي ✨": {
+        "bg": "#F5F5F5", "sidebar": "#FFFFFF", "text": "#1A1A1A", 
+        "accent": "#B8860B", "card": "rgba(255, 255, 255, 0.95)", "border": "#B8860B",
+        "select_text": "#1A1A1A", "select_bg": "#FFFFFF"
+    },
+    "أزرق القيادة 💙": {
+        "bg": "#001F3F", "sidebar": "#001529", "text": "#FFFFFF", 
+        "accent": "#0074D9", "card": "rgba(0, 31, 63, 0.8)", "border": "#0074D9",
+        "select_text": "#FFFFFF", "select_bg": "#001529"
+    },
+    "أخضر الاستدامة 💚": {
+        "bg": "#002B1B", "sidebar": "#001A10", "text": "#FFFFFF", 
+        "accent": "#00FF88", "card": "rgba(0, 43, 27, 0.8)", "border": "#00FF88",
+        "select_text": "#FFFFFF", "select_bg": "#001A10"
+    }
+}
+
+t = themes[st.session_state.app_theme]
+
+st.markdown(f"""
+    <style>
+    /* الفلسفة التصميمية: مظهر عسكري استراتيجي (Command Center) */
+    .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
+    [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
+    
+    div[data-testid="stMarkdownContainer"] p, h2, h3, h4, span, label, li {{ 
+        color: {t['text']} !important; 
+        font-weight: 700 !important; 
+    }}
+    
+    h1 {{ 
+        background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']}); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        font-weight: 950 !important; 
+        text-align: center; 
+        filter: drop-shadow(0 0 12px {t['accent']}); 
+        font-size: 3.5rem !important; 
+    }}
+
+    .team-metric-card {{
+        background: {t['card']};
+        border: 2px solid {t['border']};
+        border-radius: 25px;
+        padding: 25px;
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }}
+    .team-metric-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
+
+    .region-card {{
+        background: rgba(255, 255, 255, 0.03);
+        border-left: 5px solid {t['accent']};
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }}
+
+    /* تصميم شجرة التضاعف */
+    .node-slot {{
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        border: 2px solid {t['accent']};
+        display: flex; align-items: center; justify-content: center;
+        margin: auto; font-size: 1.5rem;
+        background: rgba(0,0,0,0.5);
+    }}
+    .node-filled {{ border-color: #00FF88; color: #00FF88; box-shadow: 0 0 15px #00FF88; }}
+
+    /* حل مشكلة الكتابة بالأسود */
+    .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 2px solid {t['border']} !important;
+        border-radius: 12px !important;
+        font-weight: bold !important;
+    }}
+
+    .stButton>button {{
+        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
+        color: #000000 !important;
+        font-weight: 950 !important;
+        border-radius: 15px !important;
+        height: 60px;
+        font-size: 1.1rem;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 2. إدارة الحالة والبيانات الجغرافية (Regional Context) ---
+if 'team_data' not in st.session_state:
+    st.session_state.team_data = {
+        "total": 12450,
+        "direct_leaders": 8, # من أصل 10 حسب قانون الـ 10
+        "regions": {
+            "مصر": {"count": 6500, "growth": "+12%", "status": "نشط جداً"},
+            "ليبيا": {"count": 2100, "growth": "+5%", "status": "توسع مستقر"},
+            "السودان": {"count": 1800, "growth": "+8%", "status": "فرص ناشئة"},
+            "عالمي": {"count": 2050, "growth": "+15%", "status": "انطلاق دولي"}
+        }
+    }
+
+# --- 3. الشريط الجانبي ---
+with st.sidebar:
+    st.markdown(f"### 🛡️ مركز القيادة الإقليمي")
+    st.selectbox("اختر إقليم المتابعة:", ["كافة الأقاليم", "مصر", "ليبيا", "السودان", "أخرى"])
+    st.divider()
+    st.markdown("### 🏆 تصنيف الجيش")
+    st.success("الرتبة الحالية: جنرال ماسي 💎")
+    st.info("قوة الشبكة: 94% تماسك")
+    st.divider()
+    theme_choice = st.selectbox("نمط الواجهة:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
+    if theme_choice != st.session_state.app_theme:
+        st.session_state.app_theme = theme_choice
+        st.rerun()
+
+# --- 4. واجهة إدارة الفرق ---
+st.title("👥 قيادة جيوش النخبة")
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>إدارة التوسع الجغرافي وهندسة التضاعف العشري العالمي</p>", unsafe_allow_html=True)
+
+st.divider()
+
+# مؤشرات الأداء الكبرى (Big Picture Metrics)
+m1, m2, m3, m4 = st.columns(4)
+with m1:
+    st.markdown(f'<div class="team-metric-card"><small>إجمالي الجيش</small><br><span style="font-size:1.8rem; color:#FFFFFF;">{st.session_state.team_data["total"]:,}</span></div>', unsafe_allow_html=True)
+with m2:
+    st.markdown(f'<div class="team-metric-card"><small>قادة الجيل الأول</small><br><span style="font-size:1.8rem; color:{t["accent"]};">{st.session_state.team_data["direct_leaders"]}/10</span></div>', unsafe_allow_html=True)
+with m3:
+    st.markdown(f'<div class="team-metric-card"><small>معدل النشاط</small><br><span style="font-size:1.8rem; color:#00FF88;">88%</span></div>', unsafe_allow_html=True)
+with m4:
+    st.markdown(f'<div class="team-metric-card"><small>قوة التضاعف</small><br><span style="font-size:1.8rem; color:#FF4B4B;">X10</span></div>', unsafe_allow_html=True)
+
+st.divider()
+
+# التبويبات الاستراتيجية
+tabs = st.tabs(["🗺️ الخارطة الجغرافية", "🌳 شجرة التضاعف (قانون 10)", "📡 غرفة العمليات", "🏆 مجلس القادة"])
+
+# --- Tab 1: الخارطة الجغرافية (Egypt, Libya, Sudan) ---
+with tabs[0]:
+    st.subheader("📍 توزيع القوى في مناطق السيادة")
+    st.info("نحن نقوم الآن بتركيز الجهود التمويلية والتعليمية بناءً على كثافة القادة في كل دولة.")
+    
+    col_reg1, col_reg2 = st.columns(2)
+    regions = st.session_state.team_data["regions"]
+    
+    for i, (name, data) in enumerate(regions.items()):
+        with [col_reg1, col_reg2][i % 2]:
+            st.markdown(f"""
+            <div class="region-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: {t['accent']} !important;">{name}</h3>
+                    <span style="color: #00FF88; font-weight: 900;">{data['growth']}</span>
+                </div>
+                <p style="font-size: 1.5rem; margin: 10px 0;">{data['count']:,} <small style="font-size: 0.8rem;">عضو</small></p>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; opacity: 0.7;">
+                    <span>الحالة الاستراتيجية:</span>
+                    <span>{data['status']}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# --- Tab 2: شجرة التضاعف العشري ---
+with tabs[1]:
+    st.subheader("🌲 هندسة قانون الـ 10 الذهبي")
+    st.markdown("""
+    تكتمل السيادة عند إغلاق صفك المباشر بـ **10 قادة حقيقيين**. بمجرد إتمامهم، ينفتح لك نظام التضاعف العشري السحابي.
+    """)
+    
+    st.markdown("### 📊 حالة الصف الأول (Directs)")
+    cols = st.columns(10)
+    for i in range(10):
+        with cols[i]:
+            is_filled = i < st.session_state.team_data["direct_leaders"]
+            class_name = "node-slot node-filled" if is_filled else "node-slot"
+            icon = "👤" if is_filled else "➕"
+            st.markdown(f'<div class="{class_name}">{icon}</div>', unsafe_allow_html=True)
+            st.markdown(f'<p style="text-align:center; font-size:0.7rem;">قائد {i+1}</p>', unsafe_allow_html=True)
+            
+    st.markdown(f"""
+    <div style="background: rgba(0, 255, 136, 0.05); border: 2px dashed #00FF88; padding: 20px; border-radius: 20px; text-align: center; margin-top: 20px;">
+        <h4 style="color: #00FF88;">متبقي {10 - st.session_state.team_data["direct_leaders"]} قادة فقط لتفعيل "رتبة الإمبراطور" 👑</h4>
+        <p>قم بدعم أعضاء جيلك الثاني في <b>مصر</b> لرفع كفاءة تضاعفهم.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# --- Tab 3: غرفة العمليات (Communication) ---
+with tabs[2]:
+    st.subheader("📡 بث التعليمات السيادية")
+    st.write("أرسل رسالة فورية عبر كافة قنوات التواصل (WhatsApp, Email, App Push) للفريق المختار.")
+    
+    with st.container():
+        target_group = st.selectbox("اختر الفئة المستهدفة:", ["قادة الجيل الأول (8 قادة)", "جيش السودان", "جيش ليبيا", "إقليم مصر بالكامل", "المنظومة العالمية"])
+        msg_subj = st.text_input("عنوان البرقية الاستراتيجية:")
+        msg_body = st.text_area("نص التعليمات القيادية:", height=120)
+        if st.button("🚀 إرسال التعليمات عبر الأقمار الصناعية"):
+            if msg_body:
+                with st.spinner("جاري التشفير والبث عالمياً..."):
+                    time.sleep(2)
+                    st.success(f"تم إرسال البرقية بنجاح لـ {target_group} ✅")
+                    st.balloons()
+            else:
+                st.warning("يرجى كتابة نص التعليمات.")
+
+# --- Tab 4: مجلس القادة (Top Performance) ---
+with tabs[3]:
+    st.subheader("🏆 نخبة قادة الأقاليم")
+    leaderboard = [
+        {"المركز": "1", "القائد": "أحمد المصري", "الإقليم": "مصر", "الفريق": "2,450", "النمو": "A++"},
+        {"المركز": "2", "القائد": "صالح الليبي", "الإقليم": "ليبيا", "الفريق": "1,200", "النمو": "A+"},
+        {"المركز": "3", "القائد": "إدريس السوداني", "الإقليم": "السودان", "الفريق": "980", "النمو": "B+"},
+    ]
+    st.table(leaderboard)
+    st.info("💡 يتم تحديث مجلس القادة كل 24 ساعة بناءً على قوة التضاعف ونسبة التزام الفريق بميثاق الرؤية.")
+
+st.divider()
+
+# خريطة الانتقال السريع
+st.markdown("### 🗺️ خريطة السيادة السريعة")
+c_b1, c_b2, c_b3 = st.columns(3)
+with c_b1:
+    if st.button("💰 الخزنة المالية"): st.switch_page("pages/3_Wallet.py")
+with c_b2:
+    if st.button("🤝 مجمع التمويل الجماعي"): st.switch_page("pages/9_Crowdfunding.py")
+with c_b3:
+    if st.button("🏠 العودة للرئيسية"): st.switch_page("app.py")
