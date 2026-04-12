@@ -1,280 +1,353 @@
-import streamlit as st
-import time
-import json
-import requests
-import uuid
-from datetime import datetime
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  ShoppingBag, 
+  Search, 
+  MapPin, 
+  TrendingUp, 
+  ShieldCheck, 
+  Star, 
+  Wallet, 
+  X, 
+  ChevronRight, 
+  Package,
+  CheckCircle2,
+  AlertCircle,
+  LayoutGrid,
+  Store,
+  Globe,
+  Filter
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getFirestore, 
+  collection, 
+  onSnapshot, 
+  addDoc,
+  query 
+} from 'firebase/firestore';
+import { 
+  getAuth, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  onAuthStateChanged 
+} from 'firebase/auth';
 
-# --- 1. محرك الأنماط الشامل (Theme Engine) ---
-if 'app_theme' not in st.session_state:
-    st.session_state.app_theme = "غامق إمبراطوري 🖤"
+// --- إعدادات الإمبراطورية ---
+const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'mr7-empire-v1';
 
-themes = {
-    "غامق إمبراطوري 🖤": {
-        "bg": "#000000", "sidebar": "#050505", "text": "#FFFFFF", 
-        "accent": "#FFD700", "card": "rgba(30, 30, 30, 0.9)", "border": "#FFD700",
-        "select_text": "#FFFFFF", "select_bg": "#1A1A1A"
-    },
-    "فاتح ملكي ✨": {
-        "bg": "#F5F5F5", "sidebar": "#FFFFFF", "text": "#1A1A1A", 
-        "accent": "#B8860B", "card": "rgba(255, 255, 255, 0.95)", "border": "#B8860B",
-        "select_text": "#1A1A1A", "select_bg": "#FFFFFF"
-    },
-    "أزرق القيادة 💙": {
-        "bg": "#001F3F", "sidebar": "#001529", "text": "#FFFFFF", 
-        "accent": "#0074D9", "card": "rgba(0, 31, 63, 0.8)", "border": "#0074D9",
-        "select_text": "#FFFFFF", "select_bg": "#001529"
-    },
-    "أخضر الاستدامة 💚": {
-        "bg": "#002B1B", "sidebar": "#001A10", "text": "#FFFFFF", 
-        "accent": "#00FF88", "card": "rgba(0, 43, 27, 0.8)", "border": "#00FF88",
-        "select_text": "#FFFFFF", "select_bg": "#001A10"
+// --- القوائم العالمية ---
+const CATEGORIES = ["الكل", "عقارات سيادية", "أكاديمية القيادة", "تقنيات المستقبل", "طاقة مستدامة", "استشارات تريليونية", "أصول رقمية"];
+
+const COUNTRIES = [
+  "الكل", "مصر", "ليبيا", "السودان", "السعودية", "الإمارات", "قطر", "الكويت", "سلطنة عمان", "البحرين", 
+  "الأردن", "لبنان", "سوريا", "العراق", "فلسطين", "المغرب", "تونس", "الجزائر", "موريتانيا", "اليمن", 
+  "تركيا", "الولايات المتحدة", "الصين", "ألمانيا", "بريطانيا", "فرنسا", "اليابان", "كندا", "أستراليا", "البرازيل"
+  // يمكن إضافة باقي الدول برمجياً هنا
+];
+
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('الكل');
+  const [selectedCategory, setSelectedCategory] = useState('الكل');
+  const [balance, setBalance] = useState(1250000);
+  const [purchaseStatus, setPurchaseStatus] = useState(null);
+
+  // 1. المصادقة
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+          await signInWithCustomToken(auth, window.__initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) { console.error(err); }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  // 2. جلب البيانات (Multi-Vendor & Multi-Category Logic)
+  useEffect(() => {
+    if (!user) return;
+    const q = collection(db, 'artifacts', appId, 'public', 'data', 'marketplace_products');
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (prods.length === 0) {
+        // بيانات تجريبية بنظام الأقسام والتجار الجدد
+        setProducts([
+          { id: 'p1', name: 'برج السيادة الإداري', price: 1500000, country: 'مصر', category: 'عقارات سيادية', vendor: 'مجموعة النبت العقارية', rating: 5.0, sales: 12, img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500' },
+          { id: 'p2', name: 'منظومة الطاقة الشمسية X10', price: 12500, country: 'ليبيا', category: 'طاقة مستدامة', vendor: 'تكنو-صحراء', rating: 4.8, sales: 85, img: 'https://images.unsplash.com/photo-1509391366360-fe5bb58583bb?w=500' },
+          { id: 'p3', name: 'دبلوم هندسة الأرباح', price: 499, country: 'السعودية', category: 'أكاديمية القيادة', vendor: 'أكاديمية MR7', rating: 4.9, sales: 1240, img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=500' },
+          { id: 'p4', name: 'وكيل الذكاء الاصطناعي الخاص', price: 2500, country: 'عالمي', category: 'تقنيات المستقبل', vendor: 'سيادة-تك', rating: 5.0, sales: 320, img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=500' },
+        ]);
+      } else {
+        setProducts(prods);
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  // 3. فلترة متقدمة (Country + Category + Search)
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.vendor.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchCountry = selectedCountry === 'الكل' || p.country === selectedCountry;
+      const matchCategory = selectedCategory === 'الكل' || p.category === selectedCategory;
+      return matchSearch && matchCountry && matchCategory;
+    });
+  }, [products, searchTerm, selectedCountry, selectedCategory]);
+
+  const addToCart = (product) => {
+    if (!cart.find(i => i.id === product.id)) {
+      setCart([...cart, product]);
+      setIsCartOpen(true);
     }
-}
+  };
 
-t = themes[st.session_state.app_theme]
-
-st.markdown(f"""
-    <style>
-    /* الفلسفة التصميمية: تجربة تسوق عالمية (World-Class Shopping Experience) */
-    .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
-    [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
+  const handleCheckout = async () => {
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    if (balance < total) { setPurchaseStatus('error'); return; }
     
-    div[data-testid="stMarkdownContainer"] p, h2, h3, h4, span, label, li {{ 
-        color: {t['text']} !important; 
-        font-weight: 700 !important; 
-    }}
-    
-    h1 {{ 
-        background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']}); 
-        -webkit-background-clip: text; 
-        -webkit-text-fill-color: transparent; 
-        font-weight: 950 !important; 
-        text-align: center; 
-        filter: drop-shadow(0 0 15px {t['accent']}); 
-        font-size: 3.5rem !important; 
-    }}
+    setBalance(prev => prev - total);
+    if (user) {
+      await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'transactions'), {
+        type: 'global_purchase',
+        amount: total,
+        items: cart.map(i => i.name),
+        timestamp: new Date().toISOString()
+      });
+    }
+    setPurchaseStatus('success');
+    setCart([]);
+    setTimeout(() => { setPurchaseStatus(null); setIsCartOpen(false); }, 2000);
+  };
 
-    /* تصميم بطاقات المنتجات الاحترافي */
-    .market-card {{
-        background: {t['card']};
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 25px;
-        padding: 0;
-        margin-bottom: 30px;
-        overflow: hidden;
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        position: relative;
-    }}
-    .market-card:hover {{ transform: translateY(-10px); border-color: {t['accent']}; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }}
-    
-    .product-img {{
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-    }}
+  return (
+    <div dir="rtl" className="min-h-screen bg-[#020202] text-white font-['Tajawal',sans-serif]">
+      {/* --- الهيدر العالمي --- */}
+      <nav className="sticky top-0 z-50 bg-black/90 backdrop-blur-2xl border-b border-yellow-500/10 px-6 py-4 shadow-2xl">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-max">
+            <div className="bg-yellow-500 text-black p-2.5 rounded-2xl shadow-[0_0_20px_rgba(234,179,8,0.4)]">
+              <Store size={28} strokeWidth={2.5} />
+            </div>
+            <div className="hidden lg:block">
+              <h1 className="text-2xl font-black tracking-tighter text-yellow-500">MR7 GLOBAL</h1>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">Empire Marketplace</p>
+            </div>
+          </div>
 
-    .product-info {{ padding: 20px; }}
+          <div className="flex-1 max-w-2xl relative">
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+            <input 
+              type="text" 
+              placeholder="ابحث عن منتج، قسم، أو تاجر سيادي..."
+              className="w-full bg-[#111] border border-gray-800 rounded-2xl py-3.5 pr-12 pl-4 focus:border-yellow-500/50 outline-none transition-all font-bold text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-    .badge-premium {{
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: linear-gradient(45deg, #FFD700, #FFA500);
-        color: black !important;
-        padding: 5px 12px;
-        border-radius: 50px;
-        font-size: 0.7rem;
-        font-weight: 900;
-        z-index: 10;
-    }}
+          <div className="flex items-center gap-4 sm:gap-8">
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-[10px] text-gray-500 font-bold">الخزنة السيادية</span>
+              <div className="flex items-center gap-2 text-[#00FF88] font-black text-xl">
+                <Wallet size={18} />
+                <span>${balance.toLocaleString()}</span>
+              </div>
+            </div>
+            <button onClick={() => setIsCartOpen(true)} className="relative p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all group">
+              <ShoppingBag size={28} className="group-hover:text-yellow-500 transition-colors" />
+              {cart.length > 0 && (
+                <span className="absolute -top-1 -left-1 bg-yellow-500 text-black text-[11px] font-black w-6 h-6 flex items-center justify-center rounded-full border-4 border-[#020202]">
+                  {cart.length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </nav>
 
-    .price-tag {{
-        color: #00FF88;
-        font-size: 1.8rem;
-        font-weight: 950;
-    }}
+      {/* --- شريط الأقسام (Categories Bar) --- */}
+      <div className="bg-[#080808] border-b border-gray-900 py-3 sticky top-[89px] z-40">
+        <div className="max-w-[1600px] mx-auto px-6 flex items-center gap-3 overflow-x-auto no-scrollbar">
+          <LayoutGrid size={20} className="text-yellow-500 ml-2" />
+          {CATEGORIES.map(cat => (
+            <button 
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-5 py-2 rounded-xl text-sm font-black whitespace-nowrap transition-all border ${
+                selectedCategory === cat 
+                ? 'bg-yellow-500/10 border-yellow-500 text-yellow-500' 
+                : 'bg-transparent border-transparent text-gray-500 hover:text-white'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
 
-    /* حل مشكلة الكتابة باللون الأسود في الحقول */
-    .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: 2px solid {t['border']} !important;
-        border-radius: 12px !important;
-        font-weight: bold !important;
-    }}
+      <main className="max-w-[1600px] mx-auto px-6 py-10">
+        {/* --- فلتر الدول المتقدم (Country Selector) --- */}
+        <div className="mb-10 flex flex-wrap items-center gap-4 bg-[#0a0a0a] p-4 rounded-3xl border border-gray-900">
+          <div className="flex items-center gap-2 text-gray-400 font-bold text-sm px-2">
+            <Globe size={18} className="text-yellow-500" />
+            تصفية حسب الدولة:
+          </div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {COUNTRIES.map(country => (
+              <button 
+                key={country}
+                onClick={() => setSelectedCountry(country)}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                  selectedCountry === country 
+                  ? 'bg-white text-black' 
+                  : 'bg-[#111] text-gray-500 hover:bg-[#1a1a1a]'
+                }`}
+              >
+                {country}
+              </button>
+            ))}
+          </div>
+        </div>
 
-    .stButton>button {{
-        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
-        color: #000000 !important;
-        font-weight: 950 !important;
-        border-radius: 20px !important;
-        height: 60px;
-        width: 100%;
-        font-size: 1.1rem;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. محرك البيانات والربط المالي (Financial Integration) ---
-fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
-app_id = st.secrets.get("__app_id", "mr7-empire-v1")
-project_id = fb_config.get("projectId", "mr7-app")
-BASE_URL = "https://firestore.googleapis.com/v1/"
-COLLECTION_PATH = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/marketplace_products"
-
-if 'cash_balance' not in st.session_state: st.session_state.cash_balance = 1250000.00
-if 'store_name' not in st.session_state: st.session_state.store_name = "إمبراطورية التجارة"
-
-def fetch_live_products():
-    """جلب كافة المنتجات الموثقة من السحابة"""
-    try:
-        res = requests.get(f"{BASE_URL}{COLLECTION_PATH}")
-        if res.status_code == 200:
-            docs = res.json().get("documents", [])
-            items = []
-            for doc in docs:
-                f = doc.get("fields", {})
-                items.append({
-                    "id": doc["name"].split("/")[-1],
-                    "name": f.get("name", {}).get("stringValue", "منتج إمبراطوري"),
-                    "price": int(f.get("price", {}).get("integerValue", "0")),
-                    "vendor": f.get("vendor", {}).get("stringValue", "تاجر MR7"),
-                    "img": f.get("img", {}).get("stringValue", "https://images.unsplash.com/photo-1554224155-169641357599?w=500&q=80"),
-                    "cat": f.get("cat", {}).get("stringValue", "عام"),
-                    "rating": f.get("rating", {}).get("doubleValue", 5.0),
-                    "sales": int(f.get("sales", {}).get("integerValue", "0")),
-                    "region": f.get("region", {}).get("stringValue", "عالمي")
-                })
-            return items
-        return []
-    except: return []
-
-def buy_product(price, name):
-    """منطق الشراء المباشر والخصم من الخزنة"""
-    if st.session_state.cash_balance >= price:
-        st.session_state.cash_balance -= price
-        st.success(f"تم شراء '{name}' بنجاح! الرصيد المتبقي: ${st.session_state.cash_balance:,.2f}")
-        st.balloons()
-        return True
-    else:
-        st.error("عذراً قائد، السيولة في خزنتك لا تغطي تكلفة هذا الأصل.")
-        return False
-
-# --- 3. واجهة المركز التجاري العالمي ---
-st.title("MR7 Global Marketplace")
-
-# شريط السيادة المالي (Top Header Wallet)
-c_h1, c_h2 = st.columns([2, 1])
-with c_h1:
-    st.markdown(f"**إقليمك المفضل:** `{st.session_state.get('leader_region', 'مصر')}`")
-with c_h2:
-    st.markdown(f"<div style='text-align:left; background:rgba(0,255,136,0.1); padding:10px; border-radius:15px; border:1px solid #00FF88;'>💰 الخزنة: **${st.session_state.cash_balance:,.2f}**</div>", unsafe_allow_html=True)
-
-st.divider()
-
-# الفلاتر الاستراتيجية (Professional Filters)
-with st.expander("🔍 فلاتر البحث المتقدمة"):
-    f_col1, f_col2, f_col3 = st.columns(3)
-    with f_col1:
-        region_filter = st.multiselect("الإقليم الاستراتيجي:", ["مصر", "ليبيا", "السودان", "عالمي"], default=["مصر", "ليبيا", "السودان", "عالمي"])
-    with f_col2:
-        price_range = st.slider("نطاق السعر ($):", 0, 10000, (0, 10000))
-    with f_col3:
-        sort_by = st.selectbox("ترتيب حسب:", ["الأعلى مبيعاً", "السعر: من الأقل", "السعر: من الأعلى", "الأعلى تقييماً"])
-
-tabs = st.tabs(["🌎 السوق العالمي", "👑 العروض الذهبية", "🏗️ لوحة التاجر", "📦 مشترياتي الموثقة"])
-
-# --- Tab 1: السوق العالمي (Professional Grid) ---
-with tabs[0]:
-    live_items = fetch_live_products() # تم تصحيح اسم الدالة هنا
-    # تحسين عرض المنتجات
-    if not live_items:
-        # بيانات تجريبية احترافية في حالة عدم توفر السحابة
-        live_items = [
-            {"id":"1", "name": "أسرار سيارات الكهرباء", "price": 499, "vendor": "أكاديمية MR7", "cat": "دورة تدريبية", "rating": 4.9, "sales": 1240, "img": "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=500&q=80", "region": "مصر"},
-            {"id":"2", "name": "حقيبة التوسع في ليبيا", "price": 250, "vendor": "القائد صالح", "cat": "أدوات تقنية", "rating": 4.7, "sales": 850, "img": "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=500&q=80", "region": "ليبيا"},
-            {"id":"3", "name": "كوتشينج المليار", "price": 2500, "vendor": "القائد المؤسس", "cat": "جلسة استشارية", "rating": 5.0, "sales": 320, "img": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=500&q=80", "region": "عالمي"}
-        ]
-
-    rows = [live_items[i:i + 3] for i in range(0, len(live_items), 3)]
-    for row in rows:
-        cols = st.columns(3)
-        for i, item in enumerate(row):
-            with cols[i]:
-                st.markdown(f"""
-                <div class="market-card">
-                    <div class="badge-premium">إصدار محدود</div>
-                    <img src="{item['img']}" class="product-img">
-                    <div class="product-info">
-                        <small style="color:{t['accent']};">{item['region']} | {item['cat']}</small>
-                        <h3 style="margin: 10px 0; font-size: 1.3rem;">{item['name']}</h3>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <span class="price-tag">${item['price']:,}</span>
-                            <span style="font-size: 0.8rem; opacity: 0.6;">👤 {item['sales']} مبيعة</span>
-                        </div>
-                        <div style="color: #FFD700; margin-bottom: 15px;">{'⭐' * int(item['rating'])} <small>({item['rating']})</small></div>
-                    </div>
+        {/* --- شبكة المنتجات العالمية --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
+          {filteredProducts.map(product => (
+            <div 
+              key={product.id}
+              className="group bg-[#0a0a0a] border border-gray-900 rounded-[2.5rem] overflow-hidden hover:border-yellow-500/40 transition-all duration-500 shadow-xl"
+            >
+              <div className="relative h-64 overflow-hidden">
+                <img src={product.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2 border border-white/10">
+                  <MapPin size={14} className="text-yellow-500" />
+                  <span className="text-[11px] font-black">{product.country}</span>
                 </div>
-                """, unsafe_allow_html=True)
-                if st.button(f"شراء بلمسة واحدة ⚡", key=f"buy_{item['id']}"):
-                    buy_product(item['price'], item['name'])
+                <div className="absolute bottom-4 left-4 bg-yellow-500 text-black px-4 py-1.5 rounded-xl text-[11px] font-black shadow-lg">
+                  {product.category}
+                </div>
+              </div>
 
-# --- Tab 2: العروض الذهبية (Golden Deals) ---
-with tabs[1]:
-    st.subheader("🔥 صفقات السيادة اللحظية")
-    st.markdown("عروض خاصة متاحة فقط لأعضاء رتبة 'قائد استراتيجي' فما فوق.")
-    st.warning("تنتهي هذه العروض خلال 04:22:15")
-    
-    st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #111, #333); padding: 30px; border-radius: 20px; border: 1px solid {t['accent']}; display: flex; gap: 20px; align-items: center;">
-        <div style="font-size: 4rem;">💎</div>
-        <div style="flex-grow: 1;">
-            <h3 style="margin:0;">باقة التريليون المتكاملة</h3>
-            <p style="opacity:0.7;">تشمل كافة الدورات + استشارة مجانية مع مجلس الإدارة.</p>
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded-lg">
+                    <Star size={14} fill="currentColor" />
+                    <span className="text-xs font-black">{product.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px] text-gray-500 font-bold uppercase">
+                    <TrendingUp size={12} className="text-[#00FF88]" />
+                    {product.sales} مبيعة
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-black mb-2 line-clamp-1 group-hover:text-yellow-500 transition-colors">{product.name}</h3>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center text-[10px]">🏢</div>
+                  <span className="text-xs text-gray-400 font-medium">التاجر: <b className="text-gray-200">{product.vendor}</b></span>
+                </div>
+                
+                <div className="flex items-center justify-between border-t border-gray-900 pt-6">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase mb-1">قيمة الأصل</span>
+                    <span className="text-2xl font-black text-[#00FF88]">${product.price.toLocaleString()}</span>
+                  </div>
+                  <button 
+                    onClick={() => addToCart(product)}
+                    className="bg-white text-black h-14 w-14 rounded-2xl flex items-center justify-center hover:bg-yellow-500 transition-all shadow-lg active:scale-95"
+                  >
+                    <ChevronRight size={28} strokeWidth={3} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div style="text-align: center;">
-            <span style="text-decoration: line-through; color: red;">$10,000</span><br>
-            <span style="font-size: 2rem; color: #00FF88;">$4,999</span>
+      </main>
+
+      {/* --- سلة المشتريات المدمجة --- */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsCartOpen(false)} />
+          <div className="relative w-full max-w-md bg-[#050505] border-r border-yellow-500/20 shadow-2xl h-full flex flex-col p-10 animate-in slide-in-from-left duration-500">
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center gap-4">
+                <ShoppingBag size={32} className="text-yellow-500" />
+                <h2 className="text-2xl font-black">عربة الضخ</h2>
+              </div>
+              <button onClick={() => setIsCartOpen(false)} className="p-3 hover:bg-white/5 rounded-2xl transition-colors">
+                <X size={28} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-6 no-scrollbar">
+              {cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
+                  <Package size={80} className="mb-6 text-yellow-500" />
+                  <p className="font-black text-xl">لا توجد أصول في العربة</p>
+                </div>
+              ) : (
+                cart.map(item => (
+                  <div key={item.id} className="bg-[#0a0a0a] p-5 rounded-[2rem] border border-gray-900 flex gap-5 group">
+                    <img src={item.img} className="w-20 h-20 rounded-2xl object-cover" />
+                    <div className="flex-1">
+                      <h4 className="font-black text-sm mb-1">{item.name}</h4>
+                      <p className="text-[10px] text-yellow-500 font-bold mb-2">📍 {item.country}</p>
+                      <span className="text-[#00FF88] font-black text-lg">${item.price.toLocaleString()}</span>
+                    </div>
+                    <button onClick={() => setCart(cart.filter(i => i.id !== item.id))} className="text-gray-700 hover:text-red-500 self-start p-1 transition-colors">
+                      <X size={20} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <div className="mt-10 pt-10 border-t border-gray-900">
+                <div className="flex justify-between items-center mb-8">
+                  <span className="text-gray-500 font-bold text-lg">الإجمالي الكلي</span>
+                  <span className="text-4xl font-black text-[#00FF88]">${cart.reduce((s,i)=>s+i.price,0).toLocaleString()}</span>
+                </div>
+                
+                <button 
+                  onClick={handleCheckout}
+                  disabled={purchaseStatus === 'success'}
+                  className={`w-full py-6 rounded-2xl font-black text-xl transition-all shadow-2xl flex items-center justify-center gap-4 ${
+                    purchaseStatus === 'success' ? 'bg-[#00FF88] text-black' : 
+                    purchaseStatus === 'error' ? 'bg-red-600 text-white' : 
+                    'bg-yellow-500 text-black hover:scale-[1.02]'
+                  }`}
+                >
+                  {purchaseStatus === 'success' ? <><CheckCircle2 size={28} /> تم الضخ بنجاح</> : 
+                   purchaseStatus === 'error' ? <><AlertCircle size={28} /> رصيد غير كافٍ</> : 
+                   <>تأكيد العملية السيادية 🚀</>}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+      )}
+
+      <footer className="mt-20 border-t border-gray-900 p-12 text-center bg-[#010101]">
+        <div className="flex items-center justify-center gap-12 mb-8 opacity-20 hover:opacity-50 transition-opacity">
+          <ShieldCheck size={40} /> <Globe size={40} /> <Store size={40} />
+        </div>
+        <p className="text-gray-600 text-sm font-bold tracking-widest uppercase">© 2026 MR7 EMPIRE - Global Sovereign Commerce</p>
+      </footer>
     </div>
-    """, unsafe_allow_html=True)
+  );
+};
 
-# --- Tab 3: لوحة التاجر (Merchant Dashboard) ---
-with tabs[2]:
-    st.subheader("🏗️ مركز إدارة التجارة العالمي")
-    m_col1, m_col2, m_col3 = st.columns(3)
-    m_col1.metric("إجمالي المبيعات", "$45,200", "+12%")
-    m_col2.metric("العمولات المستحقة", "$4,520", "+$500")
-    m_col3.metric("المنتجات النشطة", "8", "نشط ✅")
-    
-    st.divider()
-    with st.expander("➕ إضافة أصل تجاري جديد للسحابة"):
-        with st.form("new_product_admin"):
-            p_name = st.text_input("اسم المنتج الاستراتيجي:")
-            p_price = st.number_input("السعر المقترح ($):", min_value=1)
-            p_region = st.selectbox("إقليم الاستهداف الرئيسي:", ["مصر", "ليبيا", "السودان", "عالمي"])
-            p_cat = st.selectbox("التصنيف:", ["دورة تدريبية", "كتاب إلكتروني", "جلسة استشارية"])
-            if st.form_submit_button("إطلاق المنتج عالمياً 🚀"):
-                st.success("تم إرسال المنتج لتدقيق الجودة. سيظهر في السوق خلال ساعات.")
-
-# --- Tab 4: مشترياتي الموثقة ---
-with tabs[3]:
-    st.subheader("📦 أرشيف المشتريات والوصول")
-    st.info("كافة منتجاتك الرقمية محفوظة في السحابة للأبد.")
-    st.table([
-        {"المنتج": "دليل غزو أسواق مصر", "التاريخ": "2026-03-27", "الوصول": "متاح ✅"},
-        {"المنتج": "كوتشينج المليار", "التاريخ": "2026-04-05", "الوصول": "متاح ✅"}
-    ])
-
-st.divider()
-
-# خريطة الانتقال
-st.markdown("### 🗺️ خريطة السيادة السريعة")
-cb1, cb2, cb3 = st.columns(3)
-with cb1:
-    if st.button("💰 الخزنة الإمبراطورية"): st.switch_page("pages/3_Wallet.py")
-with cb2:
-    if st.button("📊 نظام العمولات"): st.switch_page("pages/11_Affiliate_System.py")
-with cb3:
-    if st.button("🏠 العودة للرئيسية"): st.switch_page("app.py")
+export default App;
