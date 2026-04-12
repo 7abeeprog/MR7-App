@@ -1,5 +1,9 @@
 import streamlit as st
 import time
+from datetime import datetime, date
+import json
+import requests
+import uuid
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -46,186 +50,143 @@ st.markdown(f"""
         -webkit-text-fill-color: transparent; 
         font-weight: 950 !important; 
         text-align: center; 
-        filter: drop-shadow(0 0 10px {t['accent']}); 
-        font-size: 3.2rem !important; 
+        filter: drop-shadow(0 0 15px {t['accent']}); 
+        font-size: 3.5rem !important; 
     }}
 
-    /* تصميم بطاقة المرحلة (The Rank Card) */
-    .rank-card {{
+    .journey-counter {{
         background: {t['card']};
         border: 2px solid {t['border']};
-        border-radius: 20px;
-        padding: 20px;
-        margin-bottom: 15px;
-        transition: 0.3s ease;
+        border-radius: 25px;
+        padding: 30px;
         text-align: center;
-    }}
-    .rank-card:hover {{ transform: scale(1.05); border-color: #00FF88; box-shadow: 0 0 20px rgba(0,255,136,0.3); }}
-
-    /* شريط التقدم الزمني لرحلة الـ 100 يوم */
-    .journey-bar {{
-        background: #222;
-        border-radius: 50px;
-        height: 30px;
-        width: 100%;
         margin: 20px 0;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid {t['accent']};
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
     }}
-    .journey-fill {{
-        background: linear-gradient(90deg, {t['accent']}, #00FF88);
-        height: 100%;
-        width: 15%; /* مثال للتقدم */
+    .days-number {{
+        font-size: 5rem !important;
+        font-weight: 900 !important;
+        color: {t['accent']} !important;
+        line-height: 1;
     }}
 
-    /* حقول الإدخال */
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] {{
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        font-weight: bold !important;
+    .course-card {{
+        background: rgba(25, 25, 25, 0.95);
+        padding: 40px;
+        border-radius: 35px;
+        border: 2px solid #00FF88;
+        box-shadow: 0 10px 40px rgba(0, 255, 136, 0.1);
+        margin-bottom: 30px;
+        transition: 0.3s;
     }}
+    .course-card:hover {{ transform: translateY(-5px); border-color: {t['accent']}; }}
 
     .stButton>button {{
         background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
         font-weight: 950 !important;
         border-radius: 20px !important;
-        height: 50px;
+        height: 70px;
+        font-size: 1.2rem;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. إدارة الرتب (The 8 Ranks of MR7) ---
-if 'user_rank' not in st.session_state:
-    st.session_state.user_rank = "Dreamer"
+# --- 2. محرك السحابة (Education Cloud Integration) ---
+fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
+app_id = st.secrets.get("__app_id", "mr7-empire-v1")
+project_id = fb_config.get("projectId", "mr7-app")
+BASE_URL = "https://firestore.googleapis.com/v1/"
 
-ranks = {
-    "Dreamer": {"icon": "🥚", "goal": "دفع $10 وبدء المسار", "reward": "$0", "next": "Adventurer"},
-    "Adventurer": {"icon": "🧭", "goal": "بناء فريق من 10 أعضاء", "reward": "$10", "next": "Knight"},
-    "Knight": {"icon": "🛡️", "goal": "الوصول لـ 100 عضو في الفريق", "reward": "$50", "next": "Warlord"},
-    "Warlord": {"icon": "👑", "goal": "الوصول لـ 1,000 عضو في الفريق", "reward": "$100", "next": "Alchemist"},
-    "Alchemist": {"icon": "🔮", "goal": "الوصول لـ 10,000 عضو", "reward": "$1,000", "next": "Visionary"},
-    "Visionary": {"icon": "🔭", "goal": "الوصول لـ 100,000 عضو", "reward": "$10,000", "next": "Game Changer"},
-    "Game Changer": {"icon": "⚡", "goal": "الوصول لـ 1,000,000 عضو", "reward": "$100,000", "next": "Legend"},
-    "Legend": {"icon": "🌌", "goal": "الوصول لـ 10,000,000 عضو", "reward": "$1,000,000", "next": "Maxed"}
-}
+if 'user_id' not in st.session_state: st.session_state.user_id = str(uuid.uuid4())
 
-# --- 3. واجهة الأكاديمية (MR7 Education Engine) ---
-st.title("🧠 مصنع قادة التريليون")
-st.markdown(f"<p style='text-align:center; font-size:1.4rem; margin-top:-20px;'>رحلة الـ 100 يوم من $0 إلى $1,000,000</p>", unsafe_allow_html=True)
+def get_user_edu_data():
+    """جلب بيانات التقدم التعليمي من السحابة"""
+    path = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/users/{st.session_state.user_id}/education_data/main"
+    try:
+        res = requests.get(f"{BASE_URL}{path}")
+        if res.status_code == 200:
+            f = res.json().get("fields", {})
+            return {
+                "xp": int(f.get("xp", {}).get("integerValue", 0)),
+                "progress": int(f.get("progress", {}).get("integerValue", 0)),
+                "start_date": f.get("start_date", {}).get("stringValue", datetime.now().strftime("%Y-%m-%d"))
+            }
+        return {"xp": 0, "progress": 0, "start_date": "2026-03-27"}
+    except: return {"xp": 0, "progress": 0, "start_date": "2026-03-27"}
 
-# شريط الرحلة (The 100-Day Bootcamp Progress)
-st.markdown("### ⏳ مسار الـ 100 يوم للسيادة")
-st.markdown("""
-<div class="journey-bar">
-    <div class="journey-fill"></div>
+def update_edu_progress(new_xp, new_prog):
+    """تحديث التقدم التعليمي في السحابة"""
+    path = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/users/{st.session_state.user_id}/education_data/main"
+    payload = {
+        "fields": {
+            "xp": {"integerValue": str(new_xp)},
+            "progress": {"integerValue": str(new_prog)},
+            "last_active": {"stringValue": datetime.now().isoformat()}
+        }
+    }
+    requests.patch(f"{BASE_URL}{path}?updateMask.fieldPaths=xp&updateMask.fieldPaths=progress", json=payload)
+
+# --- 3. واجهة الأكاديمية التعليمية ---
+st.title("🎓 مركز التميز القيادي")
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.5rem; margin-top:-20px;'>نحو هندسة عقلية المليار دولار</p>", unsafe_allow_html=True)
+
+# جلب البيانات الحية
+edu_data = get_user_edu_data()
+
+# حساب رحلة الـ 100 يوم
+s_date = datetime.strptime(edu_data['start_date'], "%Y-%m-%d").date()
+days_passed = (date.today() - s_date).days
+days_left = max(0, 100 - days_passed)
+
+st.markdown(f"""
+<div class="journey-counter">
+    <div style="text-transform: uppercase; letter-spacing: 2px;">يوم متبقي في رحلة الـ 100 يوم للسيادة</div>
+    <div class="days-number">{days_left}</div>
+    <div style="color: #00FF88; font-weight: 800; margin-top: 10px;">تم اجتياز {days_passed}% من المسار التاريخي</div>
 </div>
 """, unsafe_allow_html=True)
-col_j1, col_j2 = st.columns([1, 1])
-col_j1.caption("بداية الرحلة: يوم 1")
-col_j2.markdown("<p style='text-align:left;'>المستهدف: يوم 100 (أسطورة)</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# عرض الرتبة الحالية والمسار
-with st.sidebar:
-    st.markdown("### 👤 ملف القائد")
-    current = ranks[st.session_state.user_rank]
+# شريط التقدم التعليمي
+st.subheader("📈 مستوى تطورك القيادي الموثق")
+st.progress(edu_data['progress'] / 100)
+st.markdown(f"<p style='font-size:1.2rem;'>لقد أنجزت <span style='color:#00FF88; font-size:1.6rem;'>{edu_data['progress']}%</span> من مسار 'تأسيس القيادة الإمبراطورية'.</p>", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# الأقسام الدراسية
+col_c1, col_c2 = st.columns(2)
+
+with col_c1:
     st.markdown(f"""
-    <div class="rank-card">
-        <div style="font-size: 3rem;">{current['icon']}</div>
-        <h2 style="margin: 0; color: {t['accent']} !important;">{st.session_state.user_rank}</h2>
-        <p style="font-size: 0.9rem;">الهدف القادم: {current['next']}</p>
+    <div class="course-card">
+        <h3 style='color:#FFD700; margin-bottom:15px; font-size: 1.8rem;'>عقلية المليار 🧠</h3>
+        <p>12 درس مرئي - 5 مشاريع تطبيقية</p>
+        <p style='color:#00FF88; font-weight:900; font-size:1.5rem;'>XP المتوفر: {edu_data['xp']}</p>
     </div>
     """, unsafe_allow_html=True)
-    st.write(f"**المهمة:** {current['goal']}")
-    st.write(f"**المكافأة المالية:** {current['reward']}")
-    
-    st.divider()
-    st.markdown("### 🎨 تخصيص المظهر")
-    theme_choice = st.selectbox("النمط:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
-    if theme_choice != st.session_state.app_theme:
-        st.session_state.app_theme = theme_choice
-        st.rerun()
+    if st.button("متابعة بناء العقلية 📖"):
+        with st.spinner("جاري حفظ التقدم في السحابة..."):
+            update_edu_progress(edu_data['xp'] + 150, min(100, edu_data['progress'] + 5))
+            st.success("تم تسجيل حضورك! +150 XP")
+            time.sleep(1)
+            st.rerun()
 
-# التبويبات التعليمية (Systems Analysis)
-tabs = st.tabs(["🚀 بوت كامب الـ 100 يوم", "🧬 الأنظمة الثمانية", "🧪 استوديو المبدعين", "📜 أرشيف الاعتمادات"])
-
-# --- Tab 1: رحلة التحول السريع ---
-with tabs[0]:
-    st.subheader("🔥 مسار التحول الرقمي الفائق")
-    st.info("نحن لا نبني مجرد مجتمع، نحن ندير مصنعاً للقيادة يضاعف قدراتك كل 10 أيام.")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f"""
-        <div class="rank-card" style="border-color: #00FF88;">
-            <h3>🧠 عقلية المليار</h3>
-            <p>المستوى 1: التأسيس الذاتي</p>
-            <button style="width:100%; height:40px; background:#00FF88; border:none; border-radius:10px; font-weight:bold;">دخول الدرس 📖</button>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="rank-card">
-            <h3>📈 هندسة التضاعف</h3>
-            <p>قانون الـ 10: كيف تضاعف فريقك؟</p>
-            <button style="width:100%; height:40px; background:{t['accent']}; border:none; border-radius:10px; font-weight:bold; color:black;">دخول الدرس 📖</button>
-        </div>
-        """, unsafe_allow_html=True)
-
-# --- Tab 2: الأنظمة الثمانية المتكاملة ---
-with tabs[1]:
-    st.subheader("🧬 الأنظمة الذكية لإدارة الإمبراطورية")
-    st.write("تعلم كيفية التحكم في الأنظمة الثمانية التي تدير اقتصاد MR7:")
-    
-    systems = [
-        ("🧠 العقل المركزي (AI Brain)", "تحليل البيانات والابتكار المستمر"),
-        ("📂 محرك التعليم (Education)", "المحتوى التفاعلي والأكاديمية الرقمية"),
-        ("👥 إدارة الفرق (Team Core)", "مراقبة الأداء والكفاءة"),
-        ("🏆 التحفيز (Incentives Hub)", "المسابقات والجوائز القيادية"),
-        ("🌐 شبكة الانتشار (Network)", "بناء المجتمع والنمو الجماعي"),
-        ("💰 النظام المالي (Finance)", "المحافظ الرقمية والعمليات الذكية"),
-        ("🛒 المتجر العالمي (E-Commerce)", "منصة البيع والشراء السلسة"),
-        ("🤝 التمويل الجماعي (Crowdfunding)", "دعم المشاريع الناشئة والاقتصاد التشاركي")
-    ]
-    
-    for name, desc in systems:
-        with st.expander(f"⚙️ {name}"):
-            st.write(desc)
-            st.button(f"بدء تدريب {name}", key=f"sys_{name}")
-
-# --- Tab 3: استوديو المبدعين ---
-with tabs[2]:
-    st.subheader("🧪 كن جزءاً من المحرك المعرفي")
+with col_c2:
     st.markdown(f"""
-    <div style="background: linear-gradient(135deg, {t['accent']}, #00FF88); color: black; padding: 25px; border-radius: 20px; text-align: center;">
-        <h2 style="color: black !important;">أنت لست مجرد متدرب، أنت مهندس!</h2>
-        <p style="font-weight: 700;">ارفع محتواك التعليمي، حدد سعرك، وابدأ في تحقيق دخل سلبي من معرفتك.</p>
+    <div class="course-card" style="border-color: #FFD700;">
+        <h3 style='color:#FFD700; margin-bottom:15px; font-size: 1.8rem;'>القيادة الخضراء 🌍</h3>
+        <p>8 دروس استراتيجية - أثر مستدام</p>
+        <p style='color:#FF4B4B; font-weight:900; font-size:1.5rem;'>لم يتم البدء بعد</p>
     </div>
     """, unsafe_allow_html=True)
-    
-    if st.button("🎨 الانتقال لاستوديو بناء المحتوى"):
-        st.switch_page("pages/7_Creator_Studio.py")
-
-# --- Tab 4: الشهادات والتقدم الحقيقي ---
-with tabs[3]:
-    st.subheader("📜 سجل السيادة المعرفية")
-    st.markdown("""
-    <div style="text-align: center; padding: 40px; border: 2px dashed #444; border-radius: 20px;">
-        <p style="font-size: 1.5rem; opacity: 0.5;">لا توجد شهادات صادرة بعد</p>
-        <p>أكمل مسار 'Adventurer' بنجاح لتوليد أول شهادة موثقة.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    if st.button("بدء المسار البيئي 🚀"):
+        st.info("سيتم فتح المسار قريباً...")
 
 st.divider()
 
-# وحدة التضاعف العشري (The Formula)
-st.markdown("### 🧮 معادلة التضاعف العشري")
-with st.expander("كيف نصل لـ 100 مليون دولار في 100 يوم؟"):
-    st.write("تبدأ الرحلة بـ 1,000 حالم (Dreamers) يتضاعفون تدريجياً عبر قانون الـ 10 ليصلوا لـ 10 مليون مشترك، محققين ناتجاً اقتصادياً يتجاوز المليار دولار.")
-    st.image("http://googleusercontent.com/image_collection/image_retrieval/6449232857341181720") # صورة تعبيرية للنمو المالي
-
-if st.button("🤝 استكشاف فرص التمويل الجماعي للمشاريع"):
-    st.switch_page("pages/9_Crowdfunding.py")
+# العودة
+if st.button("🏠 العودة لمركز القيادة الرئيسي"):
+    st.switch_page("app.py")
