@@ -15,7 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% وخالية من الانهيارات) ---
+# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% - تم حل تعارض الـ DOM) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -94,32 +94,25 @@ react_html = """
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
 
-        // الحل الجذري لمشكلة الشاشة البيضاء: 
-        // فصل الأيقونات عن React Virtual DOM لمنع انهيار التطبيق
+        // الحل الجذري للانهيار (White Screen Fix):
+        // مكون أيقونة محمي بالكامل من تعارضات React و Lucide
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
             const iconRef = useRef(null);
 
             useEffect(() => {
-                if (iconRef.current) {
-                    // تفريغ العنصر لضمان عدم وجود تكرار
-                    iconRef.current.innerHTML = '';
-                    
-                    // إنشاء الأيقونة يدوياً لحمايتها من تحديثات React
+                if (iconRef.current && window.lucide) {
+                    iconRef.current.innerHTML = ''; // تنظيف الحاوية
                     const i = document.createElement('i');
                     i.setAttribute('data-lucide', name);
-                    i.setAttribute('class', className);
+                    if (className) i.setAttribute('class', className);
                     i.setAttribute('fill', fill);
-                    i.style.width = size + 'px';
-                    i.style.height = size + 'px';
-                    
                     iconRef.current.appendChild(i);
                     
-                    // تطبيق مكتبة lucide على هذا العنصر فقط!
-                    lucide.createIcons({ root: iconRef.current });
+                    window.lucide.createIcons({ root: iconRef.current });
                 }
             }, [name, size, className, fill]);
 
-            return <span ref={iconRef} className="inline-flex justify-center items-center"></span>;
+            return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
         // --- قاموس الترجمة (Multi-Language Dictionary) ---
@@ -215,6 +208,75 @@ react_html = """
                 regionalCamp: "Campaña Regional",
                 legalDoc: "Documentación Legal",
                 successAdded: "¡Activo enviado con éxito! 🚀"
+            },
+            zh: {
+                dashboardTitle: "商家中心",
+                dashboardSub: "主权商家中心",
+                searchPlaceholder: "搜索帝国资产...",
+                liquidity: "流动性金库",
+                overview: "概览",
+                assets: "资产与库存管理",
+                team: "商家辅助团队",
+                services: "智能辅助服务",
+                certified: "认证商家",
+                gen: "第三代",
+                kpiTitle: "战略绩效指标 📊",
+                sales: "总销售额",
+                activeAssets: "市场活跃资产",
+                views: "您的资产浏览量",
+                teamMembers: "辅助团队",
+                newProduct: "向市场推出新资产",
+                addAsset: "批准并发送进行主权审查",
+                aiAgent: "AI销售代理",
+                regionalCamp: "区域注资活动",
+                legalDoc: "主权法律文件",
+                successAdded: "资产已成功提交主权审查！ 🚀"
+            },
+            fa: {
+                dashboardTitle: "داشبورد تاجر",
+                dashboardSub: "مرکز تجارت حاکمیتی",
+                searchPlaceholder: "جستجوی دارایی‌های امپراتوری...",
+                liquidity: "خزانه نقدینگی",
+                overview: "نمای کلی",
+                assets: "مدیریت دارایی و موجودی",
+                team: "ارتش کمکی تاجر",
+                services: "خدمات کمکی هوشمند",
+                certified: "تاجر تایید شده",
+                gen: "نسل سوم",
+                kpiTitle: "شاخص‌های عملکرد استراتژیک 📊",
+                sales: "کل فروش",
+                activeAssets: "دارایی‌های فعال در بازار",
+                views: "بازدید دارایی‌های شما",
+                teamMembers: "تیم کمکی",
+                newProduct: "عرضه دارایی جدید به بازار",
+                addAsset: "تایید و ارسال برای بررسی حاکمیتی",
+                aiAgent: "نماینده فروش هوش مصنوعی",
+                regionalCamp: "کمپین تزریق منطقه‌ای",
+                legalDoc: "مستندات حقوقی حاکمیتی",
+                successAdded: "دارایی با موفقیت برای بررسی حاکمیتی ارسال شد! 🚀"
+            },
+            sw: {
+                dashboardTitle: "Kituo cha Mfanyabiashara",
+                dashboardSub: "Kituo cha Biashara cha Kifalme",
+                searchPlaceholder: "Tafuta Mali za Kifalme...",
+                liquidity: "Gati la Ukwasi",
+                overview: "Muhtasari",
+                assets: "Usimamizi wa Mali",
+                team: "Jeshi la Mfanyabiashara",
+                services: "Huduma za Kisasa",
+                certified: "Mfanyabiashara Aliyeidhinishwa",
+                gen: "Kizazi cha 3",
+                kpiTitle: "Viashiria vya Kimkakati 📊",
+                sales: "Mauzo ya Jumla",
+                activeAssets: "Mali Zinazofanya Kazi",
+                views: "Mionekano ya Mali Zako",
+                teamMembers: "Timu ya Msaada",
+                newProduct: "Zindua Mali Mpya Sokoni",
+                addAsset: "Idhinisha na Tuma kwa Ukaguzi",
+                aiAgent: "Wakala wa Mauzo wa AI",
+                regionalCamp: "Kampeni ya Kikanda",
+                legalDoc: "Nyaraka za Kisheria za Kifalme",
+                successAdded: "Mali imewasilishwa kwa ukaguzi wa kifalme kikamilifu! 🚀"
             }
         };
 
@@ -240,7 +302,8 @@ react_html = """
             const t = translations[lang];
 
             useEffect(() => {
-                document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+                // الفارسية والعربية من اليمين لليسار، الباقي من اليسار لليمين
+                document.documentElement.dir = (lang === 'ar' || lang === 'fa') ? 'rtl' : 'ltr';
             }, [lang]);
 
             // --- State ---
@@ -284,6 +347,9 @@ react_html = """
                 </div>
             );
 
+            // تحديد ما إذا كانت اللغة الحالية RTL لضبط الانحياز
+            const isRTL = lang === 'ar' || lang === 'fa';
+
             return (
                 <div className={`min-h-screen ${activeTheme.bg} ${activeTheme.text} flex flex-col md:flex-row overflow-hidden transition-colors duration-500`}>
                     
@@ -302,7 +368,7 @@ react_html = """
                                 ></button>
                                 
                                 {isThemeMenuOpen && (
-                                    <div className={`absolute top-12 ${lang === 'ar' ? 'right-0' : 'left-0'} glass-panel p-2 rounded-2xl flex flex-col gap-2 shadow-2xl animate-view`}>
+                                    <div className={`absolute top-12 ${isRTL ? 'right-0' : 'left-0'} glass-panel p-2 rounded-2xl flex flex-col gap-2 shadow-2xl animate-view`}>
                                         {Object.entries(themes).map(([key, theme]) => (
                                             <button 
                                                 key={key}
@@ -326,11 +392,14 @@ react_html = """
                                 </button>
                                 
                                 {isLangMenuOpen && (
-                                    <div className={`absolute top-10 ${lang === 'ar' ? 'left-0' : 'right-0'} glass-panel p-2 rounded-xl flex flex-col gap-1 shadow-2xl animate-view min-w-[100px]`}>
+                                    <div className={`absolute top-10 ${isRTL ? 'left-0' : 'right-0'} glass-panel p-2 rounded-xl flex flex-col gap-1 shadow-2xl animate-view min-w-[100px]`}>
                                         <button onClick={() => {setLang('ar'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'ar' ? activeTheme.accent : 'text-white'}`}>العربية</button>
                                         <button onClick={() => {setLang('en'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'en' ? activeTheme.accent : 'text-white'}`}>English</button>
                                         <button onClick={() => {setLang('fr'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'fr' ? activeTheme.accent : 'text-white'}`}>Français</button>
                                         <button onClick={() => {setLang('es'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'es' ? activeTheme.accent : 'text-white'}`}>Español</button>
+                                        <button onClick={() => {setLang('zh'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'zh' ? activeTheme.accent : 'text-white'}`}>中文</button>
+                                        <button onClick={() => {setLang('fa'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'fa' ? activeTheme.accent : 'text-white'}`}>فارسی</button>
+                                        <button onClick={() => {setLang('sw'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'sw' ? activeTheme.accent : 'text-white'}`}>Swahili</button>
                                     </div>
                                 )}
                             </div>
@@ -345,16 +414,16 @@ react_html = """
                         </div>
 
                         <div className="flex flex-row md:flex-col gap-2 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
-                            <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'overview' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                            <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'overview' ? `bg-white/10 ${isRTL?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                                 <Icon name="LayoutDashboard" size={20} /> {t.overview}
                             </button>
-                            <button onClick={() => setActiveTab('products')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'products' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                            <button onClick={() => setActiveTab('products')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'products' ? `bg-white/10 ${isRTL?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                                 <Icon name="Package" size={20} /> {t.assets}
                             </button>
-                            <button onClick={() => setActiveTab('team')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'team' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                            <button onClick={() => setActiveTab('team')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'team' ? `bg-white/10 ${isRTL?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                                 <Icon name="Users" size={20} /> {t.team}
                             </button>
-                            <button onClick={() => setActiveTab('services')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'services' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                            <button onClick={() => setActiveTab('services')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'services' ? `bg-white/10 ${isRTL?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                                 <Icon name="Zap" size={20} /> {t.services}
                             </button>
                         </div>
@@ -374,11 +443,11 @@ react_html = """
                         {/* Search & Wallet Bar */}
                         <div className="flex flex-col md:flex-row gap-6 mb-10 items-center">
                             <div className="flex-1 relative w-full">
-                                <Icon name="Search" size={18} className={`absolute ${lang==='ar'?'right-5':'left-5'} top-1/2 -translate-y-1/2 text-gray-400`} />
+                                <Icon name="Search" size={18} className={`absolute ${isRTL?'right-5':'left-5'} top-1/2 -translate-y-1/2 text-gray-400`} />
                                 <input 
                                     type="text" 
                                     placeholder={t.searchPlaceholder}
-                                    className={`w-full premium-input rounded-2xl py-4 ${lang==='ar'?'pr-14 pl-6':'pl-14 pr-6'} text-sm font-bold text-dir`}
+                                    className={`w-full premium-input rounded-2xl py-4 ${isRTL?'pr-14 pl-6':'pl-14 pr-6'} text-sm font-bold text-dir`}
                                 />
                             </div>
                             <div className={`glass-panel px-8 py-3 rounded-2xl border ${activeTheme.borderLight} flex items-center gap-4`}>
@@ -398,22 +467,22 @@ react_html = """
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="TrendingUp" size={120} /></div>
+                                        <div className={`absolute ${isRTL?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="TrendingUp" size={120} /></div>
                                         <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.sales}</p>
                                         <h4 className="text-3xl font-black text-[#00FF88]">$1,036,000</h4>
                                     </div>
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 text-white group-hover:scale-110 transition-transform`}><Icon name="Package" size={120} /></div>
+                                        <div className={`absolute ${isRTL?'-right-4':'-left-4'} -top-4 opacity-5 text-white group-hover:scale-110 transition-transform`}><Icon name="Package" size={120} /></div>
                                         <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.activeAssets}</p>
                                         <h4 className="text-3xl font-black text-white">{products.length}</h4>
                                     </div>
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Eye" size={120} /></div>
+                                        <div className={`absolute ${isRTL?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Eye" size={120} /></div>
                                         <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.views}</p>
                                         <h4 className="text-3xl font-black text-white">6,840</h4>
                                     </div>
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Users" size={120} /></div>
+                                        <div className={`absolute ${isRTL?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Users" size={120} /></div>
                                         <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.teamMembers}</p>
                                         <h4 className="text-3xl font-black text-white">{team.length}</h4>
                                     </div>
@@ -430,13 +499,13 @@ react_html = """
                                 <form onSubmit={handleAddProduct} className={`${activeTheme.card} p-8 md:p-10 rounded-[3rem] border ${activeTheme.borderLight} shadow-2xl transition-colors`}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                         <div className="space-y-3">
-                                            <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder="اسم الأصل..." />
+                                            <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder={lang === 'ar' ? 'اسم الأصل...' : 'Asset Name...'} />
                                         </div>
                                         <div className="space-y-3">
-                                            <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder="السعر ($)" />
+                                            <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder={lang === 'ar' ? 'السعر ($)' : 'Price ($)'} />
                                         </div>
                                         <div className="md:col-span-2 space-y-3">
-                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border} text-dir`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder="الوصف..."></textarea>
+                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border} text-dir`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder={lang === 'ar' ? 'الوصف...' : 'Description...'}></textarea>
                                         </div>
                                     </div>
                                     <button type="submit" className={`w-full py-6 rounded-[2rem] font-black text-xl ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic flex items-center justify-center gap-3`}>
