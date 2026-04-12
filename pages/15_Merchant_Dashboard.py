@@ -15,8 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% - تم حل الانهيار) ---
-# إضافة حرف r قبل النص ليمنع بايثون من العبث بالرموز
+# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% - تم حل روابط السيرفرات) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -26,8 +25,9 @@ react_html = r"""
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- السيرفرات السحابية الأصلية المستقرة لضمان الإقلاع الفوري -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -89,12 +89,13 @@ react_html = r"""
         html[dir="ltr"] .text-dir { text-align: left; }
         html[dir="rtl"] .text-dir { text-align: right; }
 
-        /* شاشة التحميل المبدئية لمنع الشاشة البيضاء */
+        /* شاشة التحميل المبدئية */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background: #000; color: #FFD700; display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 99999;
             font-family: 'Tajawal', sans-serif;
+            transition: opacity 0.5s ease;
         }
         .loader-spinner {
             border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700;
@@ -126,7 +127,6 @@ react_html = r"""
             `;
         };
 
-        // الدالة المفقودة useMemo تم إضافتها هنا!
         const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
         // 2. درع حماية React (Error Boundary)
@@ -338,10 +338,13 @@ react_html = r"""
         };
 
         const App = () => {
-            // إخفاء شاشة التحميل بمجرد بدء تطبيق React
+            // إخفاء شاشة التحميل بمجرد إقلاع تطبيق React
             useEffect(() => {
                 const loader = document.getElementById('loading-screen');
-                if (loader) loader.style.display = 'none';
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
             }, []);
 
             // --- 7 الأنماط الديناميكية (7 Dynamic Themes) ---
