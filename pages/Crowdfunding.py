@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 import requests
 import uuid
+import pandas as pd
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -36,6 +37,7 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
+    /* الفلسفة التصميمية: مجمع السيولة الكوني */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
@@ -61,6 +63,7 @@ st.markdown(f"""
         padding: 35px;
         margin-bottom: 30px;
         box-shadow: 0 15px 45px rgba(0,0,0,0.5);
+        transition: 0.3s ease-in-out;
     }}
     .project-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
 
@@ -74,6 +77,7 @@ st.markdown(f"""
         font-weight: 900;
     }}
 
+    /* حل مشكلة الكتابة باللون الأسود في الحقول البيضاء */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -93,17 +97,17 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. محرك السحابة السيادي (Cloud Sync Engine) ---
+# --- 2. محرك السحابة السيادي (Live Firestore Integration) ---
 fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 project_id = fb_config.get("projectId", "mr7-app")
 BASE_URL = "https://firestore.googleapis.com/v1/"
-PATH = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/crowd_projects"
+PROJECTS_PATH = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/crowd_projects"
 
 def fetch_live_projects():
-    """جلب كافة المشاريع من السحابة"""
+    """جلب كافة المشاريع الاستثمارية من السحابة"""
     try:
-        res = requests.get(f"{BASE_URL}{PATH}")
+        res = requests.get(f"{BASE_URL}{PROJECTS_PATH}")
         if res.status_code == 200:
             docs = res.json().get("documents", [])
             items = []
@@ -125,7 +129,7 @@ def fetch_live_projects():
     except: return []
 
 def submit_new_vision(title, country, goal, desc):
-    """إرسال رؤية مشروع جديدة للسحابة للمراجعة"""
+    """إرسال رؤية مشروع جديدة للسحابة للمراجعة من قبل الأدمن"""
     doc_id = str(uuid.uuid4())
     payload = {
         "fields": {
@@ -140,7 +144,15 @@ def submit_new_vision(title, country, goal, desc):
             "timestamp": {"stringValue": datetime.now().isoformat()}
         }
     }
-    res = requests.post(f"{BASE_URL}{PATH}?documentId={doc_id}", json=payload)
+    res = requests.post(f"{BASE_URL}{PROJECTS_PATH}?documentId={doc_id}", json=payload)
+    return res.status_code == 200
+
+def invest_in_project(p_id, current_raised, amount):
+    """تحديث مبلغ السيولة المجمعة في السحابة فور الضخ"""
+    new_total = current_raised + amount
+    url = f"{BASE_URL}{PROJECTS_PATH}/{p_id}?updateMask.fieldPaths=raised"
+    payload = {"fields": {"raised": {"integerValue": str(new_total)}}}
+    res = requests.patch(url, json=payload)
     return res.status_code == 200
 
 # --- 3. واجهة مجمع التمويل الملياري ---
@@ -151,16 +163,16 @@ st.divider()
 
 tabs = st.tabs(["🌎 ساحة المشاريع الحية", "🚀 طرح رؤية سيادية", "💰 محفظة أصولي", "📊 تحليلات السوق"])
 
-# --- Tab 1: ساحة المشاريع الحية ---
+# --- Tab 1: ساحة المشاريع الحية (Active Funding) ---
 with tabs[0]:
     st.subheader("🌎 استكشف فرص الضخ المالي")
     live_list = fetch_live_projects()
     
-    # فلترة المشاريع المعتمدة فقط للظهور في الساحة العامة
+    # فلترة المشاريع المعتمدة (Approved) فقط للظهور للعامة
     approved_list = [p for p in live_list if p['status'] == 'approved']
     
     if not approved_list:
-        st.info("لا توجد مشاريع معتمدة حالياً. قم بطرح رؤيتك في التبويب التالي!")
+        st.info("لا توجد مشاريع معتمدة حالياً للتمويل. بادر بطرح رؤيتك أو انتظر موافقة الإدارة.")
     else:
         for proj in approved_list:
             with st.container():
@@ -185,38 +197,65 @@ with tabs[0]:
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                st.progress(min(proj['raised']/proj['goal'], 1.0))
-                if st.button(f"🤝 ضخ سيادي في {proj['title']}", key=f"fund_{proj['id']}"):
-                    st.success("سيتم توجيهك لبوابة الدفع الموثقة...")
+                
+                # حساب التقدم
+                progress_val = min(proj['raised']/proj['goal'], 1.0)
+                st.progress(progress_val)
+                
+                # واجهة الضخ المالي
+                with st.expander(f"💰 ضخ سيولة في {proj['title']}"):
+                    fund_amount = st.number_input("مبلغ الاستثمار ($):", min_value=10, max_value=100000, value=100, key=f"amt_{proj['id']}")
+                    if st.button("تأكيد الضخ المالي 🚀", key=f"btn_fund_{proj['id']}"):
+                        with st.spinner("جاري مزامنة العملية مع السحابة العالمية..."):
+                            if invest_in_project(proj['id'], proj['raised'], fund_amount):
+                                st.success(f"تم ضخ ${fund_amount:,} بنجاح في مشروع {proj['title']}! ✅")
+                                time.sleep(1)
+                                st.rerun()
 
-# --- Tab 2: طرح رؤية (Submit to Cloud) ---
+# --- Tab 2: طرح رؤية (Submit Vision to Cloud) ---
 with tabs[1]:
     st.subheader("🚀 سجل رؤيتك في السحابة الإمبراطورية")
-    st.markdown("سيتم إرسال هذا الطلب مباشرة إلى 'لوحة التحكم العليا' لتدقيقه من قبل الأدمن.")
+    st.markdown("سيتم إرسال هذا الطلب مباشرة إلى **لوحة التحكم العليا** لتدقيقه واعتماده.")
     
     with st.form("pitch_to_cloud"):
         p_title = st.text_input("اسم المشروع الاستراتيجي:")
-        p_loc = st.selectbox("النطاق الجغرافي:", ["مصر", "ليبيا", "السودان", "عالمي"])
+        p_loc = st.selectbox("النطاق الجغرافي للهيمنة:", ["مصر", "ليبيا", "السودان", "عالمي"])
         p_goal = st.number_input("الميزانية التأسيسية المطلوبة ($):", min_value=1000, value=10000)
-        p_desc = st.text_area("وصف الرؤية والجدوى الاقتصادية:", height=150)
+        p_desc = st.text_area("وصف الرؤية والجدوى الاقتصادية:", height=150, placeholder="اشرح للقائد الأعلى كيف سيعيد هذا المشروع تشكيل المنطقة...")
         
-        if st.form_submit_button("إطلاق الرؤية للمراجعة 📤"):
+        if st.form_submit_button("إطلاق الرؤية للمراجعة السيادية 📤"):
             if p_title and p_desc:
-                with st.spinner("جاري المزامنة مع مركز القيادة..."):
+                with st.spinner("جاري توثيق الرؤية في السحابة..."):
                     if submit_new_vision(p_title, p_loc, p_goal, p_desc):
-                        st.success("تم إرسال الرؤية بنجاح! ستظهر لدى الأدمن فوراً للموافقة عليها.")
-                        time.sleep(1)
+                        st.success("تم إرسال الرؤية بنجاح! ستظهر لدى الإدارة فوراً.")
+                        time.sleep(1.2)
                         st.rerun()
-            else: st.error("يرجى إكمال البيانات.")
+            else: st.error("يرجى إكمال البيانات الأساسية للرؤية.")
 
-# --- Tab 3: أصولي ---
+# --- Tab 3: محفظة أصولي ---
 with tabs[2]:
     st.subheader("💰 أصولك الموثقة سحابياً")
-    my_projects = [p for p in live_list if st.session_state.user_id[:5] in p['owner']]
+    my_uid_short = st.session_state.user_id[:5]
+    my_projects = [p for p in live_list if my_uid_short in p['owner']]
+    
     if not my_projects:
-        st.info("لم تقم بطرح مشاريع بعد.")
+        st.info("لم تقم بطرح مشاريع استثمارية بعد. كن مبادراً واطرح رؤيتك الآن.")
     else:
-        st.table(pd.DataFrame(my_projects).drop(columns=['id', 'desc']))
+        # عرض المشاريع في جدول منظم
+        report_df = pd.DataFrame(my_projects)
+        report_df = report_df[['title', 'country', 'goal', 'raised', 'status']]
+        report_df.columns = ['المشروع', 'الإقليم', 'المستهدف ($)', 'المجمع ($)', 'الحالة']
+        st.table(report_df)
+
+# --- Tab 4: تحليلات السوق ---
+with tabs[3]:
+    st.subheader("📊 ذكاء الأعمال الاستراتيجي")
+    st.write("توزيع المشاريع النشطة حسب الأقاليم الجغرافية.")
+    if live_list:
+        geo_counts = pd.DataFrame(live_list)['country'].value_counts()
+        st.bar_chart(geo_counts)
+    else:
+        st.write("في انتظار تدفق البيانات الحية من الأقاليم...")
 
 st.divider()
 if st.button("🏰 العودة لمركز القيادة الرئيسي"):
