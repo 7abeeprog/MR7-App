@@ -15,7 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (مع محول الأنماط الديناميكي 7 ألوان) ---
+# --- 3. واجهة React للوحة التاجر السيادي (متعددة اللغات + محول أنماط عائم) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -36,6 +36,7 @@ react_html = """
             margin: 0; 
             overflow-x: hidden; 
             scroll-behavior: smooth;
+            transition: background-color 0.5s, color 0.5s;
         }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -49,6 +50,7 @@ react_html = """
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.05); 
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: all 0.5s;
         }
 
         .premium-input {
@@ -62,16 +64,6 @@ react_html = """
             background: rgba(255, 255, 255, 0.05);
         }
 
-        .product-card { 
-            background: linear-gradient(145deg, rgba(20,20,20,0.9) 0%, rgba(10,10,10,0.9) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .product-card:hover { 
-            transform: translateY(-10px); 
-            box-shadow: 0 20px 40px rgba(255, 255, 255, 0.05);
-        }
-        
         .btn-hover-dynamic { transition: all 0.3s ease; }
         .btn-hover-dynamic:hover {
             transform: scale(1.03);
@@ -89,6 +81,11 @@ react_html = """
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* تعديلات الاتجاه للغات الأجنبية */
+        html[dir="ltr"] .dir-invert { flex-direction: row-reverse; }
+        html[dir="ltr"] .text-dir { text-align: left; }
+        html[dir="rtl"] .text-dir { text-align: right; }
     </style>
 </head>
 <body>
@@ -102,11 +99,107 @@ react_html = """
             return LucideIcon ? <i data-lucide={name} className={className} style={{ width: size, height: size }}></i> : null;
         };
 
+        // --- قاموس الترجمة (Multi-Language Dictionary) ---
+        const translations = {
+            ar: {
+                dashboardTitle: "لوحة التاجر",
+                dashboardSub: "Sovereign Merchant Hub",
+                searchPlaceholder: "البحث الشامل عن الأصول الإمبراطورية...",
+                liquidity: "خزنة السيولة",
+                overview: "نظرة عامة",
+                assets: "إدارة الأصول والمخزون",
+                team: "جيش التاجر المساعد",
+                services: "الخدمات الذكية المعاونة",
+                certified: "تاجر معتمد",
+                gen: "الجيل الثالث",
+                kpiTitle: "مؤشرات الأداء الاستراتيجية 📊",
+                sales: "المبيعات الإجمالية",
+                activeAssets: "الأصول النشطة بالسوق",
+                views: "زيارات أصولك",
+                teamMembers: "الفريق المعاون",
+                newProduct: "طرح أصل جديد للسوق",
+                addAsset: "اعتماد وإرسال للمراجعة السيادية",
+                aiAgent: "وكيل مبيعات AI",
+                regionalCamp: "حملة ضخ إقليمية",
+                legalDoc: "التوثيق القانوني السيادي",
+                successAdded: "تم رفع الأصل للمراجعة السيادية بنجاح! 🚀"
+            },
+            en: {
+                dashboardTitle: "Merchant Hub",
+                dashboardSub: "Sovereign Merchant Hub",
+                searchPlaceholder: "Search Imperial Assets...",
+                liquidity: "Liquidity Vault",
+                overview: "Overview",
+                assets: "Asset Management",
+                team: "Merchant Army",
+                services: "Smart Services",
+                certified: "Certified Merchant",
+                gen: "3rd Generation",
+                kpiTitle: "Strategic KPIs 📊",
+                sales: "Total Sales",
+                activeAssets: "Active Assets",
+                views: "Asset Views",
+                teamMembers: "Support Team",
+                newProduct: "List New Asset",
+                addAsset: "Submit for Sovereign Review",
+                aiAgent: "AI Sales Agent",
+                regionalCamp: "Regional Campaign",
+                legalDoc: "Legal Documentation",
+                successAdded: "Asset successfully submitted for review! 🚀"
+            },
+            fr: {
+                dashboardTitle: "Hub Marchand",
+                dashboardSub: "Hub Marchand Souverain",
+                searchPlaceholder: "Rechercher des Actifs...",
+                liquidity: "Coffre de Liquidité",
+                overview: "Aperçu",
+                assets: "Gestion des Actifs",
+                team: "Armée Marchande",
+                services: "Services Intelligents",
+                certified: "Marchand Certifié",
+                gen: "3ème Génération",
+                kpiTitle: "KPI Stratégiques 📊",
+                sales: "Ventes Totales",
+                activeAssets: "Actifs Actifs",
+                views: "Vues des Actifs",
+                teamMembers: "Équipe de Soutien",
+                newProduct: "Lister Nouvel Actif",
+                addAsset: "Soumettre pour Examen",
+                aiAgent: "Agent de Vente IA",
+                regionalCamp: "Campagne Régionale",
+                legalDoc: "Documentation Légale",
+                successAdded: "Actif soumis avec succès ! 🚀"
+            },
+            es: {
+                dashboardTitle: "Centro Comercial",
+                dashboardSub: "Centro Comercial Soberano",
+                searchPlaceholder: "Buscar Activos...",
+                liquidity: "Bóveda de Liquidez",
+                overview: "Visión General",
+                assets: "Gestión de Activos",
+                team: "Ejército Comercial",
+                services: "Servicios Inteligentes",
+                certified: "Comerciante Certificado",
+                gen: "3ª Generación",
+                kpiTitle: "KPI Estratégicos 📊",
+                sales: "Ventas Totales",
+                activeAssets: "Activos Activos",
+                views: "Vistas de Activos",
+                teamMembers: "Equipo de Apoyo",
+                newProduct: "Listar Nuevo Activo",
+                addAsset: "Enviar para Revisión",
+                aiAgent: "Agente de Ventas IA",
+                regionalCamp: "Campaña Regional",
+                legalDoc: "Documentación Legal",
+                successAdded: "¡Activo enviado con éxito! 🚀"
+            }
+        };
+
         const App = () => {
             // --- 7 الأنماط الديناميكية (7 Dynamic Themes) ---
             const themes = {
-                "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#FFFFFF" },
-                "غامق إمبراطوري 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#111111" },
+                "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#E5B80B" },
+                "غامق إمبراطوري 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#FFD700" },
                 "أزرق القيادة 💙": { bg: "bg-[#000814]", text: "text-white", card: "bg-[#00122B]/80", border: "border-[#0074D9]", borderLight: "border-[#0074D9]/20", accent: "text-[#0074D9]", btn: "bg-[#0074D9]", btnText: "text-white", hex: "#0074D9" },
                 "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", border: "border-[#00FF88]", borderLight: "border-[#00FF88]/20", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" },
                 "أحمر القوة 🔴": { bg: "bg-[#140000]", text: "text-white", card: "bg-[#2B0000]/80", border: "border-[#FF4136]", borderLight: "border-[#FF4136]/20", accent: "text-[#FF4136]", btn: "bg-[#FF4136]", btnText: "text-white", hex: "#FF4136" },
@@ -116,23 +209,31 @@ react_html = """
             
             const [activeThemeName, setActiveThemeName] = useState("CURRENT_THEME_PLACEHOLDER" || "غامق إمبراطوري 🖤");
             const activeTheme = themes[activeThemeName] || themes["غامق إمبراطوري 🖤"];
+            const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+
+            // --- Multi-language State ---
+            const [lang, setLang] = useState('ar');
+            const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+            const t = translations[lang];
+
+            useEffect(() => {
+                document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+                lucide.createIcons();
+            }, [lang, activeThemeName]);
 
             // --- State ---
-            const [activeTab, setActiveTab] = useState('overview'); // overview, products, team, services
+            const [activeTab, setActiveTab] = useState('overview'); 
             const [toasts, setToasts] = useState([]);
             const [products, setProducts] = useState([
-                { id: 1, name: 'عقار تجاري في التجمع', price: 250000, category: 'عقارات سيادية', sales: 4, views: 1240, status: 'نشط' },
-                { id: 2, name: 'استشارة مالية للشركات', price: 1500, category: 'استشارات', sales: 24, views: 5600, status: 'نشط' }
+                { id: 1, name: 'عقار تجاري في التجمع', price: 250000, category: 'عقارات سيادية', sales: 4, views: 1240, status: 'نشط' }
             ]);
             const [team, setTeam] = useState([
-                { id: 1, name: 'أحمد المصري', role: 'مدير مبيعات إقليمي', sales: '$124,000', status: 'نشط 🟢' },
-                { id: 2, name: 'سارة خالد', role: 'دعم فني كبار العملاء', sales: '-', status: 'نشط 🟢' },
-                { id: 3, name: 'إدريس عثمان', role: 'مسوق سيادي', sales: '$45,200', status: 'خامل 🟡' }
+                { id: 1, name: 'أحمد المصري', role: 'مدير مبيعات', sales: '$124,000', status: 'نشط 🟢' }
             ]);
 
             const [newProd, setNewProd] = useState({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
 
-            useEffect(() => { lucide.createIcons(); }, [activeTab, toasts, products, team, activeThemeName]);
+            useEffect(() => { lucide.createIcons(); }, [activeTab, toasts, products, team, activeThemeName, isThemeMenuOpen, isLangMenuOpen]);
 
             const showToast = useCallback((msg, type = 'success') => {
                 const id = Date.now();
@@ -143,21 +244,21 @@ react_html = """
             const handleAddProduct = (e) => {
                 e.preventDefault();
                 if(!newProd.name || !newProd.price) {
-                    showToast('يرجى استكمال البيانات الأساسية للأصل', 'warning');
+                    showToast('يرجى استكمال البيانات الأساسية', 'warning');
                     return;
                 }
                 setProducts([{...newProd, id: Date.now(), sales: 0, views: 0, status: 'قيد المراجعة'}, ...products]);
                 setNewProd({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
-                showToast('تم رفع الأصل للمراجعة السيادية بنجاح! 🚀');
+                showToast(t.successAdded);
                 setActiveTab('overview');
             };
 
             const ToastContainer = () => (
                 <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
-                    {toasts.map(t => (
-                        <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : `bg-black/90 ${activeTheme.borderLight} ${activeTheme.accent}`}`}>
-                            <Icon name={t.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={20} />
-                            <span className="font-bold text-sm text-white">{t.msg}</span>
+                    {toasts.map(toast => (
+                        <div key={toast.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${toast.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : `bg-black/90 ${activeTheme.borderLight} ${activeTheme.accent}`}`}>
+                            <Icon name={toast.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={20} />
+                            <span className="font-bold text-sm text-white text-dir">{toast.msg}</span>
                         </div>
                     ))}
                 </div>
@@ -165,123 +266,136 @@ react_html = """
 
             return (
                 <div className={`min-h-screen ${activeTheme.bg} ${activeTheme.text} flex flex-col md:flex-row overflow-hidden transition-colors duration-500`}>
-                    {/* Sidebar */}
+                    
+                    {/* --- Sidebar --- */}
                     <div className={`w-full md:w-72 md:min-h-screen ${activeTheme.card} border-b md:border-b-0 md:border-l ${activeTheme.borderLight} flex flex-col transition-colors duration-500`}>
-                        <div className="p-8 pb-4">
+                        
+                        {/* Global Controls (Theme & Lang) at the top of sidebar for mobile, or integrated cleanly */}
+                        <div className="p-6 pb-2 flex justify-between items-center dir-invert">
+                            {/* Theme Picker Floating Button */}
+                            <div className="relative z-[200]">
+                                <button 
+                                    onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)} 
+                                    className={`w-10 h-10 rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center hover:scale-110 transition-transform`}
+                                    style={{backgroundColor: activeTheme.hex}}
+                                    title="تغيير النمط"
+                                ></button>
+                                
+                                {isThemeMenuOpen && (
+                                    <div className={`absolute top-12 ${lang === 'ar' ? 'right-0' : 'left-0'} glass-panel p-2 rounded-2xl flex flex-col gap-2 shadow-2xl animate-view`}>
+                                        {Object.entries(themes).map(([key, theme]) => (
+                                            <button 
+                                                key={key}
+                                                onClick={() => { setActiveThemeName(key); setIsThemeMenuOpen(false); }}
+                                                title={key}
+                                                className={`w-8 h-8 rounded-full border-2 transition-all ${activeThemeName === key ? 'border-white scale-110' : 'border-transparent hover:scale-110 opacity-70 hover:opacity-100'}`}
+                                                style={{ backgroundColor: theme.hex }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Language Picker */}
+                            <div className="relative z-[200]">
+                                <button 
+                                    onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border ${activeTheme.borderLight} hover:bg-white/10 transition-all font-bold text-sm`}
+                                >
+                                    <Icon name="Globe" size={16} className={activeTheme.accent} /> {lang.toUpperCase()}
+                                </button>
+                                
+                                {isLangMenuOpen && (
+                                    <div className={`absolute top-10 ${lang === 'ar' ? 'left-0' : 'right-0'} glass-panel p-2 rounded-xl flex flex-col gap-1 shadow-2xl animate-view min-w-[100px]`}>
+                                        <button onClick={() => {setLang('ar'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'ar' ? activeTheme.accent : 'text-white'}`}>العربية</button>
+                                        <button onClick={() => {setLang('en'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'en' ? activeTheme.accent : 'text-white'}`}>English</button>
+                                        <button onClick={() => {setLang('fr'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'fr' ? activeTheme.accent : 'text-white'}`}>Français</button>
+                                        <button onClick={() => {setLang('es'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'es' ? activeTheme.accent : 'text-white'}`}>Español</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="px-8 pb-4 text-dir">
                             <div className={`${activeTheme.btn} ${activeTheme.btnText} p-3 rounded-2xl inline-block mb-4 shadow-lg`}>
                                 <Icon name="Briefcase" size={28} />
                             </div>
-                            <h1 className={`text-2xl font-black uppercase tracking-widest ${activeTheme.accent} mb-1`}>لوحة التاجر</h1>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sovereign Merchant Hub</p>
+                            <h1 className={`text-2xl font-black uppercase tracking-widest ${activeTheme.accent} mb-1`}>{t.dashboardTitle}</h1>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{t.dashboardSub}</p>
                         </div>
 
                         <div className="flex flex-row md:flex-col gap-2 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
-                            <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-right whitespace-nowrap ${activeTab === 'overview' ? `bg-white/10 border-r-4 ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                                <Icon name="LayoutDashboard" size={20} /> نظرة عامة
+                            <button onClick={() => setActiveTab('overview')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'overview' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                                <Icon name="LayoutDashboard" size={20} /> {t.overview}
                             </button>
-                            <button onClick={() => setActiveTab('products')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-right whitespace-nowrap ${activeTab === 'products' ? `bg-white/10 border-r-4 ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                                <Icon name="Package" size={20} /> إدارة الأصول والمخزون
+                            <button onClick={() => setActiveTab('products')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'products' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                                <Icon name="Package" size={20} /> {t.assets}
                             </button>
-                            <button onClick={() => setActiveTab('team')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-right whitespace-nowrap ${activeTab === 'team' ? `bg-white/10 border-r-4 ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                                <Icon name="Users" size={20} /> جيش التاجر المساعد
+                            <button onClick={() => setActiveTab('team')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'team' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                                <Icon name="Users" size={20} /> {t.team}
                             </button>
-                            <button onClick={() => setActiveTab('services')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-right whitespace-nowrap ${activeTab === 'services' ? `bg-white/10 border-r-4 ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                                <Icon name="Zap" size={20} /> الخدمات الذكية المعاونة
+                            <button onClick={() => setActiveTab('services')} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all text-dir whitespace-nowrap ${activeTab === 'services' ? `bg-white/10 ${lang==='ar'?'border-r-4':'border-l-4'} ${activeTheme.border} ${activeTheme.accent}` : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                                <Icon name="Zap" size={20} /> {t.services}
                             </button>
                         </div>
                         
                         <div className="hidden md:block p-6 mt-auto">
-                            {/* --- أزرار تبديل الأنماط (Theme Switcher) --- */}
-                            <div className="bg-white/5 p-4 rounded-3xl border border-white/5 text-center mb-4">
-                                <span className="block text-xs font-black text-gray-400 uppercase mb-3">تخصيص النمط</span>
-                                <div className="flex flex-wrap justify-center gap-2">
-                                    {Object.entries(themes).map(([key, theme]) => (
-                                        <button 
-                                            key={key}
-                                            onClick={() => setActiveThemeName(key)}
-                                            title={key}
-                                            className={`w-6 h-6 rounded-full border-2 transition-all ${activeThemeName === key ? 'border-white scale-125' : 'border-transparent hover:scale-110 opacity-60 hover:opacity-100'}`}
-                                            style={{ backgroundColor: theme.hex }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                            
                             <div className="bg-white/5 p-5 rounded-3xl border border-white/5 text-center">
                                 <Icon name="ShieldCheck" size={24} className={`${activeTheme.accent} mx-auto mb-2`} />
-                                <span className="block text-xs font-black text-gray-400 uppercase">تاجر معتمد</span>
-                                <span className={`block ${activeTheme.accent} font-bold text-sm mt-1`}>الجيل الثالث</span>
+                                <span className="block text-xs font-black text-gray-400 uppercase">{t.certified}</span>
+                                <span className={`block ${activeTheme.accent} font-bold text-sm mt-1`}>{t.gen}</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Main Content */}
-                    <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar">
+                    {/* --- Main Content --- */}
+                    <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
+                        
+                        {/* Search & Wallet Bar */}
+                        <div className="flex flex-col md:flex-row gap-6 mb-10 items-center">
+                            <div className="flex-1 relative w-full">
+                                <Icon name="Search" size={18} className={`absolute ${lang==='ar'?'right-5':'left-5'} top-1/2 -translate-y-1/2 text-gray-400`} />
+                                <input 
+                                    type="text" 
+                                    placeholder={t.searchPlaceholder}
+                                    className={`w-full premium-input rounded-2xl py-4 ${lang==='ar'?'pr-14 pl-6':'pl-14 pr-6'} text-sm font-bold text-dir`}
+                                />
+                            </div>
+                            <div className={`glass-panel px-8 py-3 rounded-2xl border ${activeTheme.borderLight} flex items-center gap-4`}>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{t.liquidity}</span>
+                                    <span className="text-[#00FF88] font-black text-xl">${LEADER_BALANCE_PLACEHOLDER.toLocaleString()}</span>
+                                </div>
+                                <Icon name="Wallet" size={24} className={activeTheme.accent} />
+                            </div>
+                        </div>
+
                         {activeTab === 'overview' && (
                             <div className="animate-view space-y-8 max-w-6xl mx-auto">
                                 <div className="flex items-center justify-between mb-8">
-                                    <h2 className="text-3xl font-black">مؤشرات الأداء الاستراتيجية 📊</h2>
-                                    <button className="bg-white/10 px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors flex items-center gap-2">
-                                        <Icon name="Download" size={16} /> استخراج تقرير
-                                    </button>
+                                    <h2 className="text-3xl font-black">{t.kpiTitle}</h2>
                                 </div>
                                 
-                                {/* KPI Cards */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className={`absolute -right-4 -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="TrendingUp" size={120} /></div>
-                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">المبيعات الإجمالية</p>
+                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="TrendingUp" size={120} /></div>
+                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.sales}</p>
                                         <h4 className="text-3xl font-black text-[#00FF88]">$1,036,000</h4>
-                                        <span className={`text-xs ${activeTheme.accent} font-black mt-3 flex items-center gap-1`}><Icon name="ArrowUpRight" size={14}/> +15.4% هذا الربع</span>
                                     </div>
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className="absolute -right-4 -top-4 opacity-5 text-white group-hover:scale-110 transition-transform"><Icon name="Package" size={120} /></div>
-                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">الأصول النشطة بالسوق</p>
+                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 text-white group-hover:scale-110 transition-transform`}><Icon name="Package" size={120} /></div>
+                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.activeAssets}</p>
                                         <h4 className="text-3xl font-black text-white">{products.length}</h4>
-                                        <span className="text-xs text-gray-500 font-black mt-3 block">جميعها مفعلة</span>
                                     </div>
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className={`absolute -right-4 -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Eye" size={120} /></div>
-                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">زيارات أصولك</p>
+                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Eye" size={120} /></div>
+                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.views}</p>
                                         <h4 className="text-3xl font-black text-white">6,840</h4>
-                                        <span className="text-xs text-[#00FF88] font-black mt-3 flex items-center gap-1"><Icon name="ArrowUpRight" size={14}/> +2.1% الأسبوع الماضي</span>
                                     </div>
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors`}>
-                                        <div className={`absolute -right-4 -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Users" size={120} /></div>
-                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">الفريق المعاون</p>
+                                        <div className={`absolute ${lang==='ar'?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Users" size={120} /></div>
+                                        <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.teamMembers}</p>
                                         <h4 className="text-3xl font-black text-white">{team.length}</h4>
-                                        <span className="text-xs text-gray-500 font-black mt-3 block">1 بانتظار الاعتماد</span>
-                                    </div>
-                                </div>
-
-                                {/* Recent Orders/Products */}
-                                <div className={`${activeTheme.card} p-8 rounded-[2rem] border ${activeTheme.borderLight} transition-colors`}>
-                                    <h3 className="text-xl font-black mb-6 border-b border-white/5 pb-4">حالة الأصول الاستراتيجية</h3>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-right border-collapse">
-                                            <thead>
-                                                <tr className="text-gray-400 text-sm uppercase tracking-widest border-b border-white/10">
-                                                    <th className="pb-4 font-black">اسم الأصل</th>
-                                                    <th className="pb-4 font-black">القسم</th>
-                                                    <th className="pb-4 font-black">القيمة</th>
-                                                    <th className="pb-4 font-black">المبيعات</th>
-                                                    <th className="pb-4 font-black">الحالة</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {products.map(p => (
-                                                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                        <td className="py-4 font-bold">{p.name}</td>
-                                                        <td className="py-4 text-gray-400 text-sm">{p.category}</td>
-                                                        <td className="py-4 font-black text-[#00FF88]">${Number(p.price).toLocaleString()}</td>
-                                                        <td className="py-4 font-bold">{p.sales}</td>
-                                                        <td className="py-4">
-                                                            <span className={`px-3 py-1 rounded-lg text-xs font-black ${p.status === 'نشط' ? 'bg-[#00FF88]/20 text-[#00FF88]' : `${activeTheme.bg} ${activeTheme.accent} opacity-80`}`}>{p.status}</span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -290,105 +404,67 @@ react_html = """
                         {activeTab === 'products' && (
                             <div className="animate-view space-y-8 max-w-4xl mx-auto">
                                 <h2 className="text-3xl font-black mb-8 border-b border-white/10 pb-6 flex items-center gap-4">
-                                    <Icon name="PlusCircle" className={activeTheme.accent} size={32} /> طرح أصل جديد للسوق
+                                    <Icon name="PlusCircle" className={activeTheme.accent} size={32} /> {t.newProduct}
                                 </h2>
                                 
                                 <form onSubmit={handleAddProduct} className={`${activeTheme.card} p-8 md:p-10 rounded-[3rem] border ${activeTheme.borderLight} shadow-2xl transition-colors`}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                         <div className="space-y-3">
-                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">اسم الأصل / المنتج</label>
-                                            <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border}`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder="مثال: يخت قيادي فاخر..." />
+                                            <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder="اسم الأصل..." />
                                         </div>
                                         <div className="space-y-3">
-                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">القيمة التسويقية ($)</label>
-                                            <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border}`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder="0.00" />
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">القسم الاستراتيجي</label>
-                                            <select className={`w-full premium-input rounded-2xl py-4 px-5 font-bold text-white bg-black appearance-none focus:${activeTheme.border}`} value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})}>
-                                                <option>عقارات سيادية</option>
-                                                <option>أكاديمية القيادة</option>
-                                                <option>تقنيات المستقبل</option>
-                                                <option>أصول فاخرة</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">النطاق الجغرافي للتوفر</label>
-                                            <select className={`w-full premium-input rounded-2xl py-4 px-5 font-bold text-white bg-black appearance-none focus:${activeTheme.border}`}>
-                                                <option>مصر</option>
-                                                <option>ليبيا</option>
-                                                <option>السودان</option>
-                                                <option>عالمي</option>
-                                            </select>
+                                            <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder="السعر ($)" />
                                         </div>
                                         <div className="md:col-span-2 space-y-3">
-                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">الوصف الذكي (سيتم تحسينه عبر الذكاء الاصطناعي تلقائياً)</label>
-                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border}`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder="اشرح القيمة المضافة لهذا الأصل ليجذب القادة للاستحواذ عليه..."></textarea>
+                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border} text-dir`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder="الوصف..."></textarea>
                                         </div>
                                     </div>
                                     <button type="submit" className={`w-full py-6 rounded-[2rem] font-black text-xl ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic flex items-center justify-center gap-3`}>
-                                        <Icon name="UploadCloud" /> اعتماد وإرسال للمراجعة السيادية
+                                        <Icon name="UploadCloud" /> {t.addAsset}
                                     </button>
                                 </form>
                             </div>
                         )}
 
+                        {activeTab === 'services' && (
+                            <div className="animate-view space-y-8 max-w-6xl mx-auto">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:border-[#00FF88] transition-colors`}>
+                                        <div className="bg-[#00FF88]/10 text-[#00FF88] p-5 rounded-3xl mb-6"><Icon name="Bot" size={40} /></div>
+                                        <h4 className="text-xl font-black mb-3">{t.aiAgent}</h4>
+                                        <button className="mt-auto w-full py-4 bg-white/5 hover:bg-[#00FF88] hover:text-black rounded-xl font-black transition-all">تفعيل</button>
+                                    </div>
+                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:${activeTheme.border} transition-colors`}>
+                                        <div className={`bg-white/10 ${activeTheme.accent} p-5 rounded-3xl mb-6`}><Icon name="Megaphone" size={40} /></div>
+                                        <h4 className="text-xl font-black mb-3">{t.regionalCamp}</h4>
+                                        <button className={`mt-auto w-full py-4 bg-white/5 hover:${activeTheme.btn} hover:${activeTheme.btnText} rounded-xl font-black transition-all`}>تفعيل</button>
+                                    </div>
+                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:border-[#0074D9] transition-colors`}>
+                                        <div className="bg-[#0074D9]/10 text-[#0074D9] p-5 rounded-3xl mb-6"><Icon name="FileSignature" size={40} /></div>
+                                        <h4 className="text-xl font-black mb-3">{t.legalDoc}</h4>
+                                        <button className="mt-auto w-full py-4 bg-white/5 hover:bg-[#0074D9] hover:text-white rounded-xl font-black transition-all">تفعيل</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
                         {activeTab === 'team' && (
                             <div className="animate-view space-y-8 max-w-6xl mx-auto">
-                                <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
-                                    <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="Users" className={activeTheme.accent} size={32} /> جيش التاجر المعاون</h2>
-                                    <button onClick={() => showToast('تم إرسال دعوة انضمام!', 'success')} className={`bg-white/10 hover:${activeTheme.btn} hover:${activeTheme.btnText} px-6 py-3 rounded-xl font-bold transition-colors flex items-center gap-2`}>
-                                        <Icon name="UserPlus" size={18} /> دعوة عضو جديد
-                                    </button>
-                                </div>
-                                
+                                <h2 className="text-3xl font-black mb-8 border-b border-white/10 pb-6 flex items-center gap-4">
+                                    <Icon name="Users" className={activeTheme.accent} size={32} /> {t.teamMembers}
+                                </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {team.map(member => (
                                         <div key={member.id} className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} relative overflow-hidden transition-colors`}>
                                             <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4 text-2xl">👤</div>
                                             <h4 className="text-xl font-black mb-1">{member.name}</h4>
                                             <p className={`text-sm font-bold mb-6 ${activeTheme.accent}`}>{member.role}</p>
-                                            <div className="flex justify-between items-center border-t border-white/10 pt-4">
-                                                <span className="text-xs text-gray-500 uppercase font-black">المبيعات: <span className="text-white text-sm">{member.sales}</span></span>
-                                                <span className="text-xs font-black">{member.status}</span>
-                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
-
-                        {activeTab === 'services' && (
-                            <div className="animate-view space-y-8 max-w-6xl mx-auto">
-                                <h2 className="text-3xl font-black mb-8 border-b border-white/10 pb-6 flex items-center gap-4">
-                                    <Icon name="Zap" className={activeTheme.accent} size={32} /> الخدمات الذكية المعاونة
-                                </h2>
-                                <p className="text-gray-400 text-lg mb-10">ارتقِ بمتجرك السيادي عبر تفعيل خدمات الإمبراطورية المعاونة التي تعمل بالنيابة عنك.</p>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:border-[#00FF88] transition-colors`}>
-                                        <div className="bg-[#00FF88]/10 text-[#00FF88] p-5 rounded-3xl mb-6"><Icon name="Bot" size={40} /></div>
-                                        <h4 className="text-xl font-black mb-3">وكيل مبيعات AI</h4>
-                                        <p className="text-gray-400 text-sm mb-8 leading-relaxed">روبوت ذكاء اصطناعي يقوم بالرد على استفسارات المشترين وإقناعهم بإتمام الاستحواذ 24/7.</p>
-                                        <button onClick={() => showToast('تم تفعيل وكيل الذكاء الاصطناعي لمتجرك')} className="mt-auto w-full py-4 bg-white/5 hover:bg-[#00FF88] hover:text-black rounded-xl font-black transition-all">تفعيل الخدمة ($50/شهر)</button>
-                                    </div>
-                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:${activeTheme.border} transition-colors`}>
-                                        <div className={`bg-white/10 ${activeTheme.accent} p-5 rounded-3xl mb-6`}><Icon name="Megaphone" size={40} /></div>
-                                        <h4 className="text-xl font-black mb-3">حملة ضخ إقليمية</h4>
-                                        <p className="text-gray-400 text-sm mb-8 leading-relaxed">ترويج أصولك بقوة داخل شبكة القادة في إقليم معين لضمان مبيعات فورية.</p>
-                                        <button onClick={() => showToast('سيتم توجيهك لمدير الحملات الإقليمية')} className={`mt-auto w-full py-4 bg-white/5 hover:${activeTheme.btn} hover:${activeTheme.btnText} rounded-xl font-black transition-all`}>طلب حملة (مخصص)</button>
-                                    </div>
-                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:border-[#0074D9] transition-colors`}>
-                                        <div className="bg-[#0074D9]/10 text-[#0074D9] p-5 rounded-3xl mb-6"><Icon name="FileSignature" size={40} /></div>
-                                        <h4 className="text-xl font-black mb-3">التوثيق القانوني السيادي</h4>
-                                        <p className="text-gray-400 text-sm mb-8 leading-relaxed">إسناد عملية صياغة عقود الملكية للمشترين للإدارة القانونية بالإمبراطورية.</p>
-                                        <button onClick={() => showToast('تم ربط متجرك بالخدمة القانونية')} className="mt-auto w-full py-4 bg-white/5 hover:bg-[#0074D9] hover:text-white rounded-xl font-black transition-all">تفعيل التوثيق التلقائي</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
-                    
                     <ToastContainer />
                 </div>
             );
@@ -406,7 +482,7 @@ final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 final_html = final_html.replace("LEADER_BALANCE_PLACEHOLDER", str(current_balance))
 
 # --- 5. عرض الواجهة (Render) ---
-components.html(final_html, height=900, scrolling=True)
+components.html(final_html, height=950, scrolling=True)
 
 # --- 6. أزرار التحكم والرجوع ---
 st.markdown("---")
