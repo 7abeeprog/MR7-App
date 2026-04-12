@@ -78,7 +78,11 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. محرك الحسابات المالية المتقدمة ---
+# --- 2. إدارة الحالة المالية (State Integration) ---
+if 'cash_balance' not in st.session_state:
+    st.session_state.cash_balance = 1250000.00
+
+# --- 3. محرك الحسابات المالية المتقدمة ---
 st.title("📈 نظام الحسابات المتقدم")
 st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>محاكي التضاعف المالي والعوائد السيادية المركبة</p>", unsafe_allow_html=True)
 
@@ -115,7 +119,8 @@ with tabs[0]:
     
     st.markdown(f"""
     <div class="finance-card">
-        <h3 style="color: #00FF88; text-align: center;">الرصيد النهائي المتوقع: ${balance:,.2f}</h3>
+        <h3 style="color: #00FF88; text-align: center;">الرصيد النهائي المتوقع بعد {years} سنوات:</h3>
+        <h1 style="text-align: center; color: #FFFFFF !important;">${balance:,.2f}</h1>
         <p style="text-align: center; opacity: 0.7;">بناءً على تكرار الأرباح وإعادة استثمارها آلياً.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -127,17 +132,35 @@ with tabs[1]:
     st.subheader("🏢 عوائد المشاريع الإقليمية (مصر، ليبيا، السودان)")
     st.markdown("تحليل العوائد المباشرة من المشاريع السيادية النشطة في الأقاليم.")
     
+    # بيانات المشاريع مع قيم رقمية للمعالجة
     project_data = [
-        {"المشروع": "مجمع السيارات الكهربائية (مصر)", "العائد الحالي": "24%", "حصة القائد": "$5,000", "الربح الموزع": "$1,200"},
-        {"المشروع": "مبادرة الـ 20 ألف مشروع (ليبيا)", "العائد الحالي": "12%", "حصة القائد": "$2,000", "الربح الموزع": "$240"},
-        {"المشروع": "سلة غذاء العرب (السودان)", "العائد الحالي": "19%", "حصة القائد": "$3,000", "الربح الموزع": "$570"}
+        {"المشروع": "مجمع السيارات الكهربائية (مصر)", "العائد الحالي": "24%", "حصة القائد": "$5,000", "val": 1200},
+        {"المشروع": "مبادرة الـ 20 ألف مشروع (ليبيا)", "العائد الحالي": "12%", "حصة القائد": "$2,000", "val": 240},
+        {"المشروع": "سلة غذاء العرب (السودان)", "العائد الحالي": "19%", "حصة القائد": "$3,000", "val": 570}
     ]
-    st.table(project_data)
     
-    if st.button("💰 تحويل الأرباح للمحفظة المركزية"):
-        with st.spinner("جاري تدقيق الحصص الضريبية والتحويل..."):
+    # عرض الجدول
+    display_df = pd.DataFrame(project_data).drop(columns=['val'])
+    display_df['الربح الموزع'] = [f"${p['val']:,}" for p in project_data]
+    st.table(display_df)
+    
+    total_transfer = sum(p['val'] for p in project_data)
+    
+    st.markdown(f"""
+    <div style="text-align: center; padding: 20px; background: rgba(0, 255, 136, 0.05); border-radius: 20px; border: 1px dashed #00FF88; margin-bottom: 20px;">
+        <span style="font-size: 1.1rem;">إجمالي الأرباح المستحقة للترحيل: </span>
+        <b style="font-size: 1.8rem; color: #00FF88;">${total_transfer:,}</b>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("💰 ترحيل الأرباح إلى المحفظة المركزية"):
+        with st.spinner("جاري تدقيق الحصص وتحديث الخزنة الإمبراطورية..."):
             time.sleep(2)
-            st.success("تم تحويل $2,010 إلى خزنتك الإمبراطورية بنجاح! ✅")
+            st.session_state.cash_balance += total_transfer
+            st.success(f"تم ترحيل ${total_transfer:,} بنجاح! رصيدك الكلي الآن: ${st.session_state.cash_balance:,.2f} ✅")
+            st.balloons()
+            time.sleep(1)
+            st.rerun()
 
 # --- Tab 3: تحليل التدفقات النقدية ---
 with tabs[2]:
@@ -150,9 +173,14 @@ with tabs[2]:
     })
     st.bar_chart(source_data.set_index("الدولة"))
     
-    st.info("💡 ملاحظة: إقليم مصر يمثل 45% من تدفقاتك النقدية الحالية نظراً لنمو قطاع التصنيع الثقيل.")
+    st.info("💡 ملاحظة استراتيجية: إقليم مصر يمثل 45% من تدفقاتك النقدية الحالية نظراً لنمو قطاع التصنيع الثقيل.")
 
 st.divider()
 
-if st.button("🏠 العودة لمركز القيادة الرئيسي"):
-    st.switch_page("app.py")
+col_nav1, col_nav2 = st.columns(2)
+with col_nav1:
+    if st.button("💰 الانتقال للمحفظة الرئيسية"):
+        st.switch_page("pages/3_Wallet.py")
+with col_nav2:
+    if st.button("🏠 العودة لمركز القيادة"):
+        st.switch_page("app.py")
