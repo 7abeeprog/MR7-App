@@ -13,7 +13,7 @@ st.set_page_config(
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 user_id = st.session_state.get('user_id', "MR7-ROOT-001")
 
-# --- 3. واجهة React المتقدمة (لوحة التحكم العليا السيادية v10.0 - محرك الدعوات) ---
+# --- 3. واجهة React المتقدمة (لوحة التحكم العليا السيادية v10.1 - التوجيه الديناميكي) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -136,7 +136,7 @@ react_html = r"""
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- نظام التنبيه الصوتي والاهتزاز السيادي (Admin Haptics) ---
+        // --- نظام التنبيه الصوتي والاهتزاز السيادي ---
         const triggerAdminFeedback = (type) => {
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
                 if (type === 'approve' || type === 'success') navigator.vibrate([100, 50, 100]); 
@@ -212,7 +212,7 @@ react_html = r"""
             const t = translations[lang] || translations['ar'];
 
             // --- States ---
-            const [activeTab, setActiveTab] = useState('invites'); // تم تغيير التبويب الافتراضي للدعوات
+            const [activeTab, setActiveTab] = useState('invites'); 
             const [toasts, setToasts] = useState([]);
             const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
             const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -223,10 +223,9 @@ react_html = r"""
             ]);
 
             // --- Data Injector States ---
-            const [injectStatus, setInjectStatus] = useState('idle'); // idle, scanning, extracted, injected
+            const [injectStatus, setInjectStatus] = useState('idle'); 
             const [extractedPhases, setExtractedPhases] = useState([]);
 
-            // مصفوفة تعكس محتوى الـ PDF للـ 100 برنامج
             const pdfDataMap = [
                 { phase: 1, days: "1-10", title: "القيادة والإدارة الاستراتيجية", count: 10, icon: "Crown", color: "#FFD700", sample: "القيادة التحويلية، التفكير الاستراتيجي، إدارة الأزمات" },
                 { phase: 2, days: "11-20", title: "الاستثمار والمالية", count: 10, icon: "TrendingUp", color: "#00FF88", sample: "أساسيات الاستثمار، تحليل الأسهم، التمويل الجماعي" },
@@ -241,15 +240,31 @@ react_html = r"""
             ];
 
             // --- Invites State ---
-            const [inviteData, setInviteData] = useState({ targetName: '', organization: 'أمم متحدة (UN)', lang: 'ar', rank: 'سفير استراتيجي' });
+            const [inviteData, setInviteData] = useState({ 
+                domain: 'https://mr7-app.streamlit.app', // الدومين الافتراضي
+                targetName: '', 
+                organization: 'أمم متحدة (UN)', 
+                lang: 'ar', 
+                rank: 'سفير استراتيجي' 
+            });
             const [generatedLink, setGeneratedLink] = useState('');
 
             const handleGenerateInvite = (e) => {
                 e.preventDefault();
-                // توليد الرابط مع محاكاة المتغيرات
-                const baseUrl = "https://mr7-empire.streamlit.app/join";
+                // تنظيف الرابط
+                let baseDomain = inviteData.domain.trim();
+                if (baseDomain.endsWith('/')) {
+                    baseDomain = baseDomain.slice(0, -1);
+                }
+                
+                if (!baseDomain.startsWith('http')) {
+                    baseDomain = 'https://' + baseDomain;
+                }
+
                 const refId = "MR7-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-                const link = `${baseUrl}?ref=${refId}&org=${encodeURIComponent(inviteData.organization)}&lang=${inviteData.lang}&rank=${encodeURIComponent(inviteData.rank)}`;
+                
+                // توليد الرابط الحقيقي
+                const link = `${baseDomain}?ref=${refId}&org=${encodeURIComponent(inviteData.organization)}&lang=${inviteData.lang}&rank=${encodeURIComponent(inviteData.rank)}`;
                 
                 setGeneratedLink(link);
                 triggerAdminFeedback('success');
@@ -350,7 +365,7 @@ react_html = r"""
 
                         <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
                             {[
-                                {id: 'invites', icon: 'Link', label: t.invites}, // Tab الدعوات
+                                {id: 'invites', icon: 'Link', label: t.invites}, 
                                 {id: 'injector', icon: 'DatabaseZap', label: t.injector, badge: 'جديد'}, 
                                 {id: 'radar', icon: 'Activity', label: t.radar},
                                 {id: 'projects', icon: 'FolderKanban', label: t.projects, badge: pendingProjects.length},
@@ -369,14 +384,28 @@ react_html = r"""
                     {/* --- Main Content --- */}
                     <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
                         
-                        {/* --- Tab: Invites (محرك الدعوات الدبلوماسية) --- */}
+                        {/* --- Tab: Invites (محرك الدعوات الدبلوماسية المحدث) --- */}
                         {activeTab === 'invites' && (
                             <div className="animate-view space-y-8 max-w-5xl mx-auto pt-5">
                                 <h2 className="text-3xl font-black flex items-center gap-3 mb-4"><Icon name="Link" className={theme.accent} size={32}/> نظام الدعوات الدبلوماسية</h2>
-                                <p className="text-gray-400 mb-8 leading-relaxed">قم بتوليد روابط دخول حصرية للمنظومة مهيأة مسبقاً بالشكل واللغة التي تناسب الجهات الرسمية (الأمم المتحدة، الاتحاد الأوروبي، الحكومات).</p>
+                                <p className="text-gray-400 mb-8 leading-relaxed">لتجنب رسالة "لا تملك صلاحية الوصول"، قم بوضع النطاق الحقيقي (رابط) تطبيقك المرفوع على Streamlit في الحقل الأول أدناه، ثم قم بتوليد الرابط الدبلوماسي.</p>
                                 
                                 <div className={`glass-panel p-10 rounded-[3rem] border ${theme.borderLight}`}>
                                     <form onSubmit={handleGenerateInvite} className="space-y-6">
+                                        <div className="space-y-2 mb-8 p-4 bg-white/5 border border-white/10 rounded-2xl">
+                                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block flex items-center gap-2">
+                                                <Icon name="Globe" size={16} className="text-[#00FF88]"/> النطاق الرسمي لتطبيقك (App Domain)
+                                            </label>
+                                            <input 
+                                                value={inviteData.domain} 
+                                                onChange={e => setInviteData({...inviteData, domain: e.target.value})}
+                                                placeholder="مثال: https://your-app-name.streamlit.app" 
+                                                className="w-full premium-input p-4 rounded-xl font-black text-lg" 
+                                                required
+                                            />
+                                            <p className="text-[10px] text-gray-500 mt-2">انسخ الرابط الأساسي لتطبيقك من شريط المتصفح وضعه هنا ليكون أساس الدعوة.</p>
+                                        </div>
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">اسم الشخص المستهدف (اختياري)</label>
@@ -443,14 +472,14 @@ react_html = r"""
                                         <div className="mt-8 p-6 bg-black/40 rounded-2xl border border-[#00FF88]/30 animate-view">
                                             <h4 className="text-[#00FF88] font-black mb-4 flex items-center gap-2"><Icon name="CheckCircle2" size={20}/> الرابط جاهز للإرسال</h4>
                                             <div className="flex flex-col md:flex-row gap-4 items-center">
-                                                <div className="flex-1 w-full bg-white/5 p-4 rounded-xl font-mono text-sm text-gray-300 break-all border border-white/10 overflow-x-auto">
+                                                <div className="flex-1 w-full bg-white/5 p-4 rounded-xl font-mono text-sm text-gray-300 break-all border border-white/10 overflow-x-auto" style={{direction: "ltr"}}>
                                                     {generatedLink}
                                                 </div>
                                                 <button onClick={copyToClipboard} className="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-black transition-colors flex items-center justify-center gap-2">
                                                     <Icon name="Copy" size={18}/> نسخ
                                                 </button>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-4 italic">ملاحظة: هذا الرابط مشفر ويحتوي على الصلاحيات والتوجيهات اللغوية التي حددتها.</p>
+                                            <p className="text-xs text-gray-500 mt-4 italic">ملاحظة: هذا الرابط سيوجه الزائر مباشرة لتطبيقك المرفوع على مساحتك الخاصة.</p>
                                         </div>
                                     )}
                                 </div>
@@ -624,7 +653,7 @@ react_html = r"""
 </html>
 """
 
-# --- 4. حقن المتغيرات السحابية ---
+# --- 4. حقن المتغيرات ---
 final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 
 # --- 5. عرض الواجهة (Render) ---
