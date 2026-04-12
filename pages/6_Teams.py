@@ -13,7 +13,7 @@ st.set_page_config(
 current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
 user_id = st.session_state.get('user_id', "COMMANDER-001")
 
-# --- 3. واجهة React المتقدمة (مقر القيادة الميدانية السحري v4.0 - الصوت والاهتزاز) ---
+# --- 3. واجهة React المتقدمة (مقر القيادة الميدانية السحري v5.0 - العملات ورحلة الـ 100 يوم) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -73,12 +73,12 @@ react_html = r"""
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* الجيمفيكيشن: أنيميشن نقاط الخبرة */
-        .pulse-xp { animation: pulseXP 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes pulseXP {
-            0% { transform: scale(1); color: #00FF88; }
-            50% { transform: scale(1.3); color: #FFD700; text-shadow: 0 0 20px rgba(255,215,0,0.8); }
-            100% { transform: scale(1); color: #00FF88; }
+        /* الجيمفيكيشن: أنيميشن العملات الذهبية */
+        .coin-bounce { animation: coinBounceAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: inline-block; }
+        @keyframes coinBounceAnim {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.3); color: #FFD700; text-shadow: 0 0 30px #FFD700; }
+            100% { transform: translateY(0) scale(1); }
         }
 
         /* Kanban Magic Styles */
@@ -104,6 +104,10 @@ react_html = r"""
         }
         .task-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 
+        /* شريط رحلة الـ 100 يوم */
+        .journey-bar-bg { width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .journey-bar-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #00FF88); transition: width 1s ease-in-out; }
+
         html[dir="ltr"] .dir-invert { flex-direction: row-reverse; }
         html[dir="ltr"] .text-dir { text-align: left; }
         html[dir="rtl"] .text-dir { text-align: right; }
@@ -118,7 +122,7 @@ react_html = r"""
     <div id="loading-screen">
         <div style="border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
         <h2 style="margin-top:20px; font-weight: 900; letter-spacing: 2px;">MR7 TACTICAL COMMAND</h2>
-        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Audio & Haptic Feedback...</p>
+        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing 100-Day Journey & Coin Systems...</p>
     </div>
 
     <div id="root"></div>
@@ -141,20 +145,14 @@ react_html = r"""
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- نظام التنبيه الصوتي والاهتزاز (Audio & Haptics Engine) ---
+        // --- نظام التنبيه الصوتي (Coin Sound & Haptics Engine) ---
         const triggerSensoryFeedback = (type) => {
-            // 1. الاهتزاز (Haptic Feedback) إذا كان مدعوماً في المتصفح/الجهاز
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                if (type === 'success') {
-                    navigator.vibrate([100, 50, 100]); // نبضتان للنجاح
-                } else if (type === 'info') {
-                    navigator.vibrate(50); // نبضة خفيفة للمعلومات
-                } else {
-                    navigator.vibrate([200]); // نبضة طويلة للتنبيهات الأخرى
-                }
+                if (type === 'coin') navigator.vibrate([50, 50, 50]); // اهتزاز متتالي وسريع للعملات
+                else if (type === 'success') navigator.vibrate([100, 50, 100]); 
+                else navigator.vibrate(50); 
             }
 
-            // 2. التنبيه الصوتي (Web Audio API)
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
@@ -165,31 +163,29 @@ react_html = r"""
                 osc.connect(gain);
                 gain.connect(ctx.destination);
 
-                if (type === 'success') {
-                    // نغمة نجاح (تصاعدية)
+                if (type === 'coin') {
+                    // نغمة رنين العملة الذهبية (Classic Coin Sound)
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-                    osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.1); // C6
+                    osc.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
+                    osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08); // E6
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'success') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.1); 
                     gain.gain.setValueAtTime(0.1, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
                     osc.start();
                     osc.stop(ctx.currentTime + 0.15);
-                } else {
-                    // نغمة معلومات عادية (نبضة بسيطة)
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
-                    gain.gain.setValueAtTime(0.05, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.1);
                 }
-            } catch(e) {
-                console.log("Audio feedback not supported or blocked by browser policy.", e);
-            }
+            } catch(e) { console.log("Audio blocked.", e); }
         };
 
         const App = () => {
-            // --- 1. الأنماط السبعة (7 Themes) ---
+            // --- 1. الأنماط السبعة ---
             const themes = {
                 "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#FFFFFF" },
                 "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
@@ -197,17 +193,21 @@ react_html = r"""
                 "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", border: "border-[#00FF88]", borderLight: "border-[#00FF88]/20", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" },
                 "أحمر القوة 🔴": { bg: "bg-[#140000]", text: "text-white", card: "bg-[#2B0000]/80", border: "border-[#FF4136]", borderLight: "border-[#FF4136]/20", accent: "text-[#FF4136]", btn: "bg-[#FF4136]", btnText: "text-white", hex: "#FF4136" },
                 "أصفر الريادة 🟡": { bg: "bg-[#141400]", text: "text-white", card: "bg-[#2B2B00]/80", border: "border-[#FFDC00]", borderLight: "border-[#FFDC00]/20", accent: "text-[#FFDC00]", btn: "bg-[#FFDC00]", btnText: "text-black", hex: "#FFDC00" },
-                "روز الفخامة 🌸": { bg: "bg-[#14000A]", text: "text-white", card: "bg-[#2B0015]/80", border: "border-[#F012BE]", borderLight: "border-[#F012BE]/20", accent: "text-[#F012BE]", btn: "bg-[#F012BE]", btnText: "text-white", hex: "#F012BE" }
+                "روز الفخامة 🌸": { bg: "bg-[#14000A]", text: "text-white", card: "bg-[#2B0015]/80", border: "border-[#F012BE]", borderLight: "border-[#F012BE]/20", accent: "text:-[#F012BE]", btn: "bg-[#F012BE]", btnText: "text-white", hex: "#F012BE" }
             };
 
             const [activeThemeName, setActiveThemeName] = useState("أسود قيادي 🖤");
             const theme = themes[activeThemeName] || themes["أسود قيادي 🖤"];
 
-            // --- 2. اللغات السبعة (7 Languages) ---
+            // --- 2. اللغات السبعة ---
             const translations = {
-                ar: { title: "القيادة الميدانية", kanban: "المهام الاستراتيجية", meetings: "غرفة الاجتماعات", performance: "رادار الأداء", task: "المهمة", assignee: "القائد المُكلف", priority: "الأولوية", add_task: "إصدار تكليف", todo: "تكليفات جديدة", progress: "قيد التنفيذ", done: "مكتملة", high: "عاجلة 🔥", medium: "متوسطة", low: "عادية", xp_earned: "تم إضافة نقاط خبرة", notification: "إشعار نظام" },
-                en: { title: "Field Command", kanban: "Strategic Tasks", meetings: "Meeting Room", performance: "Performance Radar", task: "Task", assignee: "Assignee", priority: "Priority", add_task: "Issue Command", todo: "New Tasks", progress: "In Progress", done: "Completed", high: "Urgent 🔥", medium: "Medium", low: "Normal", xp_earned: "XP Earned", notification: "System Notification" },
-                // اللغات الأخرى يمكن إضافتها لاحقاً لتبسيط الكود هنا
+                ar: { title: "القيادة الميدانية", kanban: "المهام الاستراتيجية", meetings: "غرفة الاجتماعات", performance: "رادار الأداء", task: "المهمة", assignee: "القائد المُكلف", priority: "الأولوية", add_task: "إصدار تكليف", todo: "تكليفات جديدة", progress: "قيد التنفيذ", done: "مكتملة", high: "عاجلة 🔥", medium: "متوسطة", low: "عادية", coins_earned: "تم كسب عملات ذهبية" },
+                en: { title: "Field Command", kanban: "Strategic Tasks", meetings: "Meeting Room", performance: "Performance Radar", task: "Task", assignee: "Assignee", priority: "Priority", add_task: "Issue Command", todo: "New Tasks", progress: "In Progress", done: "Completed", high: "Urgent 🔥", medium: "Medium", low: "Normal", coins_earned: "Coins Earned" },
+                fr: { title: "Commandement", kanban: "Tâches", meetings: "Réunions", performance: "Performance", task: "Tâche", assignee: "Assigné", priority: "Priorité", add_task: "Ajouter", todo: "À faire", progress: "En cours", done: "Terminé", high: "Urgent", medium: "Moyen", low: "Normal", coins_earned: "Pièces Gagnées" },
+                es: { title: "Comando de Campo", kanban: "Tareas", meetings: "Reuniones", performance: "Rendimiento", task: "Tarea", assignee: "Asignado", priority: "Prioridad", add_task: "Añadir", todo: "Pendiente", progress: "En Progreso", done: "Completado", high: "Urgente", medium: "Medio", low: "Normal", coins_earned: "Monedas Ganadas" },
+                zh: { title: "野战指挥部", kanban: "任务", meetings: "会议", performance: "绩效", task: "任务", assignee: "受托人", priority: "优先", add_task: "添加", todo: "待办", progress: "进行中", done: "已完成", high: "紧急", medium: "中", low: "正常", coins_earned: "赚取金币" },
+                fa: { title: "فرماندهی میدانی", kanban: "وظایف", meetings: "جلسات", performance: "عملکرد", task: "وظیفه", assignee: "مسئول", priority: "اولویت", add_task: "افزودن", todo: "جدید", progress: "در حال انجام", done: "تکمیل", high: "فوری", medium: "متوسط", low: "عادی", coins_earned: "سکه های کسب شده" },
+                sw: { title: "Amri ya Uwanja", kanban: "Kazi", meetings: "Mikutano", performance: "Utendaji", task: "Kazi", assignee: "Mkabidhiwa", priority: "Kipaumbele", add_task: "Ongeza", todo: "Mpya", progress: "Inaendelea", done: "Imekamilika", high: "Haraka", medium: "Kati", low: "Kawaida", coins_earned: "Sarafu Zimepatikana" }
             };
 
             const [lang, setLang] = useState('ar');
@@ -219,42 +219,33 @@ react_html = r"""
             const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
             const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
             
-            // --- نظام الجيمفيكيشن (Gamification State) ---
-            const [xp, setXp] = useState(14500);
-            const [xpAnim, setXpAnim] = useState(false);
+            // --- نظام الجيمفيكيشن والعملات (Gamification: Sovereign Coins) ---
+            const [coins, setCoins] = useState(14500);
+            const [coinAnim, setCoinAnim] = useState(false);
 
             // --- Data States ---
             const [tasks, setTasks] = useState([
-                { id: 1, title: 'إعداد حملة التسويق لمشروع النبت', assignee: 'أحمد المصري', status: 'todo', priority: 'high' },
-                { id: 2, title: 'متابعة عملاء الجيل الثاني في الإقليم', assignee: 'صالح فهد', status: 'progress', priority: 'medium' },
-                { id: 3, title: 'إغلاق 10 مبيعات لدبلوم الأرباح', assignee: 'سارة خالد', status: 'done', priority: 'high' }
+                { id: 1, title: 'التسجيل في أكاديمية القيادة', assignee: 'أحمد المصري', status: 'done', priority: 'high' },
+                { id: 2, title: 'إعداد حملة التمويل لمشروع النبت', assignee: 'صالح فهد', status: 'progress', priority: 'medium' },
+                { id: 3, title: 'إغلاق 10 مبيعات لدبلوم الأرباح', assignee: 'سارة خالد', status: 'todo', priority: 'high' }
             ]);
 
             const [meetings, setMeetings] = useState([
-                { id: 1, title: 'الاجتماع الاستراتيجي الأسبوعي', date: 'غداً 08:00 PM', type: 'Zoom' },
-                { id: 2, title: 'تدريب قادة الصف الأول', date: 'الخميس 05:00 PM', type: 'Google Meet' }
+                { id: 1, title: 'توجيهات رحلة الـ 100 يوم', date: 'اليوم 08:00 PM', type: 'Zoom' }
             ]);
 
             // --- Helper Functions ---
             const showToast = (msg, type = 'success') => {
                 const id = Date.now();
                 setToasts(prev => [...prev, { id, msg, type }]);
-                
-                // تشغيل التأثيرات الحسية (صوت واهتزاز)
                 triggerSensoryFeedback(type);
-
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
             };
 
-            const addXp = (amount) => {
-                setXp(prev => prev + amount);
-                setXpAnim(true);
-                setTimeout(() => setXpAnim(false), 800); // إيقاف الأنيميشن
-            };
-
-            const simulateGlobalNotification = (msg) => {
-                // يحاكي إرسال إشعار للنظام المركزي
-                console.log("Global Notification Emitted: ", msg);
+            const addCoins = (amount) => {
+                setCoins(prev => prev + amount);
+                setCoinAnim(true);
+                setTimeout(() => setCoinAnim(false), 800); 
             };
 
             // --- Handlers ---
@@ -262,12 +253,11 @@ react_html = r"""
                 setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
                 
                 if (newStatus === 'done') {
-                    const earnedXp = 50;
-                    addXp(earnedXp);
-                    showToast(lang === 'ar' ? `تم إنجاز المهمة بنجاح! مكافأة +${earnedXp} XP 🏆` : `Task Completed! +${earnedXp} XP 🏆`, 'success');
-                    simulateGlobalNotification(`القائد أنجز مهمة استراتيجية وحصل على ${earnedXp} نقطة خبرة.`);
+                    const earnedCoins = 50;
+                    addCoins(earnedCoins);
+                    showToast(lang === 'ar' ? `عمل استثنائي! +${earnedCoins} عملة سيادية 🪙` : `Great Job! +${earnedCoins} Coins 🪙`, 'coin');
                 } else {
-                    showToast(lang === 'ar' ? 'تم تحريك مسار المهمة' : 'Task track updated', 'info');
+                    showToast(lang === 'ar' ? 'تم تحديث مسار المهمة' : 'Task updated', 'info');
                 }
             };
 
@@ -279,19 +269,10 @@ react_html = r"""
                     priority: f.get('priority'), status: 'todo'
                 }, ...tasks]);
                 
-                const earnedXp = 15; // نقاط القيادة لإصدار التكليفات
-                addXp(earnedXp);
-                showToast(lang === 'ar' ? `تم إصدار التكليف للقيادة الميدانية! +${earnedXp} XP 🎯` : `Command issued! +${earnedXp} XP 🎯`, 'success');
-                simulateGlobalNotification(`تم تكليف ${f.get('assignee')} بمهمة جديدة.`);
-                
+                const earnedCoins = 15;
+                addCoins(earnedCoins);
+                showToast(lang === 'ar' ? `تم إصدار التكليف بمهارة! +${earnedCoins} عملة 🪙` : `Command issued! +${earnedCoins} Coins 🪙`, 'coin');
                 e.target.reset();
-            };
-
-            const handleRewardLeader = (leaderName) => {
-                const earnedXp = 100;
-                addXp(earnedXp);
-                showToast(lang === 'ar' ? `تم منح مكافأة تحفيزية للقائد ${leaderName}! إرث قيادي +${earnedXp} XP 🎁` : `Reward granted to ${leaderName}! +${earnedXp} XP 🎁`, 'success');
-                simulateGlobalNotification(`القائد الأعلى أرسل مكافأة تحفيزية للقائد ${leaderName}.`);
             };
 
             useEffect(() => {
@@ -338,16 +319,27 @@ react_html = r"""
                         <div className="p-8 pb-4">
                             <div className={`${theme.btn} ${theme.btnText} p-3 rounded-2xl inline-block mb-4 shadow-xl`}><Icon name="Crosshair" size={30} /></div>
                             <h1 className={`text-xl font-black uppercase tracking-tighter ${theme.accent}`}>{t.title}</h1>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase">Field Ops v4.0</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Master Operations</p>
                             
-                            {/* عداد الجيمفيكيشن (XP) */}
+                            {/* رحلة الـ 100 يوم */}
+                            <div className="mt-8 mb-2">
+                                <div className="flex justify-between items-end mb-1">
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase">رحلة الـ 100 يوم للسيادة</span>
+                                    <span className="text-xs font-black text-[#00FF88]">اليوم 35</span>
+                                </div>
+                                <div className="journey-bar-bg">
+                                    <div className="journey-bar-fill" style={{width: '35%'}}></div>
+                                </div>
+                            </div>
+
+                            {/* عداد العملات السيادية (Coins) */}
                             <div className="mt-6 bg-black/40 border border-white/10 rounded-xl p-4 flex justify-between items-center shadow-inner">
                                 <div className="flex items-center gap-2">
-                                    <Icon name="Zap" size={16} className="text-yellow-500" />
-                                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">نقاط السيادة</span>
+                                    <span className="text-xl">🪙</span>
+                                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">عملات سيادية</span>
                                 </div>
-                                <span className={`text-[#00FF88] font-black text-xl ${xpAnim ? 'pulse-xp' : ''}`}>
-                                    {xp.toLocaleString()} <span className="text-[10px]">XP</span>
+                                <span className={`text-[#FFD700] font-black text-xl flex items-center gap-1 ${coinAnim ? 'coin-bounce' : ''}`}>
+                                    {coins.toLocaleString()}
                                 </span>
                             </div>
                         </div>
@@ -443,8 +435,8 @@ react_html = r"""
                                 <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Video" className="text-blue-500" size={32}/> {t.meetings}</h2>
                                 <div className={`glass-panel p-10 rounded-[3rem] border ${theme.borderLight}`}>
                                     <div className="flex justify-between items-center mb-10 border-b border-white/10 pb-6">
-                                        <h3 className="text-2xl font-black">غرفة التخطيط الاستراتيجي</h3>
-                                        <button onClick={()=>{showToast(lang === 'ar' ? 'تم نسخ الرابط وإرسال دعوة للفريق! +10 XP' : 'Link Copied & Invite Sent! +10 XP'); addXp(10);}} className="bg-white/10 px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors flex items-center gap-2"><Icon name="CalendarPlus" size={18}/> جدولة اجتماع</button>
+                                        <h3 className="text-2xl font-black">غرفة التخطيط للرحلة</h3>
+                                        <button onClick={()=>{showToast(lang === 'ar' ? 'تم النسخ! مكافأة +10 🪙' : 'Link Copied! +10 🪙', 'coin'); addCoins(10);}} className="bg-white/10 px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors flex items-center gap-2"><Icon name="CalendarPlus" size={18}/> جدولة اجتماع</button>
                                     </div>
                                     <div className="space-y-4">
                                         {meetings.map(m => (
@@ -495,8 +487,8 @@ react_html = r"""
                                                     <span className="text-gray-500">الهدف: ${leader.target.toLocaleString()}</span>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <button onClick={()=>showToast('تم إرسال برقية دعم عبر مركز الاتصالات', 'info')} className="flex-1 py-3 bg-white/5 border border-white/10 hover:border-white/30 rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="MessageSquare" size={14}/> تواصل</button>
-                                                    <button onClick={()=>handleRewardLeader(leader.name)} className="flex-1 py-3 bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500 hover:text-black rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="Gift" size={14}/> مكافأة</button>
+                                                    <button onClick={()=>showToast('تم التنبيه للمراجعة', 'info')} className="flex-1 py-3 bg-white/5 border border-white/10 hover:border-white/30 rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="MessageSquare" size={14}/> تواصل</button>
+                                                    <button onClick={()=>{showToast(lang === 'ar' ? `تم منح مكافأة 🪙 لـ ${leader.name}` : `Rewarded ${leader.name} 🪙`, 'coin'); addCoins(100);}} className="flex-1 py-3 bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500 hover:text-black rounded-xl text-xs font-black transition-all flex justify-center items-center gap-2"><Icon name="Gift" size={14}/> مكافأة</button>
                                                 </div>
                                             </div>
                                         )
@@ -510,8 +502,8 @@ react_html = r"""
                     {/* Toasts Container */}
                     <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
                         {toasts.map(t => (
-                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'info' ? 'bg-black/90 border-blue-500/40 text-blue-500' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
-                                <Icon name={t.type === 'success' ? 'CheckCircle2' : t.type === 'info' ? 'Info' : 'AlertCircle'} size={20} />
+                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'coin' ? 'bg-black/90 border-yellow-500/50 text-yellow-500' : t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'info' ? 'bg-black/90 border-blue-500/40 text-blue-500' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
+                                <Icon name={t.type === 'coin' ? 'Star' : t.type === 'success' ? 'CheckCircle2' : t.type === 'info' ? 'Info' : 'AlertCircle'} size={20} />
                                 <span className="font-bold text-sm text-white">{t.msg}</span>
                             </div>
                         ))}
@@ -533,7 +525,16 @@ final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 # --- 5. عرض الواجهة (Render) ---
 components.html(final_html, height=950, scrolling=True)
 
-# --- 6. أزرار العودة ---
+# --- 6. أزرار العودة والتنقل الاستراتيجي لرحلة العميل ---
 st.markdown("---")
-if st.button("🏠 العودة لمركز القيادة الرئيسي"):
-    st.switch_page("app.py")
+st.markdown("### 🗺️ خريطة السيادة السريعة (رحلة الـ 100 يوم)")
+c1, c2, c3 = st.columns(3)
+with c1:
+    if st.button("🎓 أكاديمية القيادة (استكشاف التدريب)"):
+        st.switch_page("pages/1_Education.py")
+with c2:
+    if st.button("🤝 التمويل الجماعي (دعم المشاريع)"):
+        st.switch_page("pages/9_Crowdfunding.py")
+with c3:
+    if st.button("🏠 العودة لمركز القيادة الرئيسي"):
+        st.switch_page("app.py")
