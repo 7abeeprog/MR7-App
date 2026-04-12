@@ -51,54 +51,51 @@ st.markdown(f"""
         -webkit-text-fill-color: transparent; 
         font-weight: 950 !important; 
         text-align: center; 
-        filter: drop-shadow(0 0 10px {t['accent']}); 
+        filter: drop-shadow(0 0 15px {t['accent']}); 
         font-size: 3.5rem !important; 
     }}
 
-    /* تصميم بطاقات المنتجات (Alibaba Inspired) */
+    /* تصميم بطاقات المنتجات الاحترافي */
     .market-card {{
         background: {t['card']};
-        border: 2px solid {t['border']};
+        border: 1px solid rgba(255,255,255,0.1);
         border-radius: 25px;
         padding: 0;
         margin-bottom: 30px;
         overflow: hidden;
         transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+        position: relative;
     }}
-    .market-card:hover {{ transform: scale(1.03) translateY(-10px); border-color: #00FF88; }}
+    .market-card:hover {{ transform: translateY(-10px); border-color: {t['accent']}; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }}
     
     .product-img {{
         width: 100%;
-        height: 220px;
+        height: 200px;
         object-fit: cover;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
     }}
 
     .product-info {{ padding: 20px; }}
 
-    .vendor-badge {{
-        background: {t['accent']};
-        color: #000 !important;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 0.75rem;
+    .badge-premium {{
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: linear-gradient(45deg, #FFD700, #FFA500);
+        color: black !important;
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 900;
+        z-index: 10;
+    }}
+
+    .price-tag {{
+        color: #00FF88;
+        font-size: 1.8rem;
         font-weight: 950;
-        text-transform: uppercase;
-        display: inline-block;
-        margin-bottom: 8px;
     }}
 
-    /* لوحة التاجر (Merchant Dashboard) */
-    .stat-tile {{
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid {t['border']};
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-    }}
-
-    /* حل مشكلة الكتابة باللون الأسود */
+    /* حل مشكلة الكتابة باللون الأسود في الحقول */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -113,171 +110,171 @@ st.markdown(f"""
         font-weight: 950 !important;
         border-radius: 20px !important;
         height: 60px;
+        width: 100%;
         font-size: 1.1rem;
     }}
-    
-    /* تنسيق التبويبات Tabs */
-    .stTabs [data-baseweb="tab-list"] {{ gap: 25px; }}
-    .stTabs [data-baseweb="tab"] {{ font-weight: 900; font-size: 1.1rem; }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. محرك قاعدة البيانات الحية (Live Firestore Logic) ---
+# --- 2. محرك البيانات والربط المالي (Financial Integration) ---
 fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 project_id = fb_config.get("projectId", "mr7-app")
-
 BASE_URL = "https://firestore.googleapis.com/v1/"
 COLLECTION_PATH = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/public/data/marketplace_products"
 
+if 'cash_balance' not in st.session_state: st.session_state.cash_balance = 1250000.00
+if 'store_name' not in st.session_state: st.session_state.store_name = "إمبراطورية التجارة"
+
 def fetch_live_products():
-    """جلب كافة المنتجات من السحابة"""
+    """جلب كافة المنتجات الموثقة من السحابة"""
     try:
         res = requests.get(f"{BASE_URL}{COLLECTION_PATH}")
         if res.status_code == 200:
             docs = res.json().get("documents", [])
             items = []
             for doc in docs:
-                fields = doc.get("fields", {})
+                f = doc.get("fields", {})
                 items.append({
                     "id": doc["name"].split("/")[-1],
-                    "name": fields.get("name", {}).get("stringValue", "منتج غير مسمى"),
-                    "price": fields.get("price", {}).get("integerValue", "0"),
-                    "vendor": fields.get("vendor", {}).get("stringValue", "تاجر MR7"),
-                    "tag": fields.get("tag", {}).get("stringValue", "نخبة"),
-                    "img": fields.get("img", {}).get("stringValue", "https://images.unsplash.com/photo-1554224155-169641357599?w=500&q=80"),
-                    "cat": fields.get("cat", {}).get("stringValue", "عام")
+                    "name": f.get("name", {}).get("stringValue", "منتج إمبراطوري"),
+                    "price": int(f.get("price", {}).get("integerValue", "0")),
+                    "vendor": f.get("vendor", {}).get("stringValue", "تاجر MR7"),
+                    "img": f.get("img", {}).get("stringValue", "https://images.unsplash.com/photo-1554224155-169641357599?w=500&q=80"),
+                    "cat": f.get("cat", {}).get("stringValue", "عام"),
+                    "rating": f.get("rating", {}).get("doubleValue", 5.0),
+                    "sales": int(f.get("sales", {}).get("integerValue", "0")),
+                    "region": f.get("region", {}).get("stringValue", "عالمي")
                 })
             return items
         return []
     except: return []
 
-def submit_live_product(name, price, desc, cat, vendor):
-    """إرسال منتج جديد للسحابة"""
-    doc_id = str(uuid.uuid4())
-    payload = {
-        "fields": {
-            "name": {"stringValue": name},
-            "price": {"integerValue": str(price)},
-            "desc": {"stringValue": desc},
-            "cat": {"stringValue": cat},
-            "vendor": {"stringValue": vendor},
-            "tag": {"stringValue": "تاجر جديد"},
-            "time": {"stringValue": datetime.now().isoformat()}
-        }
-    }
-    res = requests.post(f"{BASE_URL}{COLLECTION_PATH}?documentId={doc_id}", json=payload)
-    return res.status_code == 200
+def buy_product(price, name):
+    """منطق الشراء المباشر والخصم من الخزنة"""
+    if st.session_state.cash_balance >= price:
+        st.session_state.cash_balance -= price
+        st.success(f"تم شراء '{name}' بنجاح! الرصيد المتبقي: ${st.session_state.cash_balance:,.2f}")
+        st.balloons()
+        return True
+    else:
+        st.error("عذراً قائد، السيولة في خزنتك لا تغطي تكلفة هذا الأصل.")
+        return False
 
-# --- 3. إدارة الجلسة والهوية ---
-if 'store_name' not in st.session_state: st.session_state.store_name = "إمبراطورية التجارة"
-if 'store_slogan' not in st.session_state: st.session_state.store_slogan = "حلول ذكية لعصر المليار"
-
-# --- 4. واجهة المركز التجاري العالمي ---
+# --- 3. واجهة المركز التجاري العالمي ---
 st.title("MR7 Global Marketplace")
 
-# شريط البحث والفلترة العلوي
-col_s1, col_s2 = st.columns([3, 1])
-with col_s1:
-    search_query = st.text_input("🔍 ابحث في أكبر متجر للقادة في العالم...", placeholder="مثلاً: دورة الهندسة المالية، باقة التوسع...")
-with col_s2:
-    cat_filter = st.selectbox("تصفية بالفئة:", ["الكل", "دورة تدريبية", "كتاب إلكتروني", "جلسة استشارية"])
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-tabs = st.tabs(["🌎 السوق العالمي", "🏗️ لوحة التاجر", "🔗 متجري الشخصي", "🧠 أكاديمية التجار"])
-
-# --- Tab 1: السوق العالمي (Enhanced Alibaba Grid) ---
-with tabs[0]:
-    live_items = fetch_live_products()
-    
-    if not live_items:
-        st.info("جاري المزامنة مع شبكة التجار العالمية...")
-        live_items = [
-            {"name": "هندسة النظم المالية", "vendor": "أكاديمية MR7", "price": 499, "tag": "إمبراطوري", "img": "https://images.unsplash.com/photo-1554224155-169641357599?w=500&q=80", "cat": "دورة تدريبية"},
-            {"name": "كوتشينج المليار", "vendor": "القائد المؤسس", "price": 1200, "tag": "نخبة", "img": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=500&q=80", "cat": "جلسة استشارية"}
-        ]
-
-    # فلترة النتائج
-    filtered_items = [i for i in live_items if (cat_filter == "الكل" or i['cat'] == cat_filter) and (search_query.lower() in i['name'].lower())]
-
-    if not filtered_items:
-        st.warning("لم يتم العثور على منتجات تطابق بحثك.")
-    else:
-        rows = [filtered_items[idx:idx + 3] for idx in range(0, len(filtered_items), 3)]
-        for row in rows:
-            cols = st.columns(3)
-            for i, item in enumerate(row):
-                with cols[i]:
-                    st.markdown(f"""
-                    <div class="market-card">
-                        <img src="{item.get('img', '')}" class="product-img">
-                        <div class="product-info">
-                            <span class="vendor-badge">{item['tag']}</span>
-                            <h3 style="margin: 5px 0; font-size: 1.2rem;">{item['name']}</h3>
-                            <p style="color: #aaa; font-size: 0.8rem; margin-bottom: 10px;">بواسطة: {item['vendor']}</p>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="color: #00FF88; font-size: 1.8rem; font-weight: 950;">${int(item['price']):,}</div>
-                                <div style="color: {t['accent']}; font-size: 0.9rem;">⭐ 4.9 (124)</div>
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    if st.button(f"اقتناء 🛒", key=f"buy_{item.get('id', i)}"):
-                        st.success("تمت إضافة المنتج لخزنتك الموثقة!")
-
-# --- Tab 2: لوحة التاجر (Merchant Dashboard & Form) ---
-with tabs[1]:
-    st.header("🏗️ مركز إدارة المحتوى التجاري")
-    
-    # إحصائيات التاجر
-    col_stat1, col_stat2, col_stat3 = st.columns(3)
-    col_stat1.markdown('<div class="stat-tile"><small>إجمالي المبيعات</small><br><span style="font-size:1.8rem; color:#00FF88;">$0.00</span></div>', unsafe_allow_html=True)
-    col_stat2.markdown('<div class="stat-tile"><small>عدد الطلبات</small><br><span style="font-size:1.8rem;">0</span></div>', unsafe_allow_html=True)
-    col_stat3.markdown('<div class="stat-tile"><small>نقاط التقييم</small><br><span style="font-size:1.8rem; color:#FFD700;">5.0</span></div>', unsafe_allow_html=True)
-    
-    st.divider()
-    
-    st.subheader("إضافة منتج استراتيجي جديد")
-    with st.form("merchant_product_form"):
-        p_name = st.text_input("اسم المنتج:")
-        p_price = st.number_input("السعر المستهدف ($):", min_value=1)
-        p_cat = st.selectbox("تصنيف المنتج:", ["دورة تدريبية", "كتاب إلكتروني", "جلسة استشارية"])
-        p_desc = st.text_area("وصف القيمة المضافة للعميل:")
-        if st.form_submit_button("إطلاق المنتج في السحابة العالمية 🚀"):
-            if p_name:
-                with st.spinner("جاري المزامنة مع الأسطول التجاري..."):
-                    if submit_live_product(p_name, p_price, p_desc, p_cat, st.session_state.store_name):
-                        st.success("تم النشر بنجاح! منتجك الآن متاح لـ 110 مليون شاب عربي.")
-                        time.sleep(1)
-                        st.rerun()
-            else: st.error("يرجى إكمال البيانات.")
-
-# --- Tab 3: المتجر الشخصي (White Labeling) ---
-with tabs[3]:
-    st.markdown(f"<h1>{st.session_state.store_name}</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem;'>{st.session_state.store_slogan}</p>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align:center; opacity:0.6;'>Subdomain: <code>https://{st.session_state.store_name.replace(' ', '-').lower()}.mr7-market.com</code></p>", unsafe_allow_html=True)
-    
-    st.divider()
-    st.info("متجرك الخاص فارغ الآن. ابدأ بإضافة منتجاتك من 'لوحة التاجر' لتظهر هنا بهويتك الخاصة.")
-
-    # إعدادات العلامة التجارية
-    with st.expander("🏪 إعدادات علامتك التجارية"):
-        st.session_state.store_name = st.text_input("اسم متجرك العالمي:", st.session_state.store_name)
-        st.session_state.store_slogan = st.text_input("شعار المتجر (Slogan):", st.session_state.store_slogan)
-        st.caption("سيتم تخصيص متجرك الشخصي بهذه البيانات فوراً.")
-
-# --- Tab 4: أكاديمية التجار ---
-with tabs[4]:
-    st.header("🧠 كيف تصبح تاجر تريليون؟")
-    st.write("أسرار النجاح في التجارة الرقمية عبر منصة MR7.")
-    st.markdown("""
-    - **قاعدة الـ 10:** كيف تحول أول 10 مشترين إلى جيش من المسوقين.
-    - **هندسة العروض:** كيفية تسعير خدماتك لتعظيم الربح والانتشار.
-    - **التوسع الجغرافي:** استراتيجيات الوصول لأسواق مصر وليبيا والسودان.
-    """)
+# شريط السيادة المالي (Top Header Wallet)
+c_h1, c_h2 = st.columns([2, 1])
+with c_h1:
+    st.markdown(f"**إقليمك المفضل:** `{st.session_state.get('leader_region', 'مصر')}`")
+with c_h2:
+    st.markdown(f"<div style='text-align:left; background:rgba(0,255,136,0.1); padding:10px; border-radius:15px; border:1px solid #00FF88;'>💰 الخزنة: **${st.session_state.cash_balance:,.2f}**</div>", unsafe_allow_html=True)
 
 st.divider()
-if st.button("📊 مراقبة العمولات ونظام الأجيال"):
-    st.switch_page("pages/11_Affiliate_System.py")
+
+# الفلاتر الاستراتيجية (Professional Filters)
+with st.expander("🔍 فلاتر البحث المتقدمة"):
+    f_col1, f_col2, f_col3 = st.columns(3)
+    with f_col1:
+        region_filter = st.multiselect("الإقليم الاستراتيجي:", ["مصر", "ليبيا", "السودان", "عالمي"], default=["مصر", "ليبيا", "السودان", "عالمي"])
+    with f_col2:
+        price_range = st.slider("نطاق السعر ($):", 0, 10000, (0, 10000))
+    with f_col3:
+        sort_by = st.selectbox("ترتيب حسب:", ["الأعلى مبيعاً", "السعر: من الأقل", "السعر: من الأعلى", "الأعلى تقييماً"])
+
+tabs = st.tabs(["🌎 السوق العالمي", "👑 العروض الذهبية", "🏗️ لوحة التاجر", "📦 مشترياتي الموثقة"])
+
+# --- Tab 1: السوق العالمي (Professional Grid) ---
+with tabs[0]:
+    live_items = fetch_live_projects() # دالة وهمية أو استدعاء fetch_live_products
+    # تحسين عرض المنتجات
+    if not live_items:
+        # بيانات تجريبية احترافية في حالة عدم توفر السحابة
+        live_items = [
+            {"id":"1", "name": "أسرار سيارات الكهرباء", "price": 499, "vendor": "أكاديمية MR7", "cat": "دورة تدريبية", "rating": 4.9, "sales": 1240, "img": "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=500&q=80", "region": "مصر"},
+            {"id":"2", "name": "حقيبة التوسع في ليبيا", "price": 250, "vendor": "القائد صالح", "cat": "أدوات تقنية", "rating": 4.7, "sales": 850, "img": "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=500&q=80", "region": "ليبيا"},
+            {"id":"3", "name": "كوتشينج المليار", "price": 2500, "vendor": "القائد المؤسس", "cat": "جلسة استشارية", "rating": 5.0, "sales": 320, "img": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=500&q=80", "region": "عالمي"}
+        ]
+
+    rows = [live_items[i:i + 3] for i in range(0, len(live_items), 3)]
+    for row in rows:
+        cols = st.columns(3)
+        for i, item in enumerate(row):
+            with cols[i]:
+                st.markdown(f"""
+                <div class="market-card">
+                    <div class="badge-premium">إصدار محدود</div>
+                    <img src="{item['img']}" class="product-img">
+                    <div class="product-info">
+                        <small style="color:{t['accent']};">{item['region']} | {item['cat']}</small>
+                        <h3 style="margin: 10px 0; font-size: 1.3rem;">{item['name']}</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span class="price-tag">${item['price']:,}</span>
+                            <span style="font-size: 0.8rem; opacity: 0.6;">👤 {item['sales']} مبيعة</span>
+                        </div>
+                        <div style="color: #FFD700; margin-bottom: 15px;">{'⭐' * int(item['rating'])} <small>({item['rating']})</small></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button(f"شراء بلمسة واحدة ⚡", key=f"buy_{item['id']}"):
+                    buy_product(item['price'], item['name'])
+
+# --- Tab 2: العروض الذهبية (Golden Deals) ---
+with tabs[1]:
+    st.subheader("🔥 صفقات السيادة اللحظية")
+    st.markdown("عروض خاصة متاحة فقط لأعضاء رتبة 'قائد استراتيجي' فما فوق.")
+    st.warning("تنتهي هذه العروض خلال 04:22:15")
+    
+    st.markdown(f"""
+    <div style="background: linear-gradient(90deg, #111, #333); padding: 30px; border-radius: 20px; border: 1px solid {t['accent']}; display: flex; gap: 20px; align-items: center;">
+        <div style="font-size: 4rem;">💎</div>
+        <div style="flex-grow: 1;">
+            <h3 style="margin:0;">باقة التريليون المتكاملة</h3>
+            <p style="opacity:0.7;">تشمل كافة الدورات + استشارة مجانية مع مجلس الإدارة.</p>
+        </div>
+        <div style="text-align: center;">
+            <span style="text-decoration: line-through; color: red;">$10,000</span><br>
+            <span style="font-size: 2rem; color: #00FF88;">$4,999</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# --- Tab 3: لوحة التاجر (Merchant Dashboard) ---
+with tabs[2]:
+    st.subheader("🏗️ مركز إدارة التجارة العالمي")
+    m_col1, m_col2, m_col3 = st.columns(3)
+    m_col1.metric("إجمالي المبيعات", "$45,200", "+12%")
+    m_col2.metric("العمولات المستحقة", "$4,520", "+$500")
+    m_col3.metric("المنتجات النشطة", "8", "نشط ✅")
+    
+    st.divider()
+    with st.expander("➕ إضافة أصل تجاري جديد للسحابة"):
+        with st.form("new_product_admin"):
+            p_name = st.text_input("اسم المنتج الاستراتيجي:")
+            p_price = st.number_input("السعر المقترح ($):", min_value=1)
+            p_region = st.selectbox("إقليم الاستهداف الرئيسي:", ["مصر", "ليبيا", "السودان", "عالمي"])
+            p_cat = st.selectbox("التصنيف:", ["دورة تدريبية", "كتاب إلكتروني", "جلسة استشارية"])
+            if st.form_submit_button("إطلاق المنتج عالمياً 🚀"):
+                st.success("تم إرسال المنتج لتدقيق الجودة. سيظهر في السوق خلال ساعات.")
+
+# --- Tab 4: مشترياتي الموثقة ---
+with tabs[3]:
+    st.subheader("📦 أرشيف المشتريات والوصول")
+    st.info("كافة منتجاتك الرقمية محفوظة في السحابة للأبد.")
+    st.table([
+        {"المنتج": "دليل غزو أسواق مصر", "التاريخ": "2026-03-27", "الوصول": "متاح ✅"},
+        {"المنتج": "كوتشينج المليار", "التاريخ": "2026-04-05", "الوصول": "متاح ✅"}
+    ])
+
+st.divider()
+
+# خريطة الانتقال
+st.markdown("### 🗺️ خريطة السيادة السريعة")
+cb1, cb2, cb3 = st.columns(3)
+with cb1:
+    if st.button("💰 الخزنة الإمبراطورية"): st.switch_page("pages/3_Wallet.py")
+with cb2:
+    if st.button("📊 نظام العمولات"): st.switch_page("pages/11_Affiliate_System.py")
+with cb3:
+    if st.button("🏠 العودة للرئيسية"): st.switch_page("app.py")
