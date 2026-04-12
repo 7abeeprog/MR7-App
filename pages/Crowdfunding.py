@@ -33,7 +33,7 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
-    /* الفلسفة التصميمية: احترافية Enterprise وكثافة بيانات */
+    /* التنسيق الإمبراطوري عالي الكثافة */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
@@ -60,30 +60,20 @@ st.markdown(f"""
         margin-bottom: 30px;
         transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         position: relative;
-        overflow: hidden;
-        box-shadow: 0 15px 45px rgba(0,0,0,0.5);
     }}
-    .project-card:hover {{ border-color: #00FF88; transform: translateY(-10px); box-shadow: 0 20px 60px rgba(0,255,136,0.15); }}
+    .project-card:hover {{ border-color: #00FF88; transform: translateY(-10px); }}
 
-    .country-badge {{
+    .country-tag {{
         background: rgba(0, 255, 136, 0.1);
         color: #00FF88 !important;
         border: 1px solid #00FF88;
-        padding: 4px 15px;
+        padding: 5px 15px;
         border-radius: 50px;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 900;
     }}
 
-    .metric-box {{
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 15px;
-        padding: 15px;
-        text-align: center;
-        border-bottom: 3px solid {t['accent']};
-    }}
-
-    /* حل مشكلة الكتابة باللون الأسود */
+    /* حل مشكلة الكتابة باللون الأسود في الحقول البيضاء */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -100,211 +90,146 @@ st.markdown(f"""
         height: 60px;
         font-size: 1.1rem;
     }}
-
-    .stProgress > div > div > div > div {{
-        background-color: #00FF88 !important;
-    }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. إدارة البيانات الاستراتيجية المتوسعة ---
+# --- 2. قاعدة بيانات المشاريع الجغرافية (Geographic Strategy) ---
 if 'crowd_projects' not in st.session_state:
     st.session_state.crowd_projects = [
         {
-            "title": "مدينة النبت الذكية (Nabt Smart City)", 
-            "category": "مدن مستدامة وكربون صفر", 
-            "country": "مصر / عالمي",
-            "type": "سيادي استراتيجي",
-            "goal": 2000000000, 
-            "raised": 185000000, 
-            "roi": "18% سنوي",
-            "risk": "منخفض",
-            "desc": "أضخم مشروع للمدن المستدامة بملياري دولار. يعتمد على الزراعة الذكية وتوليد الطاقة النظيفة، مصمم ليكون نموذجاً قابلاً للتكرار 100 مرة في عواصم القارات.", 
-            "status": "approved"
-        },
-        {
-            "title": "مجمع السيارات الكهربائية (EV City Hub)", 
-            "category": "تصنيع ثقيل وتكنولوجيا", 
+            "title": "مجمع السيارات الكهربائية (EV City)", 
+            "category": "صناعة ثقيلة", 
             "country": "مصر",
-            "type": "صناعي إنتاجي",
-            "goal": 3600000000, 
-            "raised": 520000000, 
-            "roi": "24% سنوي",
-            "risk": "متوسط",
-            "desc": "تأسيس 600 مصنع متكامل لتوطين صناعة النقل الكهربائي في الشرق الأوسط وأفريقيا، بهدف السيطرة على سلاسل التوريد الإقليمية.", 
-            "status": "approved"
+            "desc": "إنشاء 600 مصنع متكامل لتوطين تكنولوجيا النقل الكهربائي. استثمار سيادي يعيد صياغة ريادة مصر الصناعية.", 
+            "goal": 3600000000, "raised": 520000000, "roi": "24% سنوي"
         },
         {
             "title": "مبادرة الـ 20,000 مشروع صغرى", 
-            "category": "تمكين مجتمعي وتجزئة", 
-            "country": "ليبيا / السودان",
-            "type": "تنمية قاعدية",
-            "goal": 700000000, 
-            "raised": 92000000, 
-            "roi": "12% سنوي + أثر مجتمعي",
-            "risk": "منخفض جداً",
-            "desc": "محفز مالي يستهدف رواد الأعمال في ليبيا والسودان لإنشاء مشاريع إنتاجية صغيرة ومتوسطة، مع توفير الدعم اللوجستي والتقني من MR7.", 
-            "status": "approved"
+            "category": "تمكين ريادي", 
+            "country": "ليبيا",
+            "desc": "تمويل ودعم مشاريع الشباب الصغرى والمتوسطة في ليبيا لخلق اقتصاد تشاركي قوي وتوفير آلاف فرص العمل.", 
+            "goal": 700000000, "raised": 95000000, "roi": "12% + أثر اجتماعي"
         },
         {
-            "title": "مركز سيادة البيانات الأفريقي", 
-            "category": "بنية تحتية رقمية", 
+            "title": "سلة غذاء العرب (مشاريع زراعية)", 
+            "category": "أمن غذائي", 
+            "country": "السودان",
+            "desc": "استصلاح أراضي زراعية شاسعة في السودان باستخدام تقنيات الري الذكي لضمان السيادة الغذائية للمنطقة العربية.", 
+            "goal": 900000000, "raised": 45000000, "roi": "19% سنوي"
+        },
+        {
+            "title": "مدينة النبت الذكية (Nabt City)", 
+            "category": "مدن مستدامة", 
             "country": "عالمي",
-            "type": "تقني سيادي",
-            "goal": 500000000, 
-            "raised": 45000000, 
-            "roi": "21% سنوي",
-            "risk": "متوسط",
-            "desc": "بناء مراكز بيانات عملاقة لتخزين ومعالجة بيانات القارة الأفريقية محلياً، مما يضمن الاستقلال الرقمي والسيادة المعلوماتية.", 
-            "status": "approved"
+            "desc": "أول نموذج عالمي للحياة المستدامة (كربون صفر) يعتمد على الطاقة النظيفة والذكاء الاصطناعي.", 
+            "goal": 2000000000, "raised": 185000000, "roi": "18% سنوي"
         }
     ]
 
-# --- 3. الشريط الجانبي (الفلترة الذكية حسب الدولة) ---
+# --- 3. القائمة الجانبية (فلترة حسب طبيعة الدولة) ---
 with st.sidebar:
-    st.markdown(f"### 🎨 النمط الإمبراطوري")
-    theme_choice = st.selectbox("الجو العام:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
+    st.markdown(f"### 🎨 تخصيص المنظومة")
+    theme_choice = st.selectbox("اختر الجو العام:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
     if theme_choice != st.session_state.app_theme:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
     
-    st.markdown("### 🌍 تصفية النطاق الجغرافي")
-    country_filter = st.multiselect(
-        "اختر الدول المستهدفة:", 
-        ["مصر", "ليبيا", "السودان", "عالمي"],
-        default=["مصر", "ليبيا", "السودان", "عالمي"]
-    )
-    
-    st.divider()
-    st.markdown("### 🏛️ محفظة السيادة")
-    st.metric("رصيدك الاستثماري", "50,000 $", "+2.4% أرباح")
+    st.markdown("### 🌍 نطاق العمليات")
+    target_country = st.multiselect("عرض مشاريع دول مختارة:", ["مصر", "ليبيا", "السودان", "عالمي"], default=["مصر", "ليبيا", "السودان", "عالمي"])
 
 # --- 4. واجهة مجمع التمويل الملياري ---
 st.title("🤝 مجمع التمويل الملياري")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>محرك الاستثمار السيادي لنهضة اقتصاد القادة</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>السيادة المالية من خلال المشاريع القومية العابرة للحدود</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# تبويبات الأنظمة الاحترافية
-tabs = st.tabs(["🌎 استكشاف المشاريع الكبرى", "🚀 طرح رؤية استثمارية", "💰 أصولي وعوائدي", "📊 تحليلات السوق"])
+tabs = st.tabs(["🌎 ساحة المشاريع", "🚀 طرح رؤية سيادية", "💰 محفظتي الاستثمارية", "📊 تحليل السوق"])
 
-# --- Tab 1: استكشاف المشاريع (Enterprise Style) ---
+# --- Tab 1: ساحة المشاريع (توزيع جغرافي) ---
 with tabs[0]:
-    st.subheader("🌎 الساحة الاستثمارية العالمية")
-    st.info("قم بفلترة المشاريع بناءً على المخاطر، العوائد، أو الموقع الجغرافي.")
+    st.subheader("🌎 استكشف فرص بناء الإمبراطورية")
     
-    # منطق الفلترة المتقدم
-    display_projects = [
-        p for p in st.session_state.crowd_projects 
-        if any(country in p['country'] for country in country_filter) and p.get('status') == "approved"
-    ]
+    # الفلترة بناءً على الدول
+    display_projects = [p for p in st.session_state.crowd_projects if p['country'] in target_country]
     
     if not display_projects:
-        st.warning("لا توجد مشاريع استثمارية نشطة في هذا النطاق حالياً.")
+        st.info("لا توجد مشاريع استثمارية نشطة في هذا النطاق الجغرافي حالياً.")
     else:
         for idx, proj in enumerate(display_projects):
             with st.container():
                 st.markdown(f"""
                 <div class="project-card">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <span class="country-tag">📍 {proj['country']}</span>
+                    <h2 style="color: {t['accent']}; margin: 15px 0;">{proj['title']}</h2>
+                    <p style="color: #ddd; line-height: 1.8; font-size: 1.1rem;">{proj['desc']}</p>
+                    
+                    <div style="display: flex; justify-content: space-between; margin: 20px 0; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px;">
                         <div>
-                            <span class="country-badge">📍 {proj['country']}</span>
-                            <span style="color: {t['accent']}; margin-right: 10px; font-size: 0.8rem;">[{proj['type']}]</span>
-                            <h2 style="color: {t['accent']}; margin: 10px 0;">{proj['title']}</h2>
+                            <p style="color: #888; font-size: 0.8rem; margin: 0;">العائد المتوقع</p>
+                            <span style="color: #00FF88; font-size: 1.3rem;">{proj['roi']}</span>
                         </div>
                         <div style="text-align: right;">
-                            <p style="color: #00FF88; font-size: 1.2rem; margin: 0;">العائد: {proj['roi']}</p>
-                            <p style="color: #888; font-size: 0.8rem;">المخاطر: {proj['risk']}</p>
+                            <p style="color: #888; font-size: 0.8rem; margin: 0;">الميزانية المطلوبة</p>
+                            <span style="font-size: 1.3rem;">${proj['goal']:,.0f}</span>
                         </div>
                     </div>
                     
-                    <p style="color: #ddd; line-height: 1.8; margin: 20px 0; font-size: 1.1rem;">{proj['desc']}</p>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 20px;">
-                        <div>
-                            <p style="color: #888; font-size: 0.8rem; margin: 0;">الهدف المالي</p>
-                            <span style="font-size: 1.5rem;">${proj['goal']:,.0f}</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <p style="color: #888; font-size: 0.8rem; margin: 0;">التمويل المجموع</p>
-                            <span style="font-size: 1.5rem; color: #00FF88;">${proj['raised']:,.0f}</span>
-                        </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                        <span>تم جمع: ${proj['raised']:,.0f}</span>
+                        <span>النسبة: {min(proj['raised']/proj['goal']*100, 100):.1f}%</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                # شريط التقدم والتمويل
-                progress = min(proj['raised'] / proj['goal'], 1.0)
-                st.progress(progress)
+                st.progress(min(proj['raised'] / proj['goal'], 1.0))
                 
                 col_amt, col_btn = st.columns([2, 1])
                 with col_amt:
-                    fund_val = st.number_input("مبلغ الضخ المالي ($):", min_value=10, key=f"invest_{idx}", step=500)
+                    fund_val = st.number_input("مبلغ الضخ الاستثماري ($):", min_value=10, key=f"invest_{idx}", step=100)
                 with col_btn:
                     st.write("") # مباعدة
-                    if st.button("🤝 تأكيد الاستثمار السيادي", key=f"btn_invest_{idx}"):
+                    if st.button("🤝 تأكيد المساهمة", key=f"btn_invest_{idx}"):
                         for original in st.session_state.crowd_projects:
                             if original['title'] == proj['title']:
                                 original['raised'] += fund_val
-                        st.success(f"تمت المساهمة! أنت الآن شريك رسمي في '{proj['title']}'")
+                        st.success(f"تمت المساهمة! أنت الآن شريك في بناء '{proj['title']}'")
                         time.sleep(1.5)
                         st.rerun()
 
 # --- Tab 2: طرح رؤية (Submission) ---
 with tabs[1]:
     st.subheader("🚀 طرح رؤية اقتصادية للمراجعة السيادية")
-    st.markdown("حول فكرتك إلى مشروع ملياري مدعوم من جيش القادة.")
+    st.markdown("لديك رؤية لمشروع ملياري؟ قدمها لمكتب الدراسات الاستراتيجية في MR7.")
     
-    with st.form("pitch_empire_form"):
+    with st.form("new_pitch"):
         p_name = st.text_input("اسم المشروع الاستراتيجي:")
-        p_loc = st.selectbox("الدولة الرئيسية للعمليات:", ["مصر", "ليبيا", "السودان", "الجزائر", "عالمي"])
-        p_goal = st.number_input("الميزانية التقديرية للتأسيس ($):", min_value=5000)
-        p_roi = st.text_input("العائد السنوي المتوقع (Expected ROI %):", placeholder="مثلاً: 15%")
+        p_loc = st.selectbox("الدولة المستهدفة:", ["مصر", "ليبيا", "السودان", "عالمي"])
+        p_goal = st.number_input("الميزانية التقديرية للتأسيس ($):", min_value=10000)
         p_desc = st.text_area("وصف الرؤية والناتج القومي المستهدف:", height=150)
         
-        if st.form_submit_button("إرسال للمراجعة والتدقيق الإمبراطوري 📤"):
+        if st.form_submit_button("إرسال للمراجعة والتدقيق 📤"):
             if p_name and p_desc:
-                st.success("تم استلام مسودة المشروع بنجاح. سيتم تحليل البيانات من قبل 'العقل المركزي' وإبلاغك بالنتيجة.")
+                st.success("تم استلام مسودة المشروع بنجاح. سيتم تحليل البيانات وإبلاغك بالنتيجة عبر التنبيهات.")
             else:
-                st.error("يرجى ملء كافة تفاصيل الرؤية.")
+                st.error("يرجى إكمال تفاصيل الرؤية.")
 
 # --- Tab 3: أصولي (Portfolio) ---
 with tabs[2]:
-    st.subheader("💰 محفظة أصولك السيادية")
-    col_st1, col_st2 = st.columns(2)
-    with col_st1:
-        st.markdown(f'<div class="metric-box"><p>إجمالي استثماراتك</p><h2 style="color:{t["accent"]};">$6,000</h2></div>', unsafe_allow_html=True)
-    with col_st2:
-        st.markdown(f'<div class="metric-box"><p>العائد التراكمي المحقق</p><h2 style="color:#00FF88;">$450</h2></div>', unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("💰 محفظة أصول السيادة")
     st.table([
-        {"المشروع": "مجمع السيارات الكهربائية", "المبلغ": "$5,000", "الحصة": "0.00014%", "العائد": "قيد الإنتاج"},
-        {"المشروع": "مبادرة صغرى ليبيا", "المبلغ": "$1,000", "الحصة": "0.00014%", "العائد": "+$450 (موزع)"}
+        {"المشروع": "مجمع السيارات الكهربائية", "المساهمة": "$5,000", "الحصة": "0.00014%", "العائد": "قيد التأسيس"},
+        {"المشروع": "مشاريع ليبيا الصغرى", "المساهمة": "$1,000", "الحصة": "0.00014%", "العائد": "+$450 (موزع)"}
     ])
 
-# --- Tab 4: التحليلات (Analytics) ---
+# --- Tab 4: تحليل السوق ---
 with tabs[3]:
-    st.subheader("📊 أداء المحرك المالي العالمي (MR7 Stats)")
+    st.subheader("📊 أداء المحرك المالي العام")
     c1, c2, c3 = st.columns(3)
-    c1.metric("إجمالي الضخ السنوي", "$6.1B", "+15% شهرية")
+    c1.metric("إجمالي الضخ العالمي", "$6.1B", "+15% شهرية")
     c2.metric("عدد المشاريع النشطة", "142", "✅")
-    c3.metric("المستثمرون الفاعلون", "1.2M", "🚀")
-    
-    st.divider()
-    st.markdown("### 🗺️ توزيع تدفقات السيولة الجغرافية")
-    # محاكاة توزيع جغرافي
-    st.write("مصر (45%)")
-    st.progress(0.45)
-    st.write("ليبيا (25%)")
-    st.progress(0.25)
-    st.write("السودان (20%)")
-    st.progress(0.20)
-    st.write("عالمي (10%)")
-    st.progress(0.10)
+    c3.metric("معدل نجاح المشاريع", "94%", "فائق")
 
 st.divider()
 
-if st.button("🏰 العودة لمركز القيادة الرئيسي"):
+if st.button("🏰 العودة لمركز القيادة"):
     st.switch_page("app.py")
