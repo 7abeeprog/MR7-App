@@ -147,6 +147,7 @@ with col_side:
     if st.button("💰 الخزنة المالية"): st.switch_page("pages/3_Wallet.py")
     if st.button("👥 جيش القادة"): st.switch_page("pages/6_Teams.py")
     if st.button("🤝 التمويل الجماعي"): st.switch_page("pages/9_Crowdfunding.py")
+    if st.button("📈 الحسابات المتقدمة"): st.switch_page("pages/14_Financial_Advanced.py")
     if st.button("🛒 المتجر العالمي"): st.switch_page("pages/4_Marketplace.py")
     if st.button("🔔 مركز التنبيهات"): st.switch_page("pages/10_Notifications.py")
     if st.button("👤 ملفي الشخصي"): st.switch_page("pages/13_Leader_Profile.py")
