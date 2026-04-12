@@ -13,7 +13,7 @@ st.set_page_config(
 current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React المتقدمة (الإصدار 14.0 - الربط الموحد والخالي من الأخطاء) ---
+# --- 3. واجهة React المتقدمة (الإصدار 15.0 - الهوية الكاملة والعقل الاقتصادي) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -35,7 +35,6 @@ react_html = r"""
             overflow-x: hidden; 
             scroll-behavior: smooth;
             transition: background-color 0.5s, color 0.5s;
-            background-color: #030303;
         }
         
         ::-webkit-scrollbar { width: 6px; }
@@ -52,13 +51,8 @@ react_html = r"""
         .premium-input {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            color: white;
+            color: inherit;
             transition: all 0.3s ease;
-        }
-        .premium-input:focus {
-            border-color: #FFD700;
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
-            outline: none;
         }
 
         .animate-view { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -111,37 +105,56 @@ react_html = r"""
         };
 
         const App = () => {
+            // --- 1. الأنماط السبعة (7 Themes) ---
+            const themes = {
+                "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#FFFFFF" },
+                "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
+                "أزرق القيادة 💙": { bg: "bg-[#000814]", text: "text-white", card: "bg-[#00122B]/80", border: "border-[#0074D9]", borderLight: "border-[#0074D9]/20", accent: "text-[#0074D9]", btn: "bg-[#0074D9]", btnText: "text-white", hex: "#0074D9" },
+                "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", border: "border-[#00FF88]", borderLight: "border-[#00FF88]/20", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" },
+                "أحمر القوة 🔴": { bg: "bg-[#140000]", text: "text-white", card: "bg-[#2B0000]/80", border: "border-[#FF4136]", borderLight: "border-[#FF4136]/20", accent: "text-[#FF4136]", btn: "bg-[#FF4136]", btnText: "text-white", hex: "#FF4136" },
+                "أصفر الريادة 🟡": { bg: "bg-[#141400]", text: "text-white", card: "bg-[#2B2B00]/80", border: "border-[#FFDC00]", borderLight: "border-[#FFDC00]/20", accent: "text-[#FFDC00]", btn: "bg-[#FFDC00]", btnText: "text-black", hex: "#FFDC00" },
+                "روز الفخامة 🌸": { bg: "bg-[#14000A]", text: "text-white", card: "bg-[#2B0015]/80", border: "border-[#F012BE]", borderLight: "border-[#F012BE]/20", accent: "text-[#F012BE]", btn: "bg-[#F012BE]", btnText: "text-white", hex: "#F012BE" }
+            };
+
+            const [activeThemeName, setActiveThemeName] = useState("أسود قيادي 🖤");
+            const theme = themes[activeThemeName] || themes["أسود قيادي 🖤"];
+
+            // --- 2. اللغات السبعة (7 Languages) ---
+            const translations = {
+                ar: { title: "مركز القيادة", overview: "الرادار", inventory: "الأصول", ops: "العمليات", comms: "التواصل", finance: "المالية", search: "البحث الشامل...", add: "نشر أصل جديد", levels: "تخصيص عمولات الأجيال", buyer: "المشتري", amount: "القيمة", status: "الحالة", send: "إرسال" },
+                en: { title: "Command Hub", overview: "Radar", inventory: "Assets", ops: "Ops", comms: "Comms", finance: "Finance", search: "Global Search...", add: "Publish Asset", levels: "Multi-level Commissions", buyer: "Buyer", amount: "Amount", status: "Status", send: "Send" },
+                fr: { title: "Centre de Commande", overview: "Radar", inventory: "Actifs", ops: "Ops", comms: "Comms", finance: "Finances", search: "Recherche...", add: "Publier l'actif", levels: "Commissions multiniveaux", buyer: "Acheteur", amount: "Montant", status: "Statut", send: "Envoyer" },
+                es: { title: "Centro de Mando", overview: "Radar", inventory: "Activos", ops: "Ops", comms: "Comms", finance: "Finanzas", search: "Buscar...", add: "Publicar activo", levels: "Comisiones multinivel", buyer: "Comprador", amount: "Monto", status: "Estado", send: "Enviar" },
+                zh: { title: "指挥中心", overview: "雷达", inventory: "资产", ops: "操作", comms: "通信", finance: "金融", search: "搜索...", add: "发布资产", levels: "多级佣金", buyer: "买方", amount: "金额", status: "状态", send: "发送" },
+                fa: { title: "مرکز فرماندهی", overview: "رادار", inventory: "دارایی‌ها", ops: "عملیات", comms: "ارتباطات", finance: "مالی", search: "جستجو...", add: "انتشار دارایی", levels: "کمیسیون‌های چند سطحی", buyer: "خریدار", amount: "ارزش", status: "وضعیت", send: "ارسال" },
+                sw: { title: "Kituo cha Amri", overview: "Rada", inventory: "Mali", ops: "Operesheni", comms: "Mawasiliano", finance: "Fedha", search: "Tafuta...", add: "Chapisha Mali", levels: "Tume za ngazi nyingi", buyer: "Mnunuzi", amount: "Thamani", status: "Hali", send: "Tuma" }
+            };
+
+            const [lang, setLang] = useState('ar');
+            const t = translations[lang] || translations['ar'];
+
+            // --- Global State ---
             const [activeTab, setActiveTab] = useState('overview');
             const [toasts, setToasts] = useState([]);
             const [balance, setBalance] = useState(Number(LEADER_BALANCE_PLACEHOLDER));
+            const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+            const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
-            // --- 1. الأصول والجرد (Assets Logic) ---
+            // Logic State
             const [assets, setAssets] = useState([
                 { id: 1, name: 'برج السيادة الإداري', price: 1500000, commRates: [10,5,2,1,1,1,1,1,1,1], stock: 5, type: 'عقاري', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400', desc: 'مقر قيادي عالمي.' },
                 { id: 2, name: 'دبلوم هندسة الأرباح', price: 499, commRates: [15,7,3,1,1,1,1,1,1,1], stock: Infinity, type: 'رقمي', img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400', desc: 'صناعة عقلية المليار.' }
             ]);
 
-            // --- 2. العمليات والطلبات (Operations Logic) ---
             const [orders, setOrders] = useState([
                 { id: 'ORD-202', buyer: 'أحمد القائد', item: 'برج السيادة', amount: 1500000, status: 'قيد المراجعة', date: 'اليوم' }
             ]);
-            const [returns, setReturns] = useState([
-                { id: 'RET-05', buyer: 'سارة خالد', item: 'دبلوم هندسة الأرباح', reason: 'طلب استبدال مسار', status: 'منتظر' }
-            ]);
-
-            // --- 3. مركز التواصل (Communications Logic) ---
+            
             const [chats, setChats] = useState([
-                { id: 1, sender: 'أحمد القائد', type: 'Client', lastMsg: 'هل يمكنني زيادة مبلغ القسط الأول؟', time: '10:30 AM', unread: true },
-                { id: 2, sender: 'فريق تسويق القاهرة', type: 'Team', lastMsg: 'تم تجهيز فيديو العرض الجديد.', time: '09:15 AM', unread: false }
+                { id: 1, sender: 'أحمد القائد', type: 'Client', lastMsg: 'هل هناك تسهيلات دفع؟', time: '10:30 AM', unread: true }
             ]);
             const [activeChat, setActiveChat] = useState(null);
             const [messageText, setMessageText] = useState('');
-
-            // --- 4. المالية والولاء (Finance Logic) ---
-            const [installments, setInstallments] = useState([
-                { id: 'INS-01', user: 'ياسين علي', item: 'برج السيادة', total: 1500000, paid: 500000, next_due: '2026-05-01' }
-            ]);
-            const [loyaltyPoints, setLoyaltyPoints] = useState(124500);
 
             const showToast = (msg, type = 'success') => {
                 const id = Date.now();
@@ -149,7 +162,6 @@ react_html = r"""
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
             };
 
-            // Functions
             const handleAddAsset = (e) => {
                 e.preventDefault();
                 const f = new FormData(e.target);
@@ -161,115 +173,162 @@ react_html = r"""
                     type: f.get('type'), img: f.get('img'), desc: f.get('desc'), status: 'نشط'
                 };
                 setAssets([n, ...assets]);
-                showToast('تم إدراج الأصل وتوثيقه');
+                showToast(lang === 'ar' ? 'تم التوثيق بنجاح' : 'Success');
                 e.target.reset();
-            };
-
-            const confirmOrder = (id) => {
-                setOrders(orders.map(o => o.id === id ? {...o, status: 'مكتمل'} : o));
-                showToast('تم اعتماد العملية بنجاح');
             };
 
             useEffect(() => {
                 const loader = document.getElementById('loading-screen');
                 if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }
-            }, []);
+                document.documentElement.dir = (lang === 'ar' || lang === 'fa') ? 'rtl' : 'ltr';
+            }, [lang]);
+
+            const isRTL = lang === 'ar' || lang === 'fa';
 
             return (
-                <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row overflow-hidden transition-all duration-500">
+                <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col md:flex-row overflow-hidden transition-all duration-500`}>
                     
                     {/* --- Sidebar --- */}
-                    <div className="w-full md:w-72 md:min-h-screen bg-[rgba(15,15,15,0.95)] border-b md:border-b-0 md:border-l border-white/10 flex flex-col z-10 shadow-2xl">
-                        <div className="p-8 pb-6">
-                            <div className="bg-yellow-500 text-black p-3 rounded-2xl inline-block mb-4 shadow-xl"><Icon name="Terminal" size={30} /></div>
-                            <h1 className="text-xl font-black text-yellow-500 uppercase tracking-tighter">مركز القيادة</h1>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase">MR7 Logic v14.0</p>
+                    <div className={`w-full md:w-72 md:min-h-screen ${theme.card} border-b md:border-b-0 md:border-l ${theme.borderLight} flex flex-col z-10 shadow-2xl`}>
+                        
+                        <div className="p-6 pb-2 flex justify-between items-center">
+                            {/* Theme Picker Container */}
+                            <div className="relative">
+                                <button onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)} className="w-8 h-8 rounded-full border-2 border-white/20 shadow-lg" style={{backgroundColor: theme.hex}}></button>
+                                {isThemeMenuOpen && (
+                                    <div className={`absolute top-10 ${isRTL ? 'right-0' : 'left-0'} glass-panel p-2 rounded-xl flex flex-col gap-2 z-[100] animate-view`}>
+                                        {Object.entries(themes).map(([name, t]) => (
+                                            <button key={name} onClick={() => {setActiveThemeName(name); setIsThemeMenuOpen(false);}} className="w-6 h-6 rounded-full border border-white/10" style={{backgroundColor: t.hex}} title={name}></button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Lang Picker Container */}
+                            <div className="relative">
+                                <button onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-bold">
+                                    <Icon name="Globe" size={14} /> {lang.toUpperCase()}
+                                </button>
+                                {isLangMenuOpen && (
+                                    <div className={`absolute top-10 ${isRTL ? 'left-0' : 'right-0'} glass-panel p-2 rounded-xl flex flex-col gap-1 z-[100] animate-view min-w-[80px]`}>
+                                        {Object.keys(translations).map(l => (
+                                            <button key={l} onClick={() => {setLang(l); setIsLangMenuOpen(false);}} className="text-[10px] font-bold py-1 hover:bg-white/10 rounded uppercase">{l}</button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="p-8 pt-4">
+                            <div className={`${theme.btn} ${theme.btnText} p-3 rounded-2xl inline-block mb-4 shadow-xl`}><Icon name="Terminal" size={30} /></div>
+                            <h1 className={`text-xl font-black uppercase tracking-tighter ${theme.accent}`}>{t.title}</h1>
+                            <p className="text-[10px] opacity-50 font-bold uppercase">MR7 Logic v15.0</p>
                         </div>
 
                         <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
                             {[
-                                {id: 'overview', icon: 'LayoutDashboard', label: 'الرادار'},
-                                {id: 'inventory', icon: 'Box', label: 'الأصول'},
-                                {id: 'operations', icon: 'Activity', label: 'العمليات'},
-                                {id: 'communications', icon: 'MessageSquare', label: 'التواصل', badge: '2'},
-                                {id: 'finance', icon: 'CreditCard', label: 'المالية'}
+                                {id: 'overview', icon: 'LayoutDashboard', label: t.overview},
+                                {id: 'inventory', icon: 'Box', label: t.inventory},
+                                {id: 'operations', icon: 'Zap', label: t.ops},
+                                {id: 'communications', icon: 'MessageSquare', label: t.comms},
+                                {id: 'finance', icon: 'CreditCard', label: t.finance}
                             ].map(btn => (
-                                <button key={btn.id} onClick={() => setActiveTab(btn.id)} className={`flex items-center justify-between px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id ? 'bg-white/5 border-r-4 border-yellow-500 text-yellow-500 shadow-md' : 'text-gray-500 hover:text-white'}`}>
-                                    <div className="flex items-center gap-4">
-                                        <Icon name={btn.icon} size={18} /> {btn.label}
-                                    </div>
-                                    {btn.badge && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{btn.badge}</span>}
+                                <button key={btn.id} onClick={() => setActiveTab(btn.id)} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id ? `bg-white/5 ${isRTL ? 'border-r-4' : 'border-l-4'} ${theme.border} ${theme.accent}` : 'opacity-50 hover:opacity-100 hover:bg-white/5'}`}>
+                                    <Icon name={btn.icon} size={18} /> {btn.label}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* --- Main Content Arena --- */}
-                    <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
+                    {/* --- Main Content --- */}
+                    <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir relative">
                         
-                        {/* Tab: Overview */}
+                        <div className="flex flex-col md:flex-row gap-6 mb-10 items-center justify-between">
+                            <div className="flex-1 max-w-xl w-full relative">
+                                <Icon name="Search" size={18} className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 opacity-30`} />
+                                <input placeholder={t.search} className="w-full premium-input py-4 rounded-2xl pr-12 pl-4 text-sm font-bold shadow-xl outline-none border-transparent focus:border-yellow-500/30" />
+                            </div>
+                            <div className={`${theme.card} px-6 py-3 rounded-2xl border ${theme.borderLight} flex items-center gap-4`}>
+                                <div className="text-left">
+                                    <span className="text-[10px] opacity-40 font-black uppercase">Liquidity Vault</span>
+                                    <h4 className="text-xl font-black text-[#00FF88]">${balance.toLocaleString()}</h4>
+                                </div>
+                                <Icon name="Wallet" size={24} className={theme.accent} />
+                            </div>
+                        </div>
+
+                        {/* Views Logic */}
                         {activeTab === 'overview' && (
-                            <div className="animate-view space-y-8 max-w-7xl mx-auto pt-5">
+                            <div className="animate-view space-y-8 max-w-7xl mx-auto">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-green-500 shadow-xl">
-                                        <small className="text-gray-500 font-bold uppercase">التدفق المالي</small>
-                                        <h4 className="text-3xl font-black text-green-500">${balance.toLocaleString()}</h4>
+                                    <div className={`${theme.card} p-6 rounded-[2rem] border-t-4 border-green-500 shadow-xl`}>
+                                        <small className="opacity-50 font-bold uppercase">Total ROI</small>
+                                        <h4 className="text-2xl font-black text-green-500">$3.1M</h4>
                                     </div>
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-yellow-500">
-                                        <small className="text-gray-500 font-bold uppercase">الطلبات النشطة</small>
-                                        <h4 className="text-3xl font-black">{orders.length}</h4>
+                                    <div className={`${theme.card} p-6 rounded-[2rem] border-t-4 border-yellow-500`}>
+                                        <small className="opacity-50 font-bold uppercase">Pending Orders</small>
+                                        <h4 className="text-2xl font-black">{orders.length}</h4>
                                     </div>
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-blue-500">
-                                        <small className="text-gray-500 font-bold uppercase">رصيد الولاء</small>
-                                        <h4 className="text-3xl font-black text-blue-500">{loyaltyPoints.toLocaleString()}</h4>
+                                    <div className={`${theme.card} p-6 rounded-[2rem] border-t-4 border-blue-500`}>
+                                        <small className="opacity-50 font-bold uppercase">Loyalty Points</small>
+                                        <h4 className="text-2xl font-black text-blue-500">124K</h4>
                                     </div>
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-purple-500">
-                                        <small className="text-gray-500 font-bold uppercase">الأصول الموثقة</small>
-                                        <h4 className="text-3xl font-black">{assets.length}</h4>
+                                    <div className={`${theme.card} p-6 rounded-[2rem] border-t-4 border-purple-500`}>
+                                        <small className="opacity-50 font-bold uppercase">Active Assets</small>
+                                        <h4 className="text-2xl font-black">{assets.length}</h4>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Tab: Inventory */}
                         {activeTab === 'inventory' && (
                             <div className="animate-view space-y-8 max-w-7xl mx-auto">
                                 <div className="flex flex-col xl:flex-row gap-8">
-                                    <div className="xl:w-2/5 glass-panel p-8 rounded-[2.5rem] h-fit">
-                                        <h3 className="text-xl font-black mb-6 flex items-center gap-3"><Icon name="PlusCircle" className="text-yellow-500"/> هندسة أصل جديد</h3>
+                                    <div className={`${theme.card} xl:w-2/5 p-8 rounded-[2.5rem] h-fit border ${theme.borderLight}`}>
+                                        <h3 className="text-lg font-black mb-6 flex items-center gap-3"><Icon name="PlusCircle" className={theme.accent}/> {t.add}</h3>
                                         <form onSubmit={handleAddAsset} className="space-y-4">
-                                            <input name="name" placeholder="اسم الأصل..." required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                            <input name="name" placeholder="Name..." required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
                                             <div className="grid grid-cols-2 gap-3">
-                                                <input name="price" type="number" placeholder="القيمة ($)" required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
-                                                <select name="type" className="w-full premium-input p-4 rounded-xl font-bold bg-black text-sm"><option>عقاري</option><option>منتج</option><option>رقمي</option></select>
+                                                <input name="price" type="number" placeholder="Price ($)" required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                                <select name="type" className="w-full premium-input p-4 rounded-xl font-bold bg-black/50 text-sm">
+                                                    <option>عقاري</option><option>منتج</option><option>رقمي</option>
+                                                </select>
                                             </div>
                                             <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                                <label className="text-[10px] font-black text-gray-500 block mb-2">تخصيص عمولات الأجيال (10 مستويات %)</label>
+                                                <label className="text-[10px] opacity-50 font-black uppercase block mb-3">{t.levels} (10 Levels %)</label>
                                                 <div className="grid grid-cols-5 gap-2">
                                                     {Array.from({length: 10}).map((_, i) => (
-                                                        <input key={i} name={`c${i+1}`} placeholder={`ج${i+1}`} className="premium-input p-2 rounded-lg text-center text-xs font-bold" />
+                                                        <input key={i} name={`c${i+1}`} placeholder={`L${i+1}`} className="premium-input p-2 rounded-lg text-center text-xs font-bold" />
                                                     ))}
                                                 </div>
                                             </div>
-                                            <button type="submit" className="w-full py-4 bg-yellow-500 text-black rounded-xl font-black text-lg hover:scale-105 transition-all shadow-xl">نشر الأصل 🚀</button>
+                                            <input name="img" placeholder="Image URL..." className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                            <textarea name="desc" placeholder="Description..." className="w-full premium-input p-4 rounded-xl font-bold h-20 text-sm"></textarea>
+                                            <button type="submit" className={`w-full py-4 ${theme.btn} ${theme.btnText} rounded-xl font-black text-lg transition-all shadow-xl`}>PROCEED 🚀</button>
                                         </form>
                                     </div>
-                                    <div className="xl:w-3/5 glass-panel p-8 rounded-[2.5rem] overflow-x-auto no-scrollbar">
-                                        <h3 className="text-xl font-black mb-6">جرد الأصول الموثقة</h3>
+
+                                    <div className={`${theme.card} xl:w-3/5 p-8 rounded-[2.5rem] overflow-x-auto border ${theme.borderLight}`}>
+                                        <h3 className="text-lg font-black mb-6">Inventory Ledger</h3>
                                         <table className="w-full text-dir">
                                             <thead>
-                                                <tr className="text-gray-500 text-xs border-b border-white/5 uppercase"><th className="pb-4 text-right">الأصل</th><th className="pb-4 text-center">المخزون</th><th className="pb-4 text-center">القيمة</th><th className="pb-4 text-center">إجراء</th></tr>
+                                                <tr className="opacity-40 text-[10px] border-b border-white/5 uppercase">
+                                                    <th className="pb-4 text-right">Asset</th>
+                                                    <th className="pb-4 text-center">Stock</th>
+                                                    <th className="pb-4 text-center">Price</th>
+                                                    <th className="pb-4 text-center">Action</th>
+                                                </tr>
                                             </thead>
                                             <tbody>
                                                 {assets.map(a => (
-                                                    <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition-all">
+                                                    <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition-all group">
                                                         <td className="py-4 flex items-center gap-4">
                                                             <img src={a.img} className="w-12 h-12 rounded-xl object-cover" />
-                                                            <div className="font-bold text-sm">{a.name}</div>
+                                                            <div><div className="font-bold text-sm">{a.name}</div><small className="opacity-40">{a.type}</small></div>
                                                         </td>
                                                         <td className="py-4 text-center font-black">{a.stock === Infinity ? '∞' : a.stock}</td>
                                                         <td className="py-4 text-center text-[#00FF88] font-black">${a.price.toLocaleString()}</td>
-                                                        <td className="py-4 text-center"><button onClick={()=>setAssets(assets.filter(as=>as.id!==a.id))} className="text-red-500"><Icon name="Trash2" size={18}/></button></td>
+                                                        <td className="py-4 text-center"><button onClick={()=>setAssets(assets.filter(as=>as.id!==a.id))} className="text-red-500/50 hover:text-red-500"><Icon name="Trash2" size={16}/></button></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -279,113 +338,64 @@ react_html = r"""
                             </div>
                         )}
 
-                        {/* Tab: Communications */}
                         {activeTab === 'communications' && (
-                            <div className="animate-view space-y-8 max-w-7xl mx-auto h-[75vh]">
+                            <div className="animate-view space-y-8 max-w-7xl mx-auto h-[70vh]">
                                 <div className="flex h-full gap-6">
-                                    <div className="w-1/3 glass-panel rounded-[2.5rem] flex flex-col overflow-hidden">
-                                        <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                                            <h3 className="text-xl font-black uppercase">الرسائل</h3>
-                                            <Icon name="Filter" size={18} className="text-gray-500" />
-                                        </div>
+                                    <div className={`${theme.card} w-1/3 rounded-[2.5rem] flex flex-col overflow-hidden border ${theme.borderLight}`}>
+                                        <div className="p-6 border-b border-white/5 flex justify-between items-center"><h3 className="font-black uppercase">{t.comms}</h3><Icon name="Filter" size={18} className="opacity-20" /></div>
                                         <div className="flex-1 overflow-y-auto no-scrollbar p-2">
                                             {chats.map(chat => (
-                                                <div 
-                                                    key={chat.id} 
-                                                    onClick={() => setActiveChat(chat)}
-                                                    className={`p-4 rounded-2xl cursor-pointer transition-all mb-2 ${activeChat?.id === chat.id ? 'bg-white/10 border-r-4 border-yellow-500' : 'hover:bg-white/5 border border-transparent'}`}
-                                                >
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <span className="font-black text-sm">{chat.sender}</span>
-                                                        <small className="text-[10px] text-gray-500">{chat.time}</small>
-                                                    </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <p className="text-[11px] text-gray-400 truncate">{chat.lastMsg}</p>
-                                                        {chat.unread && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
-                                                    </div>
+                                                <div key={chat.id} onClick={() => setActiveChat(chat)} className={`p-4 rounded-2xl cursor-pointer transition-all mb-2 ${activeChat?.id === chat.id ? 'bg-white/10' : 'hover:bg-white/5'}`}>
+                                                    <div className="flex justify-between items-start mb-1"><span className="font-black text-sm">{chat.sender}</span><small className="opacity-30">{chat.time}</small></div>
+                                                    <p className="text-[11px] opacity-50 truncate">{chat.lastMsg}</p>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-
-                                    <div className="w-2/3 glass-panel rounded-[2.5rem] flex flex-col overflow-hidden relative">
+                                    <div className={`${theme.card} w-2/3 rounded-[2.5rem] flex flex-col overflow-hidden relative border ${theme.borderLight}`}>
                                         {activeChat ? (
                                             <>
-                                                <div className="p-6 border-b border-white/10 bg-white/5 flex items-center justify-between">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-full bg-yellow-500 text-black flex items-center justify-center font-black">👤</div>
-                                                        <h4 className="font-black">{activeChat.sender}</h4>
-                                                    </div>
+                                                <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                                                    <div className="flex items-center gap-4"><div className={`${theme.btn} ${theme.btnText} w-10 h-10 rounded-full flex items-center justify-center font-black`}>👤</div><h4 className="font-black">{activeChat.sender}</h4></div>
                                                 </div>
                                                 <div className="flex-1 p-6 overflow-y-auto no-scrollbar space-y-4">
-                                                    <div className="chat-bubble-client"><p className="text-sm">أهلاً يا قائد، مهتم بشراء برج السيادة، هل هناك تسهيلات؟</p></div>
-                                                    <div className="chat-bubble-merchant"><p className="text-sm">أهلاً بك. نعم، لدينا أنظمة تقسيط مرنة تصل لـ 12 شهراً.</p></div>
+                                                    <div className="chat-bubble-client"><p className="text-sm">أهلاً يا قائد، مهتم بشراء برج السيادة.</p></div>
+                                                    <div className="chat-bubble-merchant"><p className="text-sm">أهلاً بك. متاح لدينا أنظمة تقسيط استراتيجية.</p></div>
                                                 </div>
-                                                <div className="p-6 border-t border-white/10 bg-black/20 flex gap-4">
-                                                    <input value={messageText} onChange={(e)=>setMessageText(e.target.value)} placeholder="اكتب رسالتك..." className="flex-1 premium-input p-4 rounded-xl font-bold text-sm" />
-                                                    <button onClick={()=>{showToast('تم الإرسال'); setMessageText('')}} className="bg-yellow-500 text-black px-8 rounded-xl font-black"><Icon name="Send" size={20}/></button>
+                                                <div className="p-6 border-t border-white/5 bg-black/20 flex gap-4">
+                                                    <input value={messageText} onChange={(e)=>setMessageText(e.target.value)} placeholder={t.send + "..."} className="flex-1 premium-input p-4 rounded-xl font-bold text-sm" />
+                                                    <button onClick={()=>{showToast('SENT'); setMessageText('')}} className={`${theme.btn} ${theme.btnText} px-8 rounded-xl font-black`}><Icon name="Send" size={20}/></button>
                                                 </div>
                                             </>
                                         ) : (
-                                            <div className="h-full flex flex-col items-center justify-center text-gray-500 opacity-40">
-                                                <Icon name="MessageSquare" size={60} className="mb-4" />
-                                                <p className="text-xl font-black">اختر محادثة لبدء التواصل</p>
-                                            </div>
+                                            <div className="h-full flex flex-col items-center justify-center opacity-20"><Icon name="MessageSquare" size={60} className="mb-4" /><p className="text-xl font-black">SELECT COMMANDER</p></div>
                                         )}
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Tab: Operations */}
                         {activeTab === 'operations' && (
-                            <div className="animate-view space-y-8 max-w-6xl mx-auto pt-5 text-dir">
-                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="RefreshCcw" size={32} /> المرتجعات ومعالجة الطلبات</h2>
-                                <div className="grid grid-cols-1 gap-6">
-                                    <h3 className="text-xl font-black text-red-500">المرتجعات</h3>
-                                    {returns.map(r => (
-                                        <div key={r.id} className="glass-panel p-6 rounded-[2rem] border-r-4 border-red-500 flex justify-between items-center">
-                                            <div><h4 className="font-black">{r.buyer}</h4><p className="text-sm opacity-70">السبب: {r.reason}</p></div>
-                                            <button onClick={()=>setReturns(returns.filter(re=>re.id!==r.id))} className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl font-black text-xs">تسوية</button>
-                                        </div>
-                                    ))}
-                                    <h3 className="text-xl font-black mt-8">سجل الطلبات</h3>
-                                    {orders.map(o => (
-                                        <div key={o.id} className="glass-panel p-6 rounded-[2rem] flex justify-between items-center">
-                                            <div><h4 className="font-black">{o.buyer} <small className="text-blue-500 ml-2">{o.status}</small></h4><p className="text-xs text-gray-500">{o.item}</p></div>
-                                            <button onClick={()=>confirmOrder(o.id)} className="bg-yellow-500 text-black px-6 py-2 rounded-xl font-black text-xs">اعتماد</button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Tab: Finance */}
-                        {activeTab === 'finance' && (
-                            <div className="animate-view space-y-8 max-w-6xl mx-auto pt-5 text-dir">
-                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="CreditCard" size={32} /> الأقساط والاشتراكات</h2>
-                                {installments.map(i => (
-                                    <div key={i.id} className="glass-panel p-8 rounded-[2.5rem]">
-                                        <div className="flex justify-between mb-4">
-                                            <h4 className="text-xl font-black">{i.user} - {i.item}</h4>
-                                            <span className="text-yellow-500 font-black">الموعد: {i.next_due}</span>
-                                        </div>
-                                        <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden mb-4">
-                                            <div className="h-full bg-blue-500" style={{width: `${(i.paid/i.total)*100}%`}}></div>
-                                        </div>
-                                        <div className="flex justify-between text-xs font-bold text-gray-400">
-                                            <span>تم سداد: ${i.paid.toLocaleString()}</span>
-                                            <span>المتبقي: ${(i.total-i.paid).toLocaleString()}</span>
+                            <div className="animate-view space-y-8 max-w-6xl mx-auto pt-5">
+                                <h2 className="text-2xl font-black flex items-center gap-4"><Icon name="RefreshCcw" size={28} /> {t.ops}</h2>
+                                {orders.map(o => (
+                                    <div key={o.id} className={`${theme.card} p-6 rounded-[2rem] border ${theme.borderLight} flex justify-between items-center`}>
+                                        <div><h4 className="font-black text-xl">{o.buyer}</h4><p className="text-xs opacity-50">{o.item} • {o.date}</p></div>
+                                        <div className="flex items-center gap-6">
+                                            <span className="text-2xl font-black text-[#00FF88]">${o.amount.toLocaleString()}</span>
+                                            <button className={`${theme.btn} ${theme.btnText} px-6 py-2 rounded-xl font-black text-xs`}>APPROVE</button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
+
                     </div>
 
+                    {/* Toasts */}
                     <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
                         {toasts.map(t => (
-                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
+                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : 'bg-black/90 border-red-500/40 text-red-500'}`}>
                                 <Icon name={t.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={20} />
                                 <span className="font-bold text-sm text-white">{t.msg}</span>
                             </div>
@@ -410,10 +420,5 @@ components.html(final_html, height=1150, scrolling=True)
 
 # --- 6. أزرار التحكم والرجوع ---
 st.markdown("---")
-c1, c2 = st.columns(2)
-with c1:
-    if st.button("🛒 العودة للسوق العالمي (Marketplace)"):
-        st.switch_page("pages/4_Marketplace.py")
-with c2:
-    if st.button("🏠 العودة لمركز القيادة الرئيسي (Home)"):
-        st.switch_page("app.py")
+if st.button("🏠 العودة لمركز القيادة الرئيسي"):
+    st.switch_page("app.py")
