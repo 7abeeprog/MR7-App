@@ -13,7 +13,7 @@ st.set_page_config(
 current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React المتقدمة (الإصدار 13.0 - دمج مركز التواصل والـ CRM) ---
+# --- 3. واجهة React المتقدمة (الإصدار 14.0 - الربط الموحد والخالي من الأخطاء) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -113,24 +113,35 @@ react_html = r"""
         const App = () => {
             const [activeTab, setActiveTab] = useState('overview');
             const [toasts, setToasts] = useState([]);
-            
-            // --- 1. الأصول (Assets) ---
+            const [balance, setBalance] = useState(Number(LEADER_BALANCE_PLACEHOLDER));
+
+            // --- 1. الأصول والجرد (Assets Logic) ---
             const [assets, setAssets] = useState([
-                { id: 1, name: 'برج السيادة الإداري', price: 1500000, commRates: [10,5,2,1,1,1,1,1,1,1], stock: 5, type: 'عقاري', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400' }
+                { id: 1, name: 'برج السيادة الإداري', price: 1500000, commRates: [10,5,2,1,1,1,1,1,1,1], stock: 5, type: 'عقاري', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400', desc: 'مقر قيادي عالمي.' },
+                { id: 2, name: 'دبلوم هندسة الأرباح', price: 499, commRates: [15,7,3,1,1,1,1,1,1,1], stock: Infinity, type: 'رقمي', img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400', desc: 'صناعة عقلية المليار.' }
             ]);
 
-            // --- 2. العمليات (Operations) ---
+            // --- 2. العمليات والطلبات (Operations Logic) ---
             const [orders, setOrders] = useState([
-                { id: 'ORD-202', buyer: 'أحمد القائد', item: 'برج السيادة', amount: 1500000, status: 'قيد المراجعة' }
+                { id: 'ORD-202', buyer: 'أحمد القائد', item: 'برج السيادة', amount: 1500000, status: 'قيد المراجعة', date: 'اليوم' }
+            ]);
+            const [returns, setReturns] = useState([
+                { id: 'RET-05', buyer: 'سارة خالد', item: 'دبلوم هندسة الأرباح', reason: 'طلب استبدال مسار', status: 'منتظر' }
             ]);
 
-            // --- 3. مركز التواصل (Communications & CRM) ---
+            // --- 3. مركز التواصل (Communications Logic) ---
             const [chats, setChats] = useState([
                 { id: 1, sender: 'أحمد القائد', type: 'Client', lastMsg: 'هل يمكنني زيادة مبلغ القسط الأول؟', time: '10:30 AM', unread: true },
-                { id: 2, sender: 'فريق تسويق القاهرة', type: 'Team', lastMsg: 'تم تجهيز فيديو 'برج السيادة' الجديد.', time: '09:15 AM', unread: false }
+                { id: 2, sender: 'فريق تسويق القاهرة', type: 'Team', lastMsg: 'تم تجهيز فيديو العرض الجديد.', time: '09:15 AM', unread: false }
             ]);
             const [activeChat, setActiveChat] = useState(null);
             const [messageText, setMessageText] = useState('');
+
+            // --- 4. المالية والولاء (Finance Logic) ---
+            const [installments, setInstallments] = useState([
+                { id: 'INS-01', user: 'ياسين علي', item: 'برج السيادة', total: 1500000, paid: 500000, next_due: '2026-05-01' }
+            ]);
+            const [loyaltyPoints, setLoyaltyPoints] = useState(124500);
 
             const showToast = (msg, type = 'success') => {
                 const id = Date.now();
@@ -138,10 +149,25 @@ react_html = r"""
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
             };
 
-            const handleSendMessage = () => {
-                if(!messageText) return;
-                showToast('تم إرسال برقية التواصل بنجاح');
-                setMessageText('');
+            // Functions
+            const handleAddAsset = (e) => {
+                e.preventDefault();
+                const f = new FormData(e.target);
+                const n = {
+                    id: Date.now(),
+                    name: f.get('name'), price: parseFloat(f.get('price')),
+                    commRates: Array.from({length:10}).map((_,i)=>parseFloat(f.get(`c${i+1}`)||1)),
+                    stock: f.get('type') === 'رقمي' ? Infinity : parseInt(f.get('stock')),
+                    type: f.get('type'), img: f.get('img'), desc: f.get('desc'), status: 'نشط'
+                };
+                setAssets([n, ...assets]);
+                showToast('تم إدراج الأصل وتوثيقه');
+                e.target.reset();
+            };
+
+            const confirmOrder = (id) => {
+                setOrders(orders.map(o => o.id === id ? {...o, status: 'مكتمل'} : o));
+                showToast('تم اعتماد العملية بنجاح');
             };
 
             useEffect(() => {
@@ -153,11 +179,11 @@ react_html = r"""
                 <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row overflow-hidden transition-all duration-500">
                     
                     {/* --- Sidebar --- */}
-                    <div className="w-full md:w-72 md:min-h-screen bg-[rgba(15,15,15,0.95)] border-b md:border-b-0 md:border-l border-white/10 flex flex-col z-10">
+                    <div className="w-full md:w-72 md:min-h-screen bg-[rgba(15,15,15,0.95)] border-b md:border-b-0 md:border-l border-white/10 flex flex-col z-10 shadow-2xl">
                         <div className="p-8 pb-6">
                             <div className="bg-yellow-500 text-black p-3 rounded-2xl inline-block mb-4 shadow-xl"><Icon name="Terminal" size={30} /></div>
                             <h1 className="text-xl font-black text-yellow-500 uppercase tracking-tighter">مركز القيادة</h1>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase">MR7 Enterprise v13.0</p>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase">MR7 Logic v14.0</p>
                         </div>
 
                         <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
@@ -165,8 +191,7 @@ react_html = r"""
                                 {id: 'overview', icon: 'LayoutDashboard', label: 'الرادار'},
                                 {id: 'inventory', icon: 'Box', label: 'الأصول'},
                                 {id: 'operations', icon: 'Activity', label: 'العمليات'},
-                                {id: 'communications', icon: 'MessageSquare', label: 'مركز التواصل', badge: '2'},
-                                {id: 'marketing', icon: 'Zap', label: 'التسويق'},
+                                {id: 'communications', icon: 'MessageSquare', label: 'التواصل', badge: '2'},
                                 {id: 'finance', icon: 'CreditCard', label: 'المالية'}
                             ].map(btn => (
                                 <button key={btn.id} onClick={() => setActiveTab(btn.id)} className={`flex items-center justify-between px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id ? 'bg-white/5 border-r-4 border-yellow-500 text-yellow-500 shadow-md' : 'text-gray-500 hover:text-white'}`}>
@@ -179,7 +204,7 @@ react_html = r"""
                         </div>
                     </div>
 
-                    {/* --- Main Content --- */}
+                    {/* --- Main Content Arena --- */}
                     <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
                         
                         {/* Tab: Overview */}
@@ -188,15 +213,15 @@ react_html = r"""
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                     <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-green-500 shadow-xl">
                                         <small className="text-gray-500 font-bold uppercase">التدفق المالي</small>
-                                        <h4 className="text-3xl font-black text-green-500">$3.4M</h4>
+                                        <h4 className="text-3xl font-black text-green-500">${balance.toLocaleString()}</h4>
                                     </div>
                                     <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-yellow-500">
                                         <small className="text-gray-500 font-bold uppercase">الطلبات النشطة</small>
                                         <h4 className="text-3xl font-black">{orders.length}</h4>
                                     </div>
                                     <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-blue-500">
-                                        <small className="text-gray-500 font-bold uppercase">رسائل بانتظار الرد</small>
-                                        <h4 className="text-3xl font-black text-blue-500">2</h4>
+                                        <small className="text-gray-500 font-bold uppercase">رصيد الولاء</small>
+                                        <h4 className="text-3xl font-black text-blue-500">{loyaltyPoints.toLocaleString()}</h4>
                                     </div>
                                     <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-purple-500">
                                         <small className="text-gray-500 font-bold uppercase">الأصول الموثقة</small>
@@ -206,27 +231,27 @@ react_html = r"""
                             </div>
                         )}
 
-                        {/* Tab: Inventory (Logic CRUD) */}
+                        {/* Tab: Inventory */}
                         {activeTab === 'inventory' && (
                             <div className="animate-view space-y-8 max-w-7xl mx-auto">
                                 <div className="flex flex-col xl:flex-row gap-8">
                                     <div className="xl:w-2/5 glass-panel p-8 rounded-[2.5rem] h-fit">
                                         <h3 className="text-xl font-black mb-6 flex items-center gap-3"><Icon name="PlusCircle" className="text-yellow-500"/> هندسة أصل جديد</h3>
-                                        <form className="space-y-4">
-                                            <input placeholder="اسم الأصل..." required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                        <form onSubmit={handleAddAsset} className="space-y-4">
+                                            <input name="name" placeholder="اسم الأصل..." required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
                                             <div className="grid grid-cols-2 gap-3">
-                                                <input type="number" placeholder="القيمة ($)" required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
-                                                <select className="w-full premium-input p-4 rounded-xl font-bold bg-black text-sm"><option>عقاري</option><option>منتج</option></select>
+                                                <input name="price" type="number" placeholder="القيمة ($)" required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                                <select name="type" className="w-full premium-input p-4 rounded-xl font-bold bg-black text-sm"><option>عقاري</option><option>منتج</option><option>رقمي</option></select>
                                             </div>
                                             <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                                                 <label className="text-[10px] font-black text-gray-500 block mb-2">تخصيص عمولات الأجيال (10 مستويات %)</label>
                                                 <div className="grid grid-cols-5 gap-2">
                                                     {Array.from({length: 10}).map((_, i) => (
-                                                        <input key={i} placeholder={`ج${i+1}`} className="premium-input p-2 rounded-lg text-center text-xs font-bold" />
+                                                        <input key={i} name={`c${i+1}`} placeholder={`ج${i+1}`} className="premium-input p-2 rounded-lg text-center text-xs font-bold" />
                                                     ))}
                                                 </div>
                                             </div>
-                                            <button className="w-full py-4 bg-yellow-500 text-black rounded-xl font-black text-lg hover:scale-105 transition-all shadow-xl">نشر الأصل 🚀</button>
+                                            <button type="submit" className="w-full py-4 bg-yellow-500 text-black rounded-xl font-black text-lg hover:scale-105 transition-all shadow-xl">نشر الأصل 🚀</button>
                                         </form>
                                     </div>
                                     <div className="xl:w-3/5 glass-panel p-8 rounded-[2.5rem] overflow-x-auto no-scrollbar">
@@ -242,9 +267,9 @@ react_html = r"""
                                                             <img src={a.img} className="w-12 h-12 rounded-xl object-cover" />
                                                             <div className="font-bold text-sm">{a.name}</div>
                                                         </td>
-                                                        <td className="py-4 text-center font-black">{a.stock}</td>
+                                                        <td className="py-4 text-center font-black">{a.stock === Infinity ? '∞' : a.stock}</td>
                                                         <td className="py-4 text-center text-[#00FF88] font-black">${a.price.toLocaleString()}</td>
-                                                        <td className="py-4 text-center"><button className="text-red-500"><Icon name="Trash2" size={18}/></button></td>
+                                                        <td className="py-4 text-center"><button onClick={()=>setAssets(assets.filter(as=>as.id!==a.id))} className="text-red-500"><Icon name="Trash2" size={18}/></button></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -254,11 +279,10 @@ react_html = r"""
                             </div>
                         )}
 
-                        {/* Tab: Communications & CRM (The Hub Interface) */}
+                        {/* Tab: Communications */}
                         {activeTab === 'communications' && (
                             <div className="animate-view space-y-8 max-w-7xl mx-auto h-[75vh]">
                                 <div className="flex h-full gap-6">
-                                    {/* Chat List */}
                                     <div className="w-1/3 glass-panel rounded-[2.5rem] flex flex-col overflow-hidden">
                                         <div className="p-6 border-b border-white/10 flex justify-between items-center">
                                             <h3 className="text-xl font-black uppercase">الرسائل</h3>
@@ -279,51 +303,33 @@ react_html = r"""
                                                         <p className="text-[11px] text-gray-400 truncate">{chat.lastMsg}</p>
                                                         {chat.unread && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
                                                     </div>
-                                                    <span className={`text-[8px] uppercase font-black px-2 py-0.5 rounded-md mt-2 inline-block ${chat.type === 'Client' ? 'bg-green-500/10 text-green-500' : 'bg-purple-500/10 text-purple-500'}`}>{chat.type}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* Chat Window */}
                                     <div className="w-2/3 glass-panel rounded-[2.5rem] flex flex-col overflow-hidden relative">
                                         {activeChat ? (
                                             <>
                                                 <div className="p-6 border-b border-white/10 bg-white/5 flex items-center justify-between">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-full bg-yellow-500 text-black flex items-center justify-center font-black">👤</div>
-                                                        <div>
-                                                            <h4 className="font-black">{activeChat.sender}</h4>
-                                                            <small className="text-[#00FF88] text-[9px] font-bold uppercase">Online Now</small>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-4 opacity-50">
-                                                        <Icon name="Phone" size={18} />
-                                                        <Icon name="Info" size={18} />
+                                                        <h4 className="font-black">{activeChat.sender}</h4>
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 p-6 overflow-y-auto no-scrollbar space-y-4">
-                                                    <div className="chat-bubble-client">
-                                                        <p className="text-sm">أهلاً يا قائد، مهتم بشراء برج السيادة الإداري، هل هناك تسهيلات في دفع القسط الثالث؟</p>
-                                                    </div>
-                                                    <div className="chat-bubble-merchant">
-                                                        <p className="text-sm">أهلاً بك يا شريك النجاح. نعم، نظامنا يدعم إعادة هيكلة الأقساط بعد سداد 30% من القيمة. سأرسل لك التفاصيل.</p>
-                                                    </div>
+                                                    <div className="chat-bubble-client"><p className="text-sm">أهلاً يا قائد، مهتم بشراء برج السيادة، هل هناك تسهيلات؟</p></div>
+                                                    <div className="chat-bubble-merchant"><p className="text-sm">أهلاً بك. نعم، لدينا أنظمة تقسيط مرنة تصل لـ 12 شهراً.</p></div>
                                                 </div>
                                                 <div className="p-6 border-t border-white/10 bg-black/20 flex gap-4">
-                                                    <input 
-                                                        value={messageText}
-                                                        onChange={(e)=>setMessageText(e.target.value)}
-                                                        placeholder="اكتب رسالتك القيادية هنا..." 
-                                                        className="flex-1 premium-input p-4 rounded-xl font-bold text-sm" 
-                                                    />
-                                                    <button onClick={handleSendMessage} className="bg-yellow-500 text-black px-8 rounded-xl font-black transition-all hover:scale-105 active:scale-95"><Icon name="Send" size={20}/></button>
+                                                    <input value={messageText} onChange={(e)=>setMessageText(e.target.value)} placeholder="اكتب رسالتك..." className="flex-1 premium-input p-4 rounded-xl font-bold text-sm" />
+                                                    <button onClick={()=>{showToast('تم الإرسال'); setMessageText('')}} className="bg-yellow-500 text-black px-8 rounded-xl font-black"><Icon name="Send" size={20}/></button>
                                                 </div>
                                             </>
                                         ) : (
                                             <div className="h-full flex flex-col items-center justify-center text-gray-500 opacity-40">
                                                 <Icon name="MessageSquare" size={60} className="mb-4" />
-                                                <p className="text-xl font-black">اختر محادثة لبدء القيادة اللحظية</p>
+                                                <p className="text-xl font-black">اختر محادثة لبدء التواصل</p>
                                             </div>
                                         )}
                                     </div>
@@ -331,15 +337,57 @@ react_html = r"""
                             </div>
                         )}
 
-                        {/* ... (باقي التبويبات تتبع نفس هيكلة Logic CRUD في v12) ... */}
+                        {/* Tab: Operations */}
+                        {activeTab === 'operations' && (
+                            <div className="animate-view space-y-8 max-w-6xl mx-auto pt-5 text-dir">
+                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="RefreshCcw" size={32} /> المرتجعات ومعالجة الطلبات</h2>
+                                <div className="grid grid-cols-1 gap-6">
+                                    <h3 className="text-xl font-black text-red-500">المرتجعات</h3>
+                                    {returns.map(r => (
+                                        <div key={r.id} className="glass-panel p-6 rounded-[2rem] border-r-4 border-red-500 flex justify-between items-center">
+                                            <div><h4 className="font-black">{r.buyer}</h4><p className="text-sm opacity-70">السبب: {r.reason}</p></div>
+                                            <button onClick={()=>setReturns(returns.filter(re=>re.id!==r.id))} className="bg-white/5 border border-white/10 px-4 py-2 rounded-xl font-black text-xs">تسوية</button>
+                                        </div>
+                                    ))}
+                                    <h3 className="text-xl font-black mt-8">سجل الطلبات</h3>
+                                    {orders.map(o => (
+                                        <div key={o.id} className="glass-panel p-6 rounded-[2rem] flex justify-between items-center">
+                                            <div><h4 className="font-black">{o.buyer} <small className="text-blue-500 ml-2">{o.status}</small></h4><p className="text-xs text-gray-500">{o.item}</p></div>
+                                            <button onClick={()=>confirmOrder(o.id)} className="bg-yellow-500 text-black px-6 py-2 rounded-xl font-black text-xs">اعتماد</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab: Finance */}
+                        {activeTab === 'finance' && (
+                            <div className="animate-view space-y-8 max-w-6xl mx-auto pt-5 text-dir">
+                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="CreditCard" size={32} /> الأقساط والاشتراكات</h2>
+                                {installments.map(i => (
+                                    <div key={i.id} className="glass-panel p-8 rounded-[2.5rem]">
+                                        <div className="flex justify-between mb-4">
+                                            <h4 className="text-xl font-black">{i.user} - {i.item}</h4>
+                                            <span className="text-yellow-500 font-black">الموعد: {i.next_due}</span>
+                                        </div>
+                                        <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden mb-4">
+                                            <div className="h-full bg-blue-500" style={{width: `${(i.paid/i.total)*100}%`}}></div>
+                                        </div>
+                                        <div className="flex justify-between text-xs font-bold text-gray-400">
+                                            <span>تم سداد: ${i.paid.toLocaleString()}</span>
+                                            <span>المتبقي: ${(i.total-i.paid).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {/* --- Toasts Center --- */}
                     <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
                         {toasts.map(t => (
                             <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
                                 <Icon name={t.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={20} />
-                                <span className="font-bold text-sm text-white text-dir">{t.msg}</span>
+                                <span className="font-bold text-sm text-white">{t.msg}</span>
                             </div>
                         ))}
                     </div>
@@ -348,13 +396,7 @@ react_html = r"""
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ErrorBoundary><App /></ErrorBoundary>);
-
-        function ErrorBoundary({ children }) {
-            const [hasError, setHasError] = useState(false);
-            if (hasError) return <div className="p-10 text-red-500 font-black text-center h-screen flex items-center justify-center">⚠️ رصد خطأ في العقل الاقتصادي.. جاري إعادة التوثيق..</div>;
-            return children;
-        }
+        root.render(<App />);
     </script>
 </body>
 </html>
