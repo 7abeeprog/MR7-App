@@ -15,7 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (متعددة اللغات + محول أنماط عائم) ---
+# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% وخالية من الانهيارات) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -92,11 +92,34 @@ react_html = """
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect, useCallback, useRef } = React;
 
-        const Icon = ({ name, size = 24, className = "" }) => {
-            const LucideIcon = lucide[name];
-            return LucideIcon ? <i data-lucide={name} className={className} style={{ width: size, height: size }}></i> : null;
+        // الحل الجذري لمشكلة الشاشة البيضاء: 
+        // فصل الأيقونات عن React Virtual DOM لمنع انهيار التطبيق
+        const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
+            const iconRef = useRef(null);
+
+            useEffect(() => {
+                if (iconRef.current) {
+                    // تفريغ العنصر لضمان عدم وجود تكرار
+                    iconRef.current.innerHTML = '';
+                    
+                    // إنشاء الأيقونة يدوياً لحمايتها من تحديثات React
+                    const i = document.createElement('i');
+                    i.setAttribute('data-lucide', name);
+                    i.setAttribute('class', className);
+                    i.setAttribute('fill', fill);
+                    i.style.width = size + 'px';
+                    i.style.height = size + 'px';
+                    
+                    iconRef.current.appendChild(i);
+                    
+                    // تطبيق مكتبة lucide على هذا العنصر فقط!
+                    lucide.createIcons({ root: iconRef.current });
+                }
+            }, [name, size, className, fill]);
+
+            return <span ref={iconRef} className="inline-flex justify-center items-center"></span>;
         };
 
         // --- قاموس الترجمة (Multi-Language Dictionary) ---
@@ -218,8 +241,7 @@ react_html = """
 
             useEffect(() => {
                 document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-                lucide.createIcons();
-            }, [lang, activeThemeName]);
+            }, [lang]);
 
             // --- State ---
             const [activeTab, setActiveTab] = useState('overview'); 
@@ -232,8 +254,6 @@ react_html = """
             ]);
 
             const [newProd, setNewProd] = useState({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
-
-            useEffect(() => { lucide.createIcons(); }, [activeTab, toasts, products, team, activeThemeName, isThemeMenuOpen, isLangMenuOpen]);
 
             const showToast = useCallback((msg, type = 'success') => {
                 const id = Date.now();
@@ -270,7 +290,7 @@ react_html = """
                     {/* --- Sidebar --- */}
                     <div className={`w-full md:w-72 md:min-h-screen ${activeTheme.card} border-b md:border-b-0 md:border-l ${activeTheme.borderLight} flex flex-col transition-colors duration-500`}>
                         
-                        {/* Global Controls (Theme & Lang) at the top of sidebar for mobile, or integrated cleanly */}
+                        {/* Global Controls (Theme & Lang) */}
                         <div className="p-6 pb-2 flex justify-between items-center dir-invert">
                             {/* Theme Picker Floating Button */}
                             <div className="relative z-[200]">
