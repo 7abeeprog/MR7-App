@@ -15,7 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% - تم حل تعارض الـ DOM) ---
+# --- 3. واجهة React للوحة التاجر السيادي (مستقرة ومصفحة بالكامل) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -25,9 +25,10 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- استخدام سيرفرات cdnjs الأسرع والأكثر استقراراً -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
@@ -92,10 +93,43 @@ react_html = """
     <div id="root"></div>
 
     <script type="text/babel">
+        // 1. نظام التقاط الأخطاء العالمي لمنع الشاشة البيضاء
+        window.onerror = function(msg, url, line, col, error) {
+            document.getElementById('root').innerHTML = `
+                <div style="padding:40px; background:#220000; color:#FF5555; text-align:left; direction:ltr; min-height:100vh;">
+                    <h2 style="font-family:sans-serif;">⚠️ نظام الحماية: تم رصد خطأ تقني</h2>
+                    <p style="font-size:1.2rem;">${msg}</p>
+                    <pre style="background:#000; padding:20px; border-radius:10px; color:#FFF;">${error ? error.stack : 'No stack trace'}</pre>
+                </div>
+            `;
+        };
+
         const { useState, useEffect, useCallback, useRef } = React;
 
-        // الحل الجذري للانهيار (White Screen Fix):
-        // مكون أيقونة محمي بالكامل من تعارضات React و Lucide
+        // 2. درع حماية React (Error Boundary)
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, errorInfo: null };
+            }
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+            componentDidCatch(error, errorInfo) {
+                this.setState({ errorInfo: error.toString() + "\\n" + errorInfo.componentStack });
+            }
+            render() {
+                if (this.state.hasError) {
+                    return <div style={{padding: '30px', background: '#330000', color: 'white', direction: 'ltr', borderRadius: '20px', margin: '20px'}}>
+                        <h2>React UI Component Crash</h2>
+                        <pre style={{whiteSpace: 'pre-wrap', fontSize: '12px'}}>{this.state.errorInfo}</pre>
+                    </div>;
+                }
+                return this.props.children;
+            }
+        }
+
+        // 3. مكون أيقونة محمي بالكامل من التعارضات
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
             const iconRef = useRef(null);
 
@@ -115,7 +149,7 @@ react_html = """
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- قاموس الترجمة (Multi-Language Dictionary) ---
+        // --- قاموس الترجمة الشامل (Multi-Language Dictionary) ---
         const translations = {
             ar: {
                 dashboardTitle: "لوحة التاجر",
@@ -330,7 +364,9 @@ react_html = """
                     showToast('يرجى استكمال البيانات الأساسية', 'warning');
                     return;
                 }
-                setProducts([{...newProd, id: Date.now(), sales: 0, views: 0, status: 'قيد المراجعة'}, ...products]);
+                // تحويل السعر إلى رقم لضمان عدم حدوث تعارض في السلة
+                const p_price = parseFloat(newProd.price);
+                setProducts([{...newProd, price: p_price, id: Date.now(), sales: 0, views: 0, status: 'قيد المراجعة'}, ...products]);
                 setNewProd({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
                 showToast(t.successAdded);
                 setActiveTab('overview');
@@ -559,8 +595,9 @@ react_html = """
             );
         };
 
+        // تغليف التطبيق بدرع الأخطاء لمنع الشاشة البيضاء نهائياً
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
     </script>
 </body>
 </html>
