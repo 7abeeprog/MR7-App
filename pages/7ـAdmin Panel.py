@@ -33,6 +33,7 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
+    /* الفلسفة التصميمية: مركز القيادة والتحكم (The Command Center) */
     .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
     [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
@@ -51,16 +52,35 @@ st.markdown(f"""
         font-size: 3.2rem !important; 
     }}
 
-    .project-card {{
+    .admin-stat-card {{
         background: {t['card']};
         border: 2px solid {t['border']};
         border-radius: 25px;
         padding: 25px;
-        margin-bottom: 25px;
-        transition: 0.4s ease;
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }}
-    .project-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
+    .admin-stat-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
 
+    .approval-box {{
+        background: rgba(255,255,255,0.03);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-right: 5px solid {t['accent']};
+    }}
+
+    /* تصميم بطاقات الذكاء الاصطناعي */
+    .ai-insight-card {{
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0,0,0,0.8) 100%);
+        border: 1px solid #00FF88;
+        border-radius: 20px;
+        padding: 20px;
+        margin-top: 15px;
+    }}
+
+    /* حل مشكلة الكتابة بالأسود */
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
         color: #000000 !important;
@@ -73,165 +93,127 @@ st.markdown(f"""
         background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
         color: #000000 !important;
         font-weight: 950 !important;
-        border-radius: 15px !important;
-        height: 55px;
-    }}
-
-    .stProgress > div > div > div > div {{
-        background-color: #00FF88 !important;
+        border-radius: 20px !important;
+        height: 60px;
+        font-size: 1.1rem;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. محرك التنبيهات العالمي (Global Logic) ---
-if 'notifications' not in st.session_state:
-    st.session_state.notifications = []
-
-def add_notification(msg, icon="⚡"):
-    new_notif = {"msg": msg, "time": datetime.now().strftime("%Y-%m-%d %H:%M"), "icon": icon}
-    st.session_state.notifications.insert(0, new_notif)
+# --- 2. إدارة البيانات (Master Admin State) ---
+if 'crowd_projects' not in st.session_state:
+    st.session_state.crowd_projects = []
 
 # --- 3. الشريط الجانبي ---
 with st.sidebar:
-    st.markdown(f"### 🎨 تخصيص المظهر")
-    theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
+    st.markdown(f"### 🎨 تخصيص المنظومة")
+    theme_choice = st.selectbox("نمط الإدارة:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
     if theme_choice != st.session_state.app_theme:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
-    
-    # رابط لمركز التنبيهات بدلاً من العرض المباشر
-    notif_count = len(st.session_state.notifications)
-    if st.button(f"🔔 مركز التنبيهات ({notif_count})"):
-        st.switch_page("pages/10_Notifications.py")
-    
-    st.divider()
-    st.markdown("### 🏛️ رصيد الاستثمار")
-    st.success("المحفظة الاستثمارية: 50,000 EGP")
+    st.markdown("### 👑 رتبة الوصول")
+    st.warning("Root Admin: MR7-GOD-MODE")
+    st.success("حالة السيرفر: 99.9% Up-time")
 
-# --- 4. إدارة البيانات ---
-if 'crowd_projects' not in st.session_state:
-    st.session_state.crowd_projects = [
-        {"title": "مزرعة الهيدروبونيك الذكية", "category": "زراعة ذكية", "owner": "م. يوسف القائد", "goal": 100000, "raised": 45000, "desc": "إنشاء أول مزرعة مائية مؤتمتة بالكامل بالذكاء الاصطناعي لإنتاج محاصيل عضوية عالية الجودة.", "status": "approved"},
-        {"title": "منصة تعليم البرمجة للأطفال", "category": "تعليم تقني", "owner": "ليلى المبدعة", "goal": 50000, "raised": 48000, "desc": "تطبيق لتبسيط منطق البرمجة باستخدام الألعاب لجيل التريليون القادم.", "status": "approved"}
-    ]
-
-st.title("🤝 مجمع التمويل الجماعي")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>دعم المشاريع الناشئة وتبادل الاستثمارات الاستراتيجية</p>", unsafe_allow_html=True)
+# --- 4. واجهة لوحة التحكم العليا ---
+st.title("👑 لوحة التحكم العليا")
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>إدارة أركان الإمبراطورية وهندسة السيادة العالمية</p>", unsafe_allow_html=True)
 
 st.divider()
 
-tabs = st.tabs(["🌎 استكشاف المشاريع", "🚀 اطرح مشروعك باحترافية", "💰 استثماراتي", "📊 إحصائيات السوق"])
+# مؤشرات السيادة (Global KPIs)
+col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+with col_m1:
+    st.markdown(f'<div class="admin-stat-card"><small>إجمالي السيولة</small><br><span style="font-size:1.8rem; color:#00FF88;">$6.1B</span></div>', unsafe_allow_html=True)
+with col_m2:
+    st.markdown(f'<div class="admin-stat-card"><small>جيش القادة</small><br><span style="font-size:1.8rem; color:{t["accent"]};">1.2M</span></div>', unsafe_allow_html=True)
+with col_m3:
+    st.markdown(f'<div class="admin-stat-card"><small>طلبات معلقة</small><br><span style="font-size:1.8rem;">42</span></div>', unsafe_allow_html=True)
+with col_m4:
+    st.markdown(f'<div class="admin-stat-card"><small>معدل النمو</small><br><span style="font-size:1.8rem; color:#FF4B4B;">+22%</span></div>', unsafe_allow_html=True)
 
-# --- Tab 1: استكشاف المشاريع ---
+st.divider()
+
+# التبويبات الإدارية (The 5 Pillars of Admin)
+tabs = st.tabs(["🏗️ المشاريع الجغرافية", "🎬 جودة المحتوى", "💹 نظام العمولات", "👥 الهويات السيادية", "🧠 الذكاء الاستراتيجي"])
+
+# --- Tab 1: تدقيق المشاريع ---
 with tabs[0]:
-    st.subheader("🌎 منصة عرض أفكار النخبة")
-    approved_projects = [p for p in st.session_state.crowd_projects if p.get('status') == "approved"]
-    
-    if not approved_projects:
-        st.info("لا توجد مشاريع معتمدة حالياً.")
-    else:
-        for idx, proj in enumerate(approved_projects):
-            with st.container():
-                st.markdown(f"""
-                <div class="project-card">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <span style="background: {t['accent']}; color: black; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem;">{proj.get('category', 'عام')}</span>
-                            <h2 style="color: {t['accent']}; margin-top: 5px;">{proj['title']}</h2>
-                        </div>
-                        <span style="color: #888; font-size: 0.9rem;">👤 صاحب المشروع: {proj['owner']}</span>
-                    </div>
-                    <p style="color: #ccc; margin-top: 10px;">{proj['desc']}</p>
-                    <div style="margin: 20px 0;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>الهدف: {proj['goal']:,} EGP</span>
-                            <span>تم جمع: {proj['raised']:,} EGP</span>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                progress = min(proj['raised'] / proj['goal'], 1.0)
-                st.progress(progress)
-                
-                col_in, col_btn = st.columns([1, 1])
-                with col_in:
-                    fund_amt = st.number_input(f"مبلغ التمويل (EGP):", min_value=100, key=f"amt_{idx}", step=500)
-                with col_btn:
-                    st.write("") 
-                    if st.button(f"🤝 تمويل الآن", key=f"btn_{idx}"):
-                        for original_p in st.session_state.crowd_projects:
-                            if original_p['title'] == proj['title']:
-                                original_p['raised'] += fund_amt
-                                add_notification(f"تم استثمار {fund_amt:,} EGP في مشروع {proj['title']}", "💰")
-                        st.toast(f"✅ تم تسجيل استثمارك بنجاح!")
-                        time.sleep(1)
-                        st.rerun()
-
-# --- Tab 2: اطرح مشروعك ---
-with tabs[1]:
-    st.subheader("🚀 نموذج طرح المشروع الاستراتيجي")
-    st.info("سيتم مراجعة مشروعك من قبل الإدارة قبل نشره.")
-    
-    with st.form("professional_pitch"):
-        col_t, col_c = st.columns(2)
-        with col_t:
-            p_title = st.text_input("اسم المشروع (العنوان الجاذب):")
-        with col_c:
-            p_cat = st.selectbox("تصنيف المشروع:", ["تقني (AI/Software)", "زراعي", "عقاري", "تعليمي", "تجاري", "صناعي"])
-        
-        p_goal = st.number_input("المبلغ المطلوب للتمويل الإجمالي (EGP):", min_value=1000, step=1000)
-        p_summary = st.text_input("ملخص فكرة المشروع (Hook):")
-        p_desc = st.text_area("شرح تفصيلي للمشروع وجدواه الاقتصادية:", height=150)
-        p_risks = st.text_area("المخاطر والتحديات وكيفية مواجهتها:")
-        p_timeline = st.text_input("الجدول الزمني المتوقع:")
-        p_video = st.text_input("رابط فيديو تعريفي (يوتيوب):")
-        
-        if st.form_submit_button("إرسال المشروع للمراجعة والنشر 📤"):
-            if p_title and p_desc and p_goal > 0:
-                st.session_state.crowd_projects.append({
-                    "title": p_title, 
-                    "category": p_cat,
-                    "owner": "أنت (القائد الحالي)", 
-                    "goal": p_goal, 
-                    "raised": 0, 
-                    "desc": f"{p_summary}\n\n{p_desc}",
-                    "status": "pending"
-                })
-                add_notification(f"تم إرسال مشروع '{p_title}' للمراجعة الإدارية.", "⏳")
-                st.success("تم إرسال مشروعك بنجاح!")
-                st.balloons()
-            else:
-                st.error("يرجى التأكد من ملء الحقول الأساسية.")
-
-# --- Tab 3: استثماراتي ---
-with tabs[2]:
-    st.subheader("💰 محفظة استثماراتي الجماعية")
-    my_investments = [
-        {"المشروع": "منصة تعليم البرمجة", "المبلغ المستثمر": "5,000 EGP", "النسبة من الهدف": "10%", "الحالة": "نشط ✅"},
+    st.subheader("📍 مراجعة طلبات الضخ المالي الإقليمي")
+    pending_projects = [
+        {"title": "توسعة مزارع السودان", "country": "السودان", "goal": "$500,000", "user": "القائد إدريس"},
+        {"title": "مركز لوجستي في بنغازي", "country": "ليبيا", "goal": "$250,000", "user": "القائد صالح"},
+        {"title": "مصنع تجميع EV", "country": "مصر", "goal": "$1,200,000", "user": "القائد أحمد"}
     ]
-    st.table(my_investments)
     
-    st.markdown("---")
-    st.subheader("📤 مشاريعي المطروحة")
-    my_projects = [p for p in st.session_state.crowd_projects if p['owner'] == "أنت (القائد الحالي)"]
-    if my_projects:
-        for p in my_projects:
-            status_text = "قيد المراجعة ⏳" if p['status'] == "pending" else "معتمد ومتاح للتمويل ✅"
-            st.write(f"- **{p['title']}**: {status_text}")
-    else:
-        st.caption("لم تقم بطرح أي مشاريع بعد.")
+    for proj in pending_projects:
+        with st.container():
+            st.markdown(f"""
+            <div class="approval-box">
+                <div style="display: flex; justify-content: space-between;">
+                    <h4>{proj['title']} - {proj['country']}</h4>
+                    <span style="color:#00FF88;">المستهدف: {proj['goal']}</span>
+                </div>
+                <p style="font-size:0.8rem; opacity:0.7;">بواسطة: {proj['user']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            c1, c2, c3 = st.columns([1, 1, 2])
+            c1.button("✅ موافقة", key=f"app_{proj['title']}")
+            c2.button("❌ رفض", key=f"rej_{proj['title']}")
+            c3.text_input("ملاحظات التدقيق:", key=f"note_{proj['title']}")
 
-# --- Tab 4: إحصائيات السوق ---
+# --- Tab 2: مراقبة المحتوى ---
+with tabs[1]:
+    st.subheader("🎬 اعتماد الملكية الفكرية")
+    st.table([
+        {"الدورة": "أسرار التداول العشري", "المبدع": "ياسين القائد", "الحالة": "قيد المراجعة ⏳"},
+        {"الدورة": "قيادة الفرق العابرة للحدود", "المبدع": "سارة القائد", "الحالة": "قيد المراجعة ⏳"}
+    ])
+    st.button("دخول غرفة الفحص المرئي 📺")
+
+# --- Tab 3: نظام العمولات ---
+with tabs[2]:
+    st.subheader("💹 المعايير المالية للأجيال")
+    st.markdown(f"""
+    <div style="background:rgba(255,215,0,0.05); padding:20px; border-radius:20px; border: 1px solid {t['accent']};">
+        <p>يتم الآن تطبيق <b>السياسة المالية الموحدة</b>:</p>
+        <ul>
+            <li>الجيل الأول: <b>10%</b></li>
+            <li>الجيل الثاني: <b>5%</b></li>
+            <li>الأجيال من 3 إلى 7: <b>1%</b></li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    st.slider("تعديل نسبة الجيل الأول (طوارئ):", 1, 20, 10)
+    st.button("💾 تثبيت القوانين المالية")
+
+# --- Tab 4: إدارة الهويات ---
 with tabs[3]:
-    st.subheader("📊 أداء سوق التمويل")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("إجمالي الضخ المالي", "245,000 EGP", "+15%")
-    c2.metric("مشاريع معتمدة", f"{len(approved_projects)}", "+2")
-    c3.metric("المستثمرون", "142", "🚀")
+    st.subheader("👥 السجل الإمبراطوري للقادة")
+    st.text_input("🔍 ابحث عن قائد بالـ UUID أو الاسم:")
+    st.table([
+        {"UUID": "7c9e-...", "الاسم": "أحمد المصري", "الرتبة": "جنرال ماسي", "الحالة": "موثق ✅"},
+        {"UUID": "2b1a-...", "الاسم": "صالح الليبي", "الرتبة": "قائد استراتيجي", "الحالة": "موثق ✅"}
+    ])
+
+# --- Tab 5: الذكاء الاستراتيجي (New Opinion Upgrade) ---
+with tabs[4]:
+    st.subheader("🧠 وكيل التحليل الاستراتيجي (MR7-AI)")
+    st.markdown("""
+    <div class="ai-insight-card">
+        <h4 style="color: #00FF88;">🚀 توصية النمو اللحظي:</h4>
+        <p>بناءً على نشاط الأجيال الأخير، إقليم <b>"ليبيا"</b> يظهر زيادة في معدل التضاعف بنسبة 15%. 
+        نقترح توجيه 5% من ميزانية التسويق العالمية لدعم القادة في بنغازي هذا الأسبوع.</p>
+    </div>
+    <div class="ai-insight-card" style="border-color: #FFD700;">
+        <h4 style="color: #FFD700;">💹 تحليل مخاطر السيولة:</h4>
+        <p>المشاريع الجارية في <b>"مصر"</b> تقترب من مرحلة التشغيل الكامل. معدل العائد المتوقع (ROI) قد يرتفع إلى 28% في الربع القادم.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.button("توليد تقرير الذكاء الاصطناعي الشامل 📊")
 
 st.divider()
 
-if st.button("👑 الانتقال للوحة التحكم العليا"):
-    st.switch_page("pages/8_Admin_Panel.py")
+if st.button("🏠 العودة لمركز العمليات الرئيسي"):
+    st.switch_page("app.py")
