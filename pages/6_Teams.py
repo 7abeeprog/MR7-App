@@ -1,251 +1,364 @@
 import streamlit as st
-import time
+import streamlit.components.v1 as components
+import json
 
-# --- 1. محرك الأنماط الشامل (Theme Engine) ---
-if 'app_theme' not in st.session_state:
-    st.session_state.app_theme = "غامق إمبراطوري 🖤"
+# --- 1. إعدادات الصفحة الأساسية ---
+st.set_page_config(
+    page_title="MR7 Elite Teams Command", 
+    layout="wide", 
+    initial_sidebar_state="collapsed"
+)
 
-themes = {
-    "غامق إمبراطوري 🖤": {
-        "bg": "#000000", "sidebar": "#050505", "text": "#FFFFFF", 
-        "accent": "#FFD700", "card": "rgba(30, 30, 30, 0.9)", "border": "#FFD700",
-        "select_text": "#FFFFFF", "select_bg": "#1A1A1A"
-    },
-    "فاتح ملكي ✨": {
-        "bg": "#F5F5F5", "sidebar": "#FFFFFF", "text": "#1A1A1A", 
-        "accent": "#B8860B", "card": "rgba(255, 255, 255, 0.95)", "border": "#B8860B",
-        "select_text": "#1A1A1A", "select_bg": "#FFFFFF"
-    },
-    "أزرق القيادة 💙": {
-        "bg": "#001F3F", "sidebar": "#001529", "text": "#FFFFFF", 
-        "accent": "#0074D9", "card": "rgba(0, 31, 63, 0.8)", "border": "#0074D9",
-        "select_text": "#FFFFFF", "select_bg": "#001529"
-    },
-    "أخضر الاستدامة 💚": {
-        "bg": "#002B1B", "sidebar": "#001A10", "text": "#FFFFFF", 
-        "accent": "#00FF88", "card": "rgba(0, 43, 27, 0.8)", "border": "#00FF88",
-        "select_text": "#FFFFFF", "select_bg": "#001A10"
-    }
-}
+# --- 2. جلب إعدادات السحابة ---
+current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
+user_id = st.session_state.get('user_id', "COMMANDER-001")
 
-t = themes[st.session_state.app_theme]
-
-st.markdown(f"""
+# --- 3. واجهة React المتقدمة (مقر القيادة الميدانية - Kanban & Meetings) ---
+react_html = r"""
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
-    .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
-    [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
-    
-    div[data-testid="stMarkdownContainer"] p, h2, h3, h4, span, label, li {{ 
-        color: {t['text']} !important; 
-        font-weight: 700 !important; 
-    }}
-    
-    h1 {{ 
-        background: linear-gradient(90deg, {t['accent']}, {t['text']}, {t['accent']}); 
-        -webkit-background-clip: text; 
-        -webkit-text-fill-color: transparent; 
-        font-weight: 950 !important; 
-        text-align: center; 
-        filter: drop-shadow(0 0 10px {t['accent']}); 
-        font-size: 3rem !important; 
-    }}
-
-    .team-card {{
-        background: {t['card']};
-        border: 2px solid {t['border']};
-        border-radius: 25px;
-        padding: 25px;
-        margin-bottom: 20px;
-        text-align: center;
-        transition: 0.3s ease;
-    }}
-    .team-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
-
-    .stat-value {{
-        font-size: 2.5rem !important;
-        font-weight: 950 !important;
-        color: {t['accent']} !important;
-    }}
-
-    /* تصميم شجرة التضاعف العشري */
-    .decade-tree {{
-        background: rgba(255, 215, 0, 0.05);
-        border: 2px dashed {t['accent']};
-        border-radius: 20px;
-        padding: 20px;
-        margin: 10px 0;
-    }}
-    .node-active {{ color: #00FF88 !important; font-size: 1.2rem; }}
-    .node-empty {{ color: #555 !important; font-size: 1.2rem; }}
-
-    /* فقاعات الدردشة */
-    .chat-bubble {{
-        padding: 15px;
-        border-radius: 15px;
-        margin-bottom: 10px;
-        max-width: 80%;
-    }}
-    .chat-received {{ background: #222; border-right: 4px solid {t['accent']}; text-align: right; }}
-    .chat-sent {{ background: {t['accent']}; color: #000 !important; margin-left: auto; text-align: left; }}
-
-    .stButton>button {{
-        background: linear-gradient(135deg, {t['accent']} 0%, {t['border']} 100%) !important;
-        color: #000000 !important;
-        font-weight: 950 !important;
-        border-radius: 15px !important;
-        height: 55px;
-    }}
-
-    /* إصلاح القوائم المنسدلة */
-    div[data-baseweb="select"] > div {{ background-color: {t['select_bg']} !important; color: {t['select_text']} !important; }}
-    div[data-baseweb="popover"] li {{ color: {t['select_text']} !important; background-color: {t['select_bg']} !important; }}
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 2. القائمة الجانبية ---
-with st.sidebar:
-    st.markdown(f"### 🎨 تخصيص المظهر")
-    theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
-    if theme_choice != st.session_state.app_theme:
-        st.session_state.app_theme = theme_choice
-        st.rerun()
-    st.divider()
-    st.markdown("### 🏆 حالتك القيادية")
-    st.success("الرتبة: قائد ماسي 💎")
-    st.info("قوة الفريق: 85% كفاءة")
-    st.progress(8.5/10)
-    st.caption("متبقي 2 من القادة للوصول لمستوى 'الإمبراطور'")
-
-# --- 3. واجهة إدارة الفرق ---
-st.title("👥 إدارة فرق النخبة MR7")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>نظام التضاعف العشري والسيادة الجماعية</p>", unsafe_allow_html=True)
-
-st.divider()
-
-# ملخص الإحصائيات الحية
-col1, col2, col3, col4 = st.columns(4)
-stats = [
-    ("إجمالي الفريق", "1,248", "👥"),
-    ("مبيعات الفريق", "$842K", "📈"),
-    ("عمولاتك", "$126K", "💰"),
-    ("هدف الـ 10", "8/10", "🎯")
-]
-for i, (label, val, icon) in enumerate(stats):
-    with [col1, col2, col3, col4][i]:
-        st.markdown(f"""
-        <div class="team-card" style="padding: 15px;">
-            <p style="font-size: 0.9rem;">{icon} {label}</p>
-            <div style="font-size: 1.8rem; font-weight: 900; color: {t['accent']};">{val}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-st.divider()
-
-# التبويبات المتطورة
-tabs = st.tabs(["🌳 شجرة التضاعف العشري", "💬 مركز التواصل", "🏆 الإنجازات", "❓ الدعم والأسئلة"])
-
-# --- Tab 1: شجرة التضاعف العشري ---
-with tabs[0]:
-    st.subheader("🌲 استراتيجية الـ 10: المعيار الذهبي للسيادة")
-    st.markdown("""
-    تعتمد فلسفة MR7 على **قانون الـ 10**. عندما تكتمل صفوفك العشرة الأولى، تبدأ الماكينة المالية في التضاعف تلقائياً.
-    - **المستوى 1 (مباشر):** 10 قادة (عمولة 20%)
-    - **المستوى 2:** 100 عضو (عمولة 10%)
-    - **المستوى 3:** 1,000 مسوق (عمولة 5%)
-    """)
-    
-    st.markdown("### 📊 مسار تضاعفك الحالي")
-    
-    # محاكاة بصرية للشجرة
-    cols = st.columns(10)
-    for i in range(10):
-        with cols[i]:
-            if i < 8:
-                st.markdown(f"<div style='text-align:center;' class='node-active'>👤<br><span style='font-size:10px;'>قائد {i+1}</span></div>", unsafe_allow_html=True)
-            else:
-                st.markdown(f"<div style='text-align:center;' class='node-empty'>⚪<br><span style='font-size:10px;'>شاغر</span></div>", unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div class="decade-tree">
-        <h4 style="color: {t['accent']}; text-align: center;">لقد حققت 80% من هدف "العشرة الذهبية"</h4>
-        <p style="text-align: center; font-size: 0.9rem;">بإضافة قائدين إضافيين، ستحصل على بونص "السيادة العشرية" بقيمة $5,000</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# --- Tab 2: مركز التواصل (Chat & Media) ---
-with tabs[1]:
-    st.subheader("💬 غرفة عمليات التواصل")
-    
-    col_chat_list, col_chat_view = st.columns([1, 2])
-    
-    with col_chat_list:
-        st.markdown("#### القنوات")
-        st.button("📢 الفريق العام (1.2K)")
-        st.button("💎 مجلس القادة (15)")
-        st.divider()
-        st.markdown("#### خاص")
-        st.button("👤 عمر الفاروق (نشط)")
-        st.button("👤 ليلى (غير نشط)")
-
-    with col_chat_view:
-        st.markdown(f"""
-        <div style="height: 300px; overflow-y: auto; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 15px;">
-            <div class="chat-bubble chat-received">عمر الفاروق: قائد، لقد أكملت أول 5 أعضاء في فريقي اليوم! 🚀</div>
-            <div class="chat-bubble chat-sent">أنت: ممتاز يا بطل! استمر حتى تصل للـ 10 لفتح عمولات الجيل الثاني.</div>
-            <div class="chat-bubble chat-received">ليلى: هل هناك اجتماع صوتي اليوم لمناقشة استراتيجية المليار؟</div>
-        </div>
-        """, unsafe_allow_html=True)
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            margin: 0; 
+            background-color: #030303;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        c_v1, c_v2, c_v3 = st.columns([3, 1, 1])
-        with c_v1:
-            st.text_input("اكتب رسالتك...", label_visibility="collapsed")
-        with c_v2:
-            st.button("🎙️") # صوت
-        with c_v3:
-            st.button("🎥") # فيديو
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FFD700; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .glass-panel { 
+            backdrop-filter: blur(24px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            background: rgba(15, 15, 15, 0.8);
+        }
 
-# --- Tab 3: الإنجازات (Gamification) ---
-with tabs[2]:
-    st.subheader("🏆 لوحة أوسمة الاستحقاق")
-    col_a, col_b, col_c = st.columns(3)
-    
-    badges = [
-        ("🥇 باني الفريق", "إكمال أول 10 قادة مباشرين", "قيد الإنجاز"),
-        ("💎 المحرك المالي", "تحقيق مبيعات فريق بقيمة $500K", "تم الإنجاز ✅"),
-        ("🌍 عابر القارات", "توسع الفريق في أكثر من 5 دول", "تم الإنجاز ✅")
-    ]
-    
-    for i, (name, desc, status) in enumerate(badges):
-        with [col_a, col_b, col_c][i]:
-            st.markdown(f"""
-            <div class="team-card">
-                <div style="font-size: 40px;">{'🎖️' if 'تم' in status else '🔒'}</div>
-                <h4 style="margin: 10px 0;">{name}</h4>
-                <p style="font-size: 0.8rem; color: #aaa;">{desc}</p>
-                <p style="color: #00FF88;">{status}</p>
-            </div>
-            """, unsafe_allow_html=True)
+        .premium-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .premium-input:focus { border-color: #FFD700; outline: none; }
 
-# --- Tab 4: الدعم والأسئلة ---
-with tabs[3]:
-    st.subheader("❓ مساعدة فريق القيادة")
-    with st.expander("كيف يتم احتساب عمولات الجيل الثالث؟"):
-        st.write("يتم احتسابها بنسبة 5% من إجمالي مبيعات الأعضاء الذين انضموا عن طريق أعضاء جيلك الثاني، بشرط أن تكون قد أكملت 'العشرة الذهبية' الخاصة بك.")
-    
-    with st.expander("هل يمكنني نقل قائد من فريق لآخر؟"):
-        st.write("نظام MR7 يدعم الهيكلة الثابتة لضمان حقوق الجميع، ولكن يمكنك طلب استشارة من الأدمن للحالات الاستثنائية.")
-    
-    st.divider()
-    st.button("📝 فتح تذكرة دعم خاصة للفريق")
+        /* Kanban Specific Styles */
+        .kanban-col {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 20px;
+            min-height: 60vh;
+        }
+        
+        .task-card {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: 0.3s;
+            cursor: grab;
+        }
+        .task-card:hover { border-color: #FFD700; transform: translateY(-3px); }
 
-st.divider()
+        .animate-view { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-# العودة
-c_back, c_next = st.columns(2)
-with c_back:
-    if st.button("📊 مراجعة العمولات"):
-        st.switch_page("pages/5_Commissions.py")
-with c_next:
-    if st.button("🎨 استوديو بناء المحتوى"):
-        st.switch_page("pages/7_Creator_Studio.py")
+        html[dir="ltr"] .dir-invert { flex-direction: row-reverse; }
+        html[dir="ltr"] .text-dir { text-align: left; }
+        html[dir="rtl"] .text-dir { text-align: right; }
+
+        #loading-screen {
+            position: fixed; inset: 0; background: #000; color: #FFD700; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div style="border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+        <h2 style="margin-top:20px;">جاري نشر مقر القيادة الميدانية...</h2>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                if (iconRef.current && window.lucide) {
+                    iconRef.current.innerHTML = ''; 
+                    const i = document.createElement('i');
+                    i.setAttribute('data-lucide', name);
+                    if (className) i.setAttribute('class', className);
+                    iconRef.current.appendChild(i);
+                    window.lucide.createIcons({ root: iconRef.current });
+                }
+            }, [name, size, className]);
+            return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('kanban');
+            const [toasts, setToasts] = useState([]);
+
+            // --- Theme Setup ---
+            const themes = {
+                "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#FFFFFF" },
+                "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
+                "أزرق القيادة 💙": { bg: "bg-[#000814]", text: "text-white", card: "bg-[#00122B]/80", border: "border-[#0074D9]", accent: "text-[#0074D9]", btn: "bg-[#0074D9]", btnText: "text-white", hex: "#0074D9" },
+                "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", border: "border-[#00FF88]", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" }
+            };
+            const [activeThemeName, setActiveThemeName] = useState("CURRENT_THEME_PLACEHOLDER" || "أسود قيادي 🖤");
+            const theme = themes[activeThemeName] || themes["أسود قيادي 🖤"];
+
+            // --- Data States ---
+            const [tasks, setTasks] = useState([
+                { id: 1, title: 'إعداد حملة التسويق لمشروع النبت', assignee: 'أحمد المصري', status: 'todo', priority: 'high' },
+                { id: 2, title: 'متابعة عملاء الجيل الثاني في ليبيا', assignee: 'صالح فهد', status: 'progress', priority: 'medium' },
+                { id: 3, title: 'إغلاق 10 مبيعات لدبلوم الأرباح', assignee: 'سارة خالد', status: 'done', priority: 'high' }
+            ]);
+
+            const [meetings, setMeetings] = useState([
+                { id: 1, title: 'الاجتماع الاستراتيجي الأسبوعي', date: 'غداً 08:00 PM', type: 'Zoom', link: '#' },
+                { id: 2, title: 'تدريب قادة الصف الأول', date: 'الخميس 05:00 PM', type: 'Google Meet', link: '#' }
+            ]);
+
+            const showToast = (msg) => {
+                const id = Date.now();
+                setToasts(prev => [...prev, { id, msg }]);
+                setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
+            };
+
+            // --- Handlers ---
+            const moveTask = (taskId, newStatus) => {
+                setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+                showToast('تم تحديث مسار المهمة بنجاح');
+            };
+
+            const handleAddTask = (e) => {
+                e.preventDefault();
+                const f = new FormData(e.target);
+                setTasks([...tasks, {
+                    id: Date.now(), title: f.get('title'), assignee: f.get('assignee'),
+                    priority: f.get('priority'), status: 'todo'
+                }]);
+                showToast('تم إصدار التكليف الجديد للقائد');
+                e.target.reset();
+            };
+
+            useEffect(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }
+            }, []);
+
+            return (
+                <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col md:flex-row overflow-hidden`}>
+                    
+                    {/* --- Sidebar --- */}
+                    <div className={`w-full md:w-72 md:min-h-screen ${theme.card} border-b md:border-b-0 md:border-l ${theme.border} border-opacity-20 flex flex-col z-10`}>
+                        <div className="p-8 pb-6">
+                            <div className="bg-yellow-500 text-black p-3 rounded-2xl inline-block mb-4 shadow-[0_0_20px_rgba(255,215,0,0.3)]"><Icon name="Crosshair" size={30} /></div>
+                            <h1 className="text-xl font-black text-yellow-500 uppercase tracking-tighter">مقر القيادة الميدانية</h1>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase">Field Ops v1.0</p>
+                        </div>
+
+                        <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
+                            {[
+                                {id: 'kanban', icon: 'KanbanSquare', label: 'المهام الاستراتيجية'},
+                                {id: 'meetings', icon: 'Video', label: 'غرفة الاجتماعات'},
+                                {id: 'performance', icon: 'TrendingUp', label: 'رادار أداء القادة'}
+                            ].map(btn => (
+                                <button key={btn.id} onClick={() => setActiveTab(btn.id)} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id ? 'bg-white/5 border-r-4 border-yellow-500 text-yellow-500' : 'text-gray-500 hover:text-white'}`}>
+                                    <Icon name={btn.icon} size={18} /> {btn.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* --- Main Content --- */}
+                    <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar">
+                        
+                        {/* Tab 1: Kanban Board */}
+                        {activeTab === 'kanban' && (
+                            <div className="animate-view space-y-8">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="KanbanSquare" className="text-yellow-500" size={32}/> لوحة التكليفات (Kanban)</h2>
+                                </div>
+
+                                {/* نموذج إضافة مهمة */}
+                                <div className="glass-panel p-6 rounded-[2rem] mb-8">
+                                    <form onSubmit={handleAddTask} className="flex flex-col md:flex-row gap-4 items-end">
+                                        <div className="flex-1 w-full"><label className="text-xs text-gray-500 font-bold mb-2 block">المهمة</label><input name="title" required className="w-full premium-input p-3 rounded-xl" placeholder="ما هي المهمة؟"/></div>
+                                        <div className="w-full md:w-1/4"><label className="text-xs text-gray-500 font-bold mb-2 block">القائد المُكلف</label><input name="assignee" required className="w-full premium-input p-3 rounded-xl" placeholder="اسم القائد..."/></div>
+                                        <div className="w-full md:w-1/6"><label className="text-xs text-gray-500 font-bold mb-2 block">الأولوية</label><select name="priority" className="w-full premium-input p-3 rounded-xl bg-black"><option value="high">عاجلة 🔥</option><option value="medium">متوسطة</option><option value="low">عادية</option></select></div>
+                                        <button type="submit" className="w-full md:w-auto bg-yellow-500 text-black px-8 py-3.5 rounded-xl font-black hover:scale-105 transition-transform">إصدار التكليف</button>
+                                    </form>
+                                </div>
+
+                                {/* أعمدة الكانبان */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* Column: To Do */}
+                                    <div className="kanban-col">
+                                        <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4"><div className="w-3 h-3 rounded-full bg-red-500"></div><h3 className="font-black text-lg">تكليفات جديدة</h3><span className="bg-white/10 px-2 py-0.5 rounded-md text-xs mr-auto">{tasks.filter(t=>t.status==='todo').length}</span></div>
+                                        {tasks.filter(t=>t.status==='todo').map(task => (
+                                            <div key={task.id} className="task-card border-l-4 border-l-red-500">
+                                                <div className="flex justify-between items-start mb-3"><span className={`text-[10px] font-black px-2 py-1 rounded-md ${task.priority==='high'?'bg-red-500/20 text-red-500':'bg-blue-500/20 text-blue-500'}`}>{task.priority}</span></div>
+                                                <h4 className="font-bold mb-4">{task.title}</h4>
+                                                <div className="flex justify-between items-center border-t border-white/5 pt-3">
+                                                    <span className="text-xs text-gray-400 font-bold"><Icon name="User" size={12}/> {task.assignee}</span>
+                                                    <button onClick={()=>moveTask(task.id, 'progress')} className="text-yellow-500 hover:bg-yellow-500/10 p-1.5 rounded-lg transition-colors"><Icon name="ArrowLeft" size={16}/></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Column: In Progress */}
+                                    <div className="kanban-col">
+                                        <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4"><div className="w-3 h-3 rounded-full bg-yellow-500"></div><h3 className="font-black text-lg">قيد التنفيذ</h3><span className="bg-white/10 px-2 py-0.5 rounded-md text-xs mr-auto">{tasks.filter(t=>t.status==='progress').length}</span></div>
+                                        {tasks.filter(t=>t.status==='progress').map(task => (
+                                            <div key={task.id} className="task-card border-l-4 border-l-yellow-500">
+                                                <div className="flex justify-between items-start mb-3"><span className={`text-[10px] font-black px-2 py-1 rounded-md ${task.priority==='high'?'bg-red-500/20 text-red-500':'bg-blue-500/20 text-blue-500'}`}>{task.priority}</span></div>
+                                                <h4 className="font-bold mb-4">{task.title}</h4>
+                                                <div className="flex justify-between items-center border-t border-white/5 pt-3">
+                                                    <button onClick={()=>moveTask(task.id, 'todo')} className="text-gray-500 hover:text-white p-1.5"><Icon name="ArrowRight" size={16}/></button>
+                                                    <span className="text-xs text-gray-400 font-bold"><Icon name="User" size={12}/> {task.assignee}</span>
+                                                    <button onClick={()=>moveTask(task.id, 'done')} className="text-[#00FF88] hover:bg-[#00FF88]/10 p-1.5 rounded-lg transition-colors"><Icon name="ArrowLeft" size={16}/></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Column: Done */}
+                                    <div className="kanban-col">
+                                        <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4"><div className="w-3 h-3 rounded-full bg-[#00FF88]"></div><h3 className="font-black text-lg">مكتملة</h3><span className="bg-white/10 px-2 py-0.5 rounded-md text-xs mr-auto">{tasks.filter(t=>t.status==='done').length}</span></div>
+                                        {tasks.filter(t=>t.status==='done').map(task => (
+                                            <div key={task.id} className="task-card border-l-4 border-l-[#00FF88] opacity-70">
+                                                <h4 className="font-bold mb-4 line-through text-gray-400">{task.title}</h4>
+                                                <div className="flex justify-between items-center border-t border-white/5 pt-3">
+                                                    <button onClick={()=>moveTask(task.id, 'progress')} className="text-gray-500 hover:text-white p-1.5"><Icon name="ArrowRight" size={16}/></button>
+                                                    <span className="text-xs text-[#00FF88] font-bold"><Icon name="CheckCircle2" size={14}/> أنجزت</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab 2: Meetings */}
+                        {activeTab === 'meetings' && (
+                            <div className="animate-view space-y-8 max-w-5xl mx-auto pt-5">
+                                <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Video" className="text-blue-500" size={32}/> مركز التخطيط والاجتماعات</h2>
+                                <div className="glass-panel p-8 rounded-[2.5rem]">
+                                    <div className="flex justify-between items-center mb-8">
+                                        <h3 className="text-xl font-black">الاجتماعات القادمة</h3>
+                                        <button onClick={()=>showToast('سيتم ربط تقويم جوجل قريباً')} className="bg-white/10 px-6 py-2 rounded-xl font-bold text-sm hover:bg-white/20">+ جدولة اجتماع</button>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {meetings.map(m => (
+                                            <div key={m.id} className="flex flex-col md:flex-row justify-between items-center bg-black/40 p-6 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-colors">
+                                                <div className="flex items-center gap-5 mb-4 md:mb-0">
+                                                    <div className="bg-blue-500/10 text-blue-500 p-4 rounded-2xl"><Icon name="Calendar" size={24}/></div>
+                                                    <div>
+                                                        <h4 className="font-black text-lg">{m.title}</h4>
+                                                        <p className="text-sm text-gray-400 flex items-center gap-2"><Icon name="Clock" size={14}/> {m.date} | المنصة: {m.type}</p>
+                                                    </div>
+                                                </div>
+                                                <button className="w-full md:w-auto bg-blue-600 text-white px-8 py-3 rounded-xl font-black hover:bg-blue-500 shadow-lg flex items-center justify-center gap-2">
+                                                    <Icon name="Video" size={18}/> الانضمام للغرفة
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab 3: Performance Radar */}
+                        {activeTab === 'performance' && (
+                            <div className="animate-view space-y-8 max-w-6xl mx-auto pt-5">
+                                <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="TrendingUp" className="text-green-500" size={32}/> رادار أداء القادة (الجيل الأول)</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {[
+                                        {name: 'أحمد المصري', sales: 12500, target: 15000, status: 'ممتاز'},
+                                        {name: 'صالح فهد', sales: 8400, target: 10000, status: 'جيد'},
+                                        {name: 'سارة خالد', sales: 2100, target: 10000, status: 'يحتاج دعم'}
+                                    ].map((leader, i) => {
+                                        const prog = (leader.sales / leader.target) * 100;
+                                        const color = prog > 80 ? 'bg-green-500' : prog > 50 ? 'bg-yellow-500' : 'bg-red-500';
+                                        return (
+                                            <div key={i} className="glass-panel p-8 rounded-[2rem]">
+                                                <div className="flex items-center gap-4 mb-6">
+                                                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl border border-white/10">👤</div>
+                                                    <div>
+                                                        <h4 className="font-black text-lg">{leader.name}</h4>
+                                                        <span className="text-[10px] text-gray-500 font-bold uppercase">{leader.status}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-3">
+                                                    <div className={`h-full ${color}`} style={{width: `${prog}%`}}></div>
+                                                </div>
+                                                <div className="flex justify-between text-xs font-bold">
+                                                    <span className="text-gray-400">مبيعات: ${leader.sales}</span>
+                                                    <span className="text-gray-500">الهدف: ${leader.target}</span>
+                                                </div>
+                                                <button onClick={()=>showToast('تم إرسال برقية دعم للقائد')} className="mt-6 w-full py-2 border border-white/10 rounded-lg text-xs font-black hover:bg-white/10">إرسال تحفيز 💬</button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* Toasts */}
+                    <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-2 pointer-events-none">
+                        {toasts.map(t => (
+                            <div key={t.id} className="bg-black/90 border border-yellow-500/30 text-yellow-500 px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-view">
+                                <Icon name="CheckCircle2" size={18} />
+                                <span className="font-bold text-sm text-white">{t.msg}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+"""
+
+# --- 4. حقن المتغيرات السحابية ---
+final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
+
+# --- 5. عرض الواجهة (Render) ---
+components.html(final_html, height=950, scrolling=True)
+
+# --- 6. أزرار العودة ---
+st.markdown("---")
+if st.button("🏠 العودة لمركز القيادة الرئيسي"):
+    st.switch_page("app.py")
