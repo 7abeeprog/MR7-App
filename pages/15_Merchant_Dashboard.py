@@ -13,7 +13,7 @@ st.set_page_config(
 current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React المتقدمة (الإصدار 10.0 - العقل الاقتصادي المتكامل) ---
+# --- 3. واجهة React المتقدمة (الإصدار 11.0 - محرك العمولات ذو الـ 10 مستويات) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -73,13 +73,6 @@ react_html = r"""
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .pulse-red { animation: pulse-red-anim 2s infinite; }
-        @keyframes pulse-red-anim {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
         html[dir="ltr"] .dir-invert { flex-direction: row-reverse; }
         html[dir="ltr"] .text-dir { text-align: left; }
         html[dir="rtl"] .text-dir { text-align: right; }
@@ -94,7 +87,7 @@ react_html = r"""
 <body>
     <div id="loading-screen">
         <div style="border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
-        <h2 style="margin-top:20px;">جاري إقلاع المحرك الاقتصادي السيادي...</h2>
+        <h2 style="margin-top:20px;">جاري إقلاع محرك العمولات متعدد الأجيال...</h2>
     </div>
 
     <div id="root"></div>
@@ -102,7 +95,7 @@ react_html = r"""
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
-        // --- مكون الأيقونات المصفح ---
+        // --- Custom Guarded Icon Component ---
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
             const iconRef = useRef(null);
             useEffect(() => {
@@ -121,35 +114,32 @@ react_html = r"""
 
         const App = () => {
             const [activeTab, setActiveTab] = useState('overview');
-            const [lang, setLang] = useState('ar');
             const [toasts, setToasts] = useState([]);
             const [balance, setBalance] = useState(Number(LEADER_BALANCE_PLACEHOLDER));
 
-            // --- 1. إدارة الأصول (Assets CRUD) ---
+            // --- 1. Global Multi-Level Commission Config (10 Levels) ---
+            const [globalCommRates, setGlobalCommRates] = useState([10, 5, 2, 1, 1, 1, 1, 1, 1, 1]);
+
+            // --- 2. Assets Database (Logic CRUD) ---
             const [assets, setAssets] = useState([
-                { id: 1, name: 'برج السيادة الإداري', stock: 5, price: 1500000, type: 'عقاري', commRate: 10, discount: 0, status: 'نشط', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400', desc: 'مقر قيادي عالمي.' },
-                { id: 2, name: 'دبلوم هندسة الأرباح', stock: Infinity, price: 499, type: 'رقمي', commRate: 15, discount: 0, status: 'نشط', img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400', desc: 'صناعة عقلية المليار.' }
+                { 
+                    id: 1, name: 'برج السيادة الإداري', stock: 5, price: 1500000, 
+                    type: 'عقاري', commRates: [10, 5, 2, 1, 1, 1, 1, 1, 1, 1], 
+                    discount: 0, status: 'نشط', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400', 
+                    desc: 'مقر قيادي عالمي يجمع نخب الاستثمار.' 
+                },
+                { 
+                    id: 2, name: 'دبلوم هندسة الأرباح', stock: Infinity, price: 499, 
+                    type: 'رقمي', commRates: [15, 7, 3, 1, 1, 1, 1, 1, 1, 1], 
+                    discount: 0, status: 'نشط', img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400', 
+                    desc: 'منهج صناعة الثروة للأجيال القادمة.' 
+                }
             ]);
 
-            // --- 2. إدارة العمليات والمرتجعات (Orders & Returns) ---
+            // --- 3. Order Processing Logic ---
             const [orders, setOrders] = useState([
-                { id: 'ORD-77', buyer: 'أحمد القائد', item: 'دبلوم هندسة الأرباح', amount: 499, status: 'قيد المعالجة', date: 'منذ ساعة' }
+                { id: 'ORD-88', buyer: 'فهد الرشيد', item: 'برج السيادة', amount: 1500000, status: 'قيد المراجعة', date: 'منذ ساعتين' }
             ]);
-            const [returns, setReturns] = useState([
-                { id: 'RET-12', buyer: 'سارة خالد', item: 'منظومة طاقة', reason: 'طلب استبدال فني', status: 'منتظر' }
-            ]);
-
-            // --- 3. الأنظمة المالية (Installments & Subs) ---
-            const [installments, setInstallments] = useState([
-                { id: 'INS-01', user: 'ياسين علي', item: 'برج السيادة', total: 1500000, paid: 500000, next_due: '2026-05-01' }
-            ]);
-            const [subscriptions, setSubscriptions] = useState([
-                { id: 'SUB-10', user: 'مجموعة النبت', plan: 'دعم تقني سنوي', price: 5000, status: 'نشط' }
-            ]);
-
-            // --- 4. التسويق والولاء (Loyalty & Discounts) ---
-            const [loyaltyPoints, setLoyaltyPoints] = useState(124500);
-            const [globalDiscount, setGlobalDiscount] = useState(0);
 
             const showToast = (msg, type = 'success') => {
                 const id = Date.now();
@@ -157,29 +147,30 @@ react_html = r"""
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
             };
 
-            // --- محركات المنطق ---
+            // --- Multi-Level Logic Handlers ---
             const handleAddAsset = (e) => {
                 e.preventDefault();
                 const f = new FormData(e.target);
+                
+                // Construct the 10-level commission array from inputs
+                const customComm = globalCommRates.map((_, i) => parseFloat(f.get(`comm_l${i+1}`) || 0));
+
                 const n = {
                     id: Date.now(),
-                    name: f.get('name'), price: parseFloat(f.get('price')), commRate: parseFloat(f.get('comm')),
+                    name: f.get('name'), price: parseFloat(f.get('price')),
+                    commRates: customComm,
                     stock: f.get('type') === 'رقمي' ? Infinity : parseInt(f.get('stock')),
                     type: f.get('type'), img: f.get('img'), desc: f.get('desc'), status: 'نشط', discount: 0
                 };
                 setAssets([n, ...assets]);
-                showToast('تم إدراج الأصل وتحديث قاعدة البيانات');
+                showToast('تم إدراج الأصل وتفعيل خارطة العمولات الـ 10');
                 e.target.reset();
             };
 
-            const processReturn = (id, approved) => {
-                setReturns(returns.filter(r => r.id !== id));
-                showToast(approved ? 'تمت الموافقة على المرتجع' : 'تم رفض المرتجع لعدم استيفاء الشروط', approved ? 'success' : 'warning');
-            };
-
-            const collectInstallment = (id) => {
-                setInstallments(installments.map(i => i.id === id ? {...i, paid: i.paid + 100000} : i));
-                showToast('تم تحصيل دفعة بقيمة $100,000 وتوثيقها مالياً');
+            const updateGlobalRate = (idx, val) => {
+                const newRates = [...globalCommRates];
+                newRates[idx] = parseFloat(val);
+                setGlobalCommRates(newRates);
             };
 
             useEffect(() => {
@@ -190,21 +181,20 @@ react_html = r"""
             return (
                 <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row overflow-hidden transition-all duration-500">
                     
-                    {/* --- Sidebar (Command Menu) --- */}
+                    {/* --- Sidebar (Command Center) --- */}
                     <div className="w-full md:w-72 md:min-h-screen bg-[rgba(15,15,15,0.95)] border-b md:border-b-0 md:border-l border-white/10 flex flex-col z-10 shadow-2xl">
                         <div className="p-8 pb-6">
-                            <div className="bg-yellow-500 text-black p-3 rounded-2xl inline-block mb-4 shadow-xl"><Icon name="Cpu" size={30} /></div>
-                            <h1 className="text-xl font-black text-yellow-500 uppercase tracking-tighter">العقل التجاري</h1>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase">MR7 Economic Brain v10.0</p>
+                            <div className="bg-yellow-500 text-black p-3 rounded-2xl inline-block mb-4 shadow-xl"><Icon name="Network" size={30} /></div>
+                            <h1 className="text-xl font-black text-yellow-500 uppercase tracking-tighter">محرك الأجيال</h1>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase">MR7 Multilevel Engine v11.0</p>
                         </div>
 
                         <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
                             {[
                                 {id: 'overview', icon: 'LayoutDashboard', label: 'الرادار'},
-                                {id: 'inventory', icon: 'Box', label: 'المخزون'},
-                                {id: 'operations', icon: 'Activity', label: 'العمليات'},
-                                {id: 'marketing', icon: 'Megaphone', label: 'التسويق'},
-                                {id: 'finance', icon: 'CreditCard', label: 'المالية الاستراتيجية'}
+                                {id: 'inventory', icon: 'Box', label: 'الأصول والجرد'},
+                                {id: 'operations', icon: 'Zap', label: 'مركز العمليات'},
+                                {id: 'marketing', icon: 'Share2', label: 'هندسة العمولات'}
                             ].map(btn => (
                                 <button key={btn.id} onClick={() => setActiveTab(btn.id)} className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id ? 'bg-white/5 border-r-4 border-yellow-500 text-yellow-500' : 'text-gray-500 hover:text-white'}`}>
                                     <Icon name={btn.icon} size={18} /> {btn.label}
@@ -213,83 +203,116 @@ react_html = r"""
                         </div>
                     </div>
 
-                    {/* --- Main Arena --- */}
+                    {/* --- Main Workspace --- */}
                     <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
                         
-                        {/* Tab: Overview */}
+                        {/* Tab: Overview (KPIs) */}
                         {activeTab === 'overview' && (
-                            <div className="animate-view space-y-8 max-w-7xl mx-auto pt-10">
+                            <div className="animate-view space-y-8 max-w-7xl mx-auto pt-5">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-green-500 shadow-xl">
-                                        <small className="text-gray-500 font-bold uppercase">صافي التدفق المالي</small>
-                                        <h4 className="text-3xl font-black text-green-500">$2.4M</h4>
-                                    </div>
                                     <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-yellow-500">
-                                        <small className="text-gray-500 font-bold uppercase">الطلبات النشطة</small>
-                                        <h4 className="text-3xl font-black">{orders.length}</h4>
+                                        <small className="text-gray-500 font-bold uppercase">عمولات الأجيال المعلقة</small>
+                                        <h4 className="text-3xl font-black text-yellow-500">$24,800</h4>
                                     </div>
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-red-500 pulse-red">
-                                        <small className="text-gray-500 font-bold uppercase">المرتجعات العالقة</small>
-                                        <h4 className="text-3xl font-black text-red-500">{returns.length}</h4>
+                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-green-500">
+                                        <small className="text-gray-500 font-bold uppercase">صافي التدفق المالي</small>
+                                        <h4 className="text-3xl font-black text-green-500">$3.1M</h4>
                                     </div>
                                     <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-blue-500">
-                                        <small className="text-gray-500 font-bold uppercase">رصيد الولاء</small>
-                                        <h4 className="text-3xl font-black text-blue-500">{loyaltyPoints.toLocaleString()}</h4>
+                                        <small className="text-gray-500 font-bold uppercase">قوة الشبكة (ج10)</small>
+                                        <h4 className="text-3xl font-black">12,540</h4>
+                                    </div>
+                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-purple-500">
+                                        <small className="text-gray-500 font-bold uppercase">الأصول الموثقة</small>
+                                        <h4 className="text-3xl font-black">{assets.length}</h4>
                                     </div>
                                 </div>
 
                                 <div className="glass-panel p-8 rounded-[3rem] mt-10">
-                                    <h3 className="text-2xl font-black mb-6 flex items-center gap-3"><Icon name="Bell" className="text-yellow-500"/> رادار التنبيهات الذكي</h3>
+                                    <h3 className="text-2xl font-black mb-6 flex items-center gap-3"><Icon name="TrendingUp" className="text-green-500"/> تحليل تضاعف الأجيال</h3>
                                     <div className="space-y-4">
-                                        <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20 text-red-500 font-bold flex justify-between items-center">
-                                            <span>تنبيه: قسط 'برج السيادة' للمستخدم ياسين علي مستحق خلال 48 ساعة.</span>
-                                            <button onClick={()=>collectInstallment('INS-01')} className="bg-red-500 text-white px-4 py-1.5 rounded-xl text-xs">تحصيل فوري</button>
+                                        <p className="text-gray-400">نظام الذكاء الاصطناعي يراقب نمو الجيل الخامس في إقليم "مصر". معدل التحويل مرتفع بنسبة 12% هذا الأسبوع.</p>
+                                        <div className="flex gap-4">
+                                            <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden"><div className="bg-yellow-500 h-full w-[70%]"></div></div>
+                                            <span className="text-xs font-black">الجيل 1-3: 70%</span>
                                         </div>
-                                        <div className="p-4 bg-yellow-500/10 rounded-2xl border border-yellow-500/20 text-yellow-500 font-bold">
-                                            تنبيه: مخزون 'برج السيادة' يقترب من النفاد (المتبقي: 5).
+                                        <div className="flex gap-4">
+                                            <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden"><div className="bg-blue-500 h-full w-[30%]"></div></div>
+                                            <span className="text-xs font-black">الجيل 4-10: 30%</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Tab: Inventory (Logic CRUD) */}
+                        {/* Tab: Inventory (CRUD with 10 Levels) */}
                         {activeTab === 'inventory' && (
                             <div className="animate-view space-y-8 max-w-7xl mx-auto">
-                                <div className="flex flex-col lg:flex-row gap-8">
-                                    <div className="lg:w-1/3 glass-panel p-8 rounded-[2.5rem] h-fit sticky top-0">
-                                        <h3 className="text-xl font-black mb-6">هندسة أصل جديد</h3>
+                                <div className="flex flex-col xl:flex-row gap-8">
+                                    {/* Asset Creator Form */}
+                                    <div className="xl:w-2/5 glass-panel p-8 rounded-[2.5rem] h-fit">
+                                        <h3 className="text-xl font-black mb-6 flex items-center gap-3"><Icon name="PlusCircle" className="text-yellow-500"/> هندسة أصل جديد (10 مستويات)</h3>
                                         <form onSubmit={handleAddAsset} className="space-y-4">
-                                            <input name="name" placeholder="اسم المنتج..." required className="w-full premium-input p-4 rounded-xl font-bold" />
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <input name="price" type="number" placeholder="السعر ($)" required className="w-full premium-input p-4 rounded-xl font-bold" />
-                                                <input name="comm" type="number" placeholder="العمولة %" required className="w-full premium-input p-4 rounded-xl font-bold" />
+                                            <input name="name" placeholder="اسم الأصل الاستراتيجي..." required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input name="price" type="number" placeholder="القيمة ($)" required className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                                <select name="type" className="w-full premium-input p-4 rounded-xl font-bold bg-black text-sm">
+                                                    <option>عقاري</option><option>منتج</option><option>رقمي</option>
+                                                </select>
                                             </div>
-                                            <select name="type" className="w-full premium-input p-4 rounded-xl font-bold bg-black">
-                                                <option>منتج</option><option>عقاري</option><option>رقمي</option>
-                                            </select>
-                                            <input name="stock" type="number" placeholder="الكمية" className="w-full premium-input p-4 rounded-xl font-bold" />
-                                            <textarea name="desc" placeholder="وصف المنتج..." className="w-full premium-input p-4 rounded-xl font-bold h-24"></textarea>
-                                            <button type="submit" className="w-full py-4 bg-yellow-500 text-black rounded-xl font-black text-lg hover:scale-105 transition-all">إدراج الأصل 🚀</button>
+                                            
+                                            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                                <label className="text-[10px] font-black text-gray-500 uppercase block mb-3">تخصيص عمولات الأجيال (%)</label>
+                                                <div className="grid grid-cols-5 gap-2">
+                                                    {globalCommRates.map((rate, i) => (
+                                                        <div key={i} className="flex flex-col">
+                                                            <small className="text-[8px] text-center text-gray-600 font-black mb-1">ج{i+1}</small>
+                                                            <input name={`comm_l${i+1}`} type="number" defaultValue={rate} step="0.1" className="premium-input p-1 rounded-md text-center text-xs font-bold" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <input name="stock" type="number" placeholder="المخزون" className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                                <input name="img" placeholder="رابط الصورة..." className="w-full premium-input p-4 rounded-xl font-bold text-sm" />
+                                            </div>
+                                            <textarea name="desc" placeholder="وصف الأصل..." className="w-full premium-input p-4 rounded-xl font-bold h-20 text-sm"></textarea>
+                                            <button type="submit" className="w-full py-4 bg-yellow-500 text-black rounded-xl font-black text-lg hover:scale-105 transition-all shadow-xl">نشر الأصل في المنظومة 🚀</button>
                                         </form>
                                     </div>
-                                    <div className="lg:w-2/3 glass-panel p-8 rounded-[2.5rem] overflow-x-auto no-scrollbar">
-                                        <h3 className="text-xl font-black mb-6">جرد الأصول والعدادات</h3>
+
+                                    {/* Inventory Explorer */}
+                                    <div className="xl:w-3/5 glass-panel p-8 rounded-[2.5rem] overflow-x-auto no-scrollbar">
+                                        <h3 className="text-xl font-black mb-6">جرد الأصول وعمولات الأجيال</h3>
                                         <table className="w-full text-dir">
                                             <thead>
-                                                <tr className="text-gray-500 text-xs border-b border-white/5 uppercase"><th className="pb-4 text-right">الأصل</th><th className="pb-4 text-center">المخزون</th><th className="pb-4 text-center">العمولة</th><th className="pb-4 text-center">إجراء</th></tr>
+                                                <tr className="text-gray-500 text-[10px] border-b border-white/5 uppercase">
+                                                    <th className="pb-4 text-right">الأصل</th>
+                                                    <th className="pb-4 text-center">القيمة</th>
+                                                    <th className="pb-4 text-center">خارطة العمولات (ج1-ج10)</th>
+                                                    <th className="pb-4 text-center">إجراء</th>
+                                                </tr>
                                             </thead>
                                             <tbody>
                                                 {assets.map(a => (
                                                     <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition-all group">
-                                                        <td className="py-4 flex items-center gap-4">
-                                                            <img src={a.img} className="w-12 h-12 rounded-xl object-cover" />
-                                                            <div><div className="font-bold">{a.name}</div><small className="text-gray-500">{a.type}</small></div>
+                                                        <td className="py-4 flex items-center gap-3">
+                                                            <img src={a.img} className="w-10 h-10 rounded-lg object-cover" />
+                                                            <div><div className="font-bold text-sm">{a.name}</div><small className="text-[10px] text-gray-500">{a.type}</small></div>
                                                         </td>
-                                                        <td className="py-4 text-center font-black">{a.stock === Infinity ? '∞' : a.stock}</td>
-                                                        <td className="py-4 text-center text-yellow-500 font-black">{a.commRate}%</td>
+                                                        <td className="py-4 text-center text-green-500 font-black text-sm">${a.price.toLocaleString()}</td>
                                                         <td className="py-4 text-center">
-                                                            <button onClick={()=>setAssets(assets.filter(as=>as.id!==a.id))} className="text-red-500 hover:scale-125 transition-transform"><Icon name="Trash2" size={18}/></button>
+                                                            <div className="flex justify-center gap-0.5">
+                                                                {a.commRates.map((r, idx) => (
+                                                                    <div key={idx} title={`الجيل ${idx+1}: ${r}%`} className="w-4 h-4 bg-yellow-500/20 rounded-sm flex items-center justify-center">
+                                                                        <span className="text-[6px] font-black text-yellow-500">{r}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-4 text-center">
+                                                            <button onClick={()=>setAssets(assets.filter(as=>as.id!==a.id))} className="text-red-500 hover:scale-125 transition-transform"><Icon name="Trash2" size={16}/></button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -300,92 +323,68 @@ react_html = r"""
                             </div>
                         )}
 
-                        {/* Tab: Operations (Logic: Returns) */}
+                        {/* Tab: Operations */}
                         {activeTab === 'operations' && (
-                            <div className="animate-view space-y-8 max-w-6xl mx-auto">
-                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="RefreshCcw" size={32} /> المرتجعات ومعالجة الطلبات</h2>
-                                <div className="grid grid-cols-1 gap-6">
-                                    <h3 className="text-xl font-black text-red-500">طلبات المرتجعات (تحتاج قرار)</h3>
-                                    {returns.map(r => (
-                                        <div key={r.id} className="glass-panel p-6 rounded-[2rem] border-r-4 border-red-500 flex justify-between items-center">
-                                            <div><h4 className="font-black">{r.buyer} <small className="text-gray-400">#{r.id}</small></h4><p className="text-sm opacity-70">السبب: {r.reason}</p></div>
-                                            <div className="flex gap-2">
-                                                <button onClick={()=>processReturn(r.id, true)} className="bg-green-500 text-black px-4 py-2 rounded-xl font-black text-xs">قبول</button>
-                                                <button onClick={()=>processReturn(r.id, false)} className="bg-red-500 text-white px-4 py-2 rounded-xl font-black text-xs">رفض</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <hr className="border-white/5 my-4" />
-                                    <h3 className="text-xl font-black">سجل العمليات الأخير</h3>
+                            <div className="animate-view space-y-8 max-w-6xl mx-auto pt-5">
+                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="Activity" size={32} /> مركز السيطرة على العمليات</h2>
+                                <div className="grid grid-cols-1 gap-4">
                                     {orders.map(o => (
                                         <div key={o.id} className="glass-panel p-6 rounded-[2rem] flex justify-between items-center">
-                                            <div><h4 className="font-black">{o.buyer} <small className="text-blue-500">{o.status}</small></h4><p className="text-xs text-gray-500">{o.item}</p></div>
-                                            <span className="text-xl font-black text-[#00FF88]">${o.amount.toLocaleString()}</span>
+                                            <div className="flex items-center gap-5">
+                                                <div className="p-4 bg-yellow-500/10 text-yellow-500 rounded-2xl"><Icon name="FileText" size={24}/></div>
+                                                <div>
+                                                    <h4 className="font-black text-xl">{o.buyer} <small className="text-blue-500 text-xs font-bold mr-2">{o.status}</small></h4>
+                                                    <p className="text-sm text-gray-500">{o.item} • {o.date}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-6">
+                                                <span className="text-2xl font-black text-[#00FF88]">${o.amount.toLocaleString()}</span>
+                                                <button onClick={()=>processOrder(o.id, 'مكتمل')} className="bg-yellow-500 text-black px-6 py-2.5 rounded-xl font-black text-xs hover:scale-105 transition-transform">اعتماد وتوزيع العمولات</button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* Tab: Marketing (Logic: Loyalty Config) */}
+                        {/* Tab: Marketing (Global Commission Engineering) */}
                         {activeTab === 'marketing' && (
-                            <div className="animate-view space-y-8 max-w-6xl mx-auto">
-                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="Zap" size={32} /> هندسة العروض ونقاط الولاء</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="glass-panel p-8 rounded-[2.5rem]">
-                                        <h3 className="text-xl font-black mb-6">نظام نقاط الولاء (Loyalty Matrix)</h3>
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-center">
-                                                <span>نقاط مقابل كل $1 شراء</span>
-                                                <input type="number" defaultValue="5" className="premium-input w-20 p-2 rounded-lg text-center font-black" />
+                            <div className="animate-view space-y-8 max-w-5xl mx-auto pt-5">
+                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="Share2" size={32} /> هندسة العمولات العالمية</h2>
+                                <p className="text-gray-500">حدد النسب الافتراضية التي ستُطبق على كافة الأصول الجديدة في متجرك.</p>
+                                
+                                <div className="glass-panel p-10 rounded-[3rem]">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        {globalCommRates.map((rate, i) => (
+                                            <div key={i} className="space-y-4">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-sm font-black text-gray-400 uppercase tracking-widest">عمولة الجيل {i+1}</label>
+                                                    <span className="text-2xl font-black text-yellow-500">{rate}%</span>
+                                                </div>
+                                                <input 
+                                                    type="range" min="0" max={i === 0 ? "50" : "20"} step="0.5" 
+                                                    value={rate} 
+                                                    onChange={(e)=>updateGlobalRate(i, e.target.value)}
+                                                    className="w-full accent-yellow-500" 
+                                                />
                                             </div>
-                                            <div className="bg-yellow-500/10 p-6 rounded-[2rem] border border-yellow-500/20">
-                                                <h4 className="text-yellow-500 font-black mb-1">الرصيد الموزع حالياً</h4>
-                                                <p className="text-3xl font-black">{loyaltyPoints.toLocaleString()} <small className="text-xs">نقطة</small></p>
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
-                                    <div className="glass-panel p-8 rounded-[2.5rem]">
-                                        <h3 className="text-xl font-black mb-6">الخصومات العامة (Global Offers)</h3>
-                                        <div className="space-y-6">
-                                            <label className="text-xs font-bold text-gray-500 uppercase block">تطبيق خصم عام على كافة الأصول (%)</label>
-                                            <div className="flex items-center gap-4">
-                                                <input type="range" min="0" max="50" value={globalDiscount} onChange={(e)=>setGlobalDiscount(e.target.value)} className="flex-1 accent-yellow-500" />
-                                                <span className="text-2xl font-black text-yellow-500">{globalDiscount}%</span>
-                                            </div>
-                                            <button onClick={()=>showToast('تم تفعيل الخصومات على واجهة المشتري')} className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black hover:bg-white/10 transition-all">اعتماد العرض الآن ⚡</button>
-                                        </div>
-                                    </div>
+                                    <button onClick={()=>showToast('تم حفظ خارطة العمولات العالمية للأجيال العشرة')} className="w-full mt-12 py-5 bg-white/5 border border-white/10 rounded-2xl font-black text-xl hover:bg-white/10 transition-all shadow-2xl">تثبيت القوانين المالية للشبكة 💾</button>
                                 </div>
                             </div>
                         )}
 
-                        {/* Tab: Finance (Logic: Installments) */}
-                        {activeTab === 'finance' && (
-                            <div className="animate-view space-y-8 max-w-6xl mx-auto">
-                                <h2 className="text-3xl font-black flex items-center gap-4"><Icon name="CreditCard" size={32} /> إدارة الأقساط والاشتراكات الدورية</h2>
-                                {installments.map(i => {
-                                    const prog = (i.paid / i.total) * 100;
-                                    return (
-                                        <div key={i.id} className="glass-panel p-8 rounded-[2.5rem]">
-                                            <div className="flex justify-between mb-4">
-                                                <h4 className="text-xl font-black">{i.user} - {i.item}</h4>
-                                                <span className="text-yellow-500 font-black">تاريخ الاستحقاق: {i.next_due}</span>
-                                            </div>
-                                            <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden mb-4">
-                                                <div className="h-full bg-blue-500 transition-all duration-1000" style={{width: `${prog}%`}}></div>
-                                            </div>
-                                            <div className="flex justify-between text-xs font-bold text-gray-400">
-                                                <span>تم تحصيل: ${i.paid.toLocaleString()}</span>
-                                                <span>المتبقي: ${(i.total - i.paid).toLocaleString()}</span>
-                                            </div>
-                                            <button onClick={()=>collectInstallment(i.id)} className="mt-6 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-700 transition-all">تسجيل تحصيل يدوي 💰</button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                    </div>
 
+                    {/* --- Toasts Center --- */}
+                    <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
+                        {toasts.map(t => (
+                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
+                                <Icon name={t.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={20} />
+                                <span className="font-bold text-sm text-white">{t.msg}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             );
@@ -396,7 +395,7 @@ react_html = r"""
 
         function ErrorBoundary({ children }) {
             const [hasError, setHasError] = useState(false);
-            if (hasError) return <div className="p-10 text-red-500 font-black text-center h-screen flex items-center justify-center">⚠️ رصد خطأ في الواجهة.. جاري الإصلاح آلياً.</div>;
+            if (hasError) return <div className="p-10 text-red-500 font-black text-center h-screen flex items-center justify-center">⚠️ رصد خطأ في محرك الأجيال.. جاري إعادة التهيئة..</div>;
             return children;
         }
     </script>
@@ -408,7 +407,7 @@ react_html = r"""
 final_html = react_html.replace("LEADER_BALANCE_PLACEHOLDER", str(current_balance))
 
 # --- 5. عرض الواجهة (Render) ---
-components.html(final_html, height=1050, scrolling=True)
+components.html(final_html, height=1150, scrolling=True)
 
 # --- 6. أزرار التحكم والرجوع ---
 st.markdown("---")
