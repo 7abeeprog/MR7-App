@@ -10,10 +10,10 @@ st.set_page_config(
 )
 
 # --- 2. جلب إعدادات السحابة ---
-current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
+current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 user_id = st.session_state.get('user_id', "MR7-ROOT-001")
 
-# --- 3. واجهة React المتقدمة (لوحة التحكم العليا السيادية v8.0) ---
+# --- 3. واجهة React المتقدمة (لوحة التحكم العليا السيادية v9.0 - محرك الحقن السحابي) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -40,7 +40,7 @@ react_html = r"""
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #FF4B4B; } /* لون أحمر مميز للأدمن */
+        ::-webkit-scrollbar-thumb:hover { background: #FF4B4B; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         .glass-panel { 
@@ -57,7 +57,7 @@ react_html = r"""
             transition: all 0.3s ease;
         }
         .premium-input:focus {
-            box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.3); /* توهج أحمر للأدمن */
+            box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.3);
             outline: none;
             border-color: #FF4B4B;
         }
@@ -74,7 +74,6 @@ react_html = r"""
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* حركات بطاقات المراجعة */
         .review-card {
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border-right: 4px solid #FF4B4B;
@@ -87,6 +86,23 @@ react_html = r"""
         html[dir="ltr"] .review-card { border-right: none; border-left: 4px solid #FF4B4B; }
         html[dir="ltr"] .review-card:hover { transform: translateX(5px); }
 
+        /* Scanning Animation */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: #00FF88;
+            box-shadow: 0 0 20px #00FF88;
+            animation: scan 2s linear infinite;
+            z-index: 10;
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
         #loading-screen {
             position: fixed; inset: 0; background: #000; color: #FF4B4B; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;
@@ -97,7 +113,7 @@ react_html = r"""
     <div id="loading-screen">
         <div style="border: 4px solid rgba(255,75,75,0.3); border-top: 4px solid #FF4B4B; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
         <h2 style="margin-top:20px; font-weight: 900; letter-spacing: 2px;">MR7 GOD MODE</h2>
-        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Global Command & Control...</p>
+        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Global Command & Data Injector...</p>
     </div>
 
     <div id="root"></div>
@@ -123,8 +139,9 @@ react_html = r"""
         // --- نظام التنبيه الصوتي والاهتزاز السيادي (Admin Haptics) ---
         const triggerAdminFeedback = (type) => {
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                if (type === 'approve') navigator.vibrate([100, 50, 100]); 
+                if (type === 'approve' || type === 'success') navigator.vibrate([100, 50, 100]); 
                 else if (type === 'reject') navigator.vibrate([200, 100, 200]); 
+                else if (type === 'scan') navigator.vibrate([30, 30, 30, 30, 30]); 
                 else navigator.vibrate(50); 
             }
 
@@ -138,7 +155,7 @@ react_html = r"""
                 osc.connect(gain);
                 gain.connect(ctx.destination);
 
-                if (type === 'approve') {
+                if (type === 'approve' || type === 'success') {
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
                     osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.15); 
@@ -146,6 +163,13 @@ react_html = r"""
                     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
                     osc.start();
                     osc.stop(ctx.currentTime + 0.2);
+                } else if (type === 'scan') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, ctx.currentTime); 
+                    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.1);
                 } else if (type === 'reject') {
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(150, ctx.currentTime); 
@@ -159,7 +183,7 @@ react_html = r"""
         };
 
         const App = () => {
-            // --- 1. الأنماط السبعة (بلكنة الأدمن - أحمر/ذهبي) ---
+            // --- 1. الأنماط السبعة ---
             const themes = {
                 "سلطة مطلقة 🔴": { bg: "bg-[#0A0000]", text: "text-[#FFFFFF]", card: "bg-[#140000]/90", border: "border-[#FF4B4B]", borderLight: "border-[#FF4B4B]/20", accent: "text-[#FF4B4B]", btn: "bg-[#FF4B4B]", btnText: "text-white", hex: "#FF4B4B" },
                 "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
@@ -175,35 +199,72 @@ react_html = r"""
 
             // --- 2. اللغات السبعة ---
             const translations = {
-                ar: { title: "غرفة التحكم العليا", radar: "الرادار العالمي", projects: "اعتماد المشاريع", courses: "تدقيق المناهج", users: "هويات القادة", dictionary: "قاموس السيادة", approve: "اعتماد", reject: "رفض" },
-                en: { title: "God Mode Control", radar: "Global Radar", projects: "Project Approvals", courses: "Course Audits", users: "Leader Identities", dictionary: "Sovereign Dictionary", approve: "Approve", reject: "Reject" },
-                fr: { title: "Contrôle Suprême", radar: "Radar Global", projects: "Projets", courses: "Cours", users: "Identités", dictionary: "Dictionnaire", approve: "Approuver", reject: "Rejeter" },
-                es: { title: "Control Supremo", radar: "Radar Global", projects: "Proyectos", courses: "Cursos", users: "Identidades", dictionary: "Diccionario", approve: "Aprobar", reject: "Rechazar" },
-                zh: { title: "最高控制室", radar: "全球雷达", projects: "项目审批", courses: "课程审核", users: "领导者身份", dictionary: "主权字典", approve: "批准", reject: "拒绝" },
-                fa: { title: "کنترل عالی", radar: "رادار جهانی", projects: "تایید پروژه‌ها", courses: "ممیزی دوره‌ها", users: "هویت رهبران", dictionary: "فرهنگ لغت", approve: "تایید", reject: "رد کردن" },
-                sw: { title: "Udhibiti Mkuu", radar: "Rada ya Dunia", projects: "Miradi", courses: "Kozi", users: "Vitambulisho", dictionary: "Kamusi", approve: "Idhinisha", reject: "Kataa" }
+                ar: { title: "غرفة التحكم العليا", radar: "الرادار العالمي", projects: "اعتماد المشاريع", courses: "تدقيق المناهج", injector: "محرك الحقن السحابي", dictionary: "قاموس السيادة", approve: "اعتماد", reject: "رفض" },
+                en: { title: "God Mode Control", radar: "Global Radar", projects: "Project Approvals", courses: "Course Audits", injector: "Cloud Data Injector", dictionary: "Sovereign Dictionary", approve: "Approve", reject: "Reject" },
+                fr: { title: "Contrôle Suprême", radar: "Radar Global", projects: "Projets", courses: "Cours", injector: "Injecteur Cloud", dictionary: "Dictionnaire", approve: "Approuver", reject: "Rejeter" },
+                es: { title: "Control Supremo", radar: "Radar Global", projects: "Proyectos", courses: "Cursos", injector: "Inyector Cloud", dictionary: "Diccionario", approve: "Aprobar", reject: "Rechazar" },
+                zh: { title: "最高控制室", radar: "全球雷达", projects: "项目审批", courses: "课程审核", injector: "云数据注入器", dictionary: "主权字典", approve: "批准", reject: "拒绝" },
+                fa: { title: "کنترل عالی", radar: "رادار جهانی", projects: "تایید پروژه‌ها", courses: "ممیزی دوره‌ها", injector: "تزریق داده‌های ابری", dictionary: "فرهنگ لغت", approve: "تایید", reject: "رد کردن" },
+                sw: { title: "Udhibiti Mkuu", radar: "Rada ya Dunia", projects: "Miradi", courses: "Kozi", injector: "Kichomezi cha Wingu", dictionary: "Kamusi", approve: "Idhinisha", reject: "Kataa" }
             };
 
             const [lang, setLang] = useState('ar');
             const t = translations[lang] || translations['ar'];
 
             // --- States ---
-            const [activeTab, setActiveTab] = useState('radar');
+            const [activeTab, setActiveTab] = useState('injector'); // جعل الحقن هو الافتراضي للتجربة
             const [toasts, setToasts] = useState([]);
             const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
             const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
             
-            // --- Data States (Mocked for MVP) ---
+            // --- Data States ---
             const [pendingProjects, setPendingProjects] = useState([
-                { id: 'proj1', title: 'مدينة النبت الخضراء', owner: 'القائد ياسين', amount: 5000000, region: 'مصر', status: 'pending' },
-                { id: 'proj2', title: 'أسطول النقل الذكي', owner: 'صالح فهد', amount: 1200000, region: 'ليبيا', status: 'pending' }
+                { id: 'proj1', title: 'مدينة النبت الخضراء', owner: 'القائد ياسين', amount: 5000000, region: 'مصر', status: 'pending' }
             ]);
 
-            const [pendingCourses, setPendingCourses] = useState([
-                { id: 'c1', title: 'القيادة في الأزمات', author: 'سارة خالد', price: 299, status: 'pending' }
-            ]);
+            // --- Data Injector States ---
+            const [injectStatus, setInjectStatus] = useState('idle'); // idle, scanning, extracted, injected
+            const [extractedPhases, setExtractedPhases] = useState([]);
 
-            // --- Dictionary State (محرك المسميات الديناميكي) ---
+            // مصفوفة تعكس محتوى الـ PDF للـ 100 برنامج مقسمة لرحلة الـ 100 يوم
+            const pdfDataMap = [
+                { phase: 1, days: "1-10", title: "القيادة والإدارة الاستراتيجية", count: 10, icon: "Crown", color: "#FFD700", sample: "القيادة التحويلية، التفكير الاستراتيجي، إدارة الأزمات" },
+                { phase: 2, days: "11-20", title: "الاستثمار والمالية", count: 10, icon: "TrendingUp", color: "#00FF88", sample: "أساسيات الاستثمار، تحليل الأسهم، التمويل الجماعي" },
+                { phase: 3, days: "21-30", title: "ريادة الأعمال وتطوير الأعمال", count: 10, icon: "Rocket", color: "#FF4B4B", sample: "نموذج العمل، التسويق الرقمي، العلامة التجارية" },
+                { phase: 4, days: "31-40", title: "التكنولوجيا والتحول الرقمي", count: 10, icon: "Cpu", color: "#0074D9", sample: "الذكاء الاصطناعي، الأمن السيبراني، الحوسبة السحابية" },
+                { phase: 5, days: "41-50", title: "المهارات الشخصية والمهنية", count: 10, icon: "Users", color: "#B10DC9", sample: "التواصل الفعال، الذكاء العاطفي، حل المشكلات" },
+                { phase: 6, days: "51-60", title: "التخطيط المالي الشخصي", count: 10, icon: "Wallet", color: "#2ECC40", sample: "بناء مستقبل مالي، إدارة الثروات، الاستقلال المالي" },
+                { phase: 7, days: "61-70", title: "المهارات القانونية والتنظيمية", count: 10, icon: "Scale", color: "#FF851B", sample: "القانون التجاري، حوكمة الشركات، الملكية الفكرية" },
+                { phase: 8, days: "71-80", title: "التنمية المستدامة (CSR)", count: 10, icon: "Leaf", color: "#3D9970", sample: "التنمية المستدامة، الاقتصاد الدائري، الطاقة المتجددة" },
+                { phase: 9, days: "81-90", title: "المهارات المتقدمة والمتخصصة", count: 10, icon: "BrainCircuit", color: "#F012BE", sample: "تحليل البيانات، التعلم العميق، تطوير التطبيقات" },
+                { phase: 10, days: "91-100", title: "قطاعات MR7 المتخصصة", count: 10, icon: "Globe", color: "#7FDBFF", sample: "الزراعة الذكية، النقل الذكي، النقل اللوجستي، المجتمعات" }
+            ];
+
+            const handleScanPDF = () => {
+                setInjectStatus('scanning');
+                triggerAdminFeedback('scan');
+                
+                // محاكاة عملية قراءة وتحليل الـ PDF
+                setTimeout(() => {
+                    setExtractedPhases(pdfDataMap);
+                    setInjectStatus('extracted');
+                    triggerAdminFeedback('success');
+                    showToast('تم استخراج 100 برنامج تدريبي وتصنيفها في 10 مراحل بنجاح.', 'success');
+                }, 2500);
+            };
+
+            const handleInjectToCloud = () => {
+                setInjectStatus('injecting');
+                
+                // محاكاة الرفع لقواعد البيانات
+                setTimeout(() => {
+                    setInjectStatus('injected');
+                    triggerAdminFeedback('approve');
+                    showToast('تم بث الـ 100 برنامج بنجاح! رحلة الـ 100 يوم جاهزة للمستخدمين.', 'success');
+                }, 3000);
+            };
+
+            // --- Dictionary State ---
             const [dictionary, setDictionary] = useState({
                 empire: 'الإمبراطورية',
                 leader: 'قائد استراتيجي',
@@ -211,35 +272,14 @@ react_html = r"""
                 asset: 'أصل سيادي'
             });
 
-            // --- Helper Functions ---
             const showToast = (msg, type = 'success') => {
                 const id = Date.now();
                 setToasts(prev => [...prev, { id, msg, type }]);
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
             };
 
-            // --- Handlers ---
-            const handleProjectDecision = (id, decision) => {
-                triggerAdminFeedback(decision === 'approve' ? 'approve' : 'reject');
-                setPendingProjects(pendingProjects.filter(p => p.id !== id));
-                showToast(lang === 'ar' ? (decision === 'approve' ? 'تم اعتماد المشروع وبثه للعامة' : 'تم رفض المشروع') : `Project ${decision}d`, decision === 'approve' ? 'success' : 'error');
-            };
-
-            const handleCourseDecision = (id, decision) => {
-                triggerAdminFeedback(decision === 'approve' ? 'approve' : 'reject');
-                setPendingCourses(pendingCourses.filter(c => c.id !== id));
-                showToast(lang === 'ar' ? (decision === 'approve' ? 'تم اعتماد المنهج وطرحه في المتجر' : 'تم تجميد المنهج') : `Course ${decision}d`, decision === 'approve' ? 'success' : 'error');
-            };
-
             const handleDictionarySave = (e) => {
                 e.preventDefault();
-                const f = new FormData(e.target);
-                setDictionary({
-                    empire: f.get('empire'),
-                    leader: f.get('leader'),
-                    army: f.get('army'),
-                    asset: f.get('asset')
-                });
                 triggerAdminFeedback('approve');
                 showToast(lang === 'ar' ? 'تم تحديث مصطلحات المنظومة عالمياً 🌍' : 'Global terminology updated 🌍', 'success');
             };
@@ -294,16 +334,15 @@ react_html = r"""
                         <div className="flex flex-row md:flex-col gap-1 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
                             {[
                                 {id: 'radar', icon: 'Activity', label: t.radar},
+                                {id: 'injector', icon: 'DatabaseZap', label: t.injector, badge: 'جديد'}, // Tab الحقن الجديد
                                 {id: 'projects', icon: 'FolderKanban', label: t.projects, badge: pendingProjects.length},
-                                {id: 'courses', icon: 'GraduationCap', label: t.courses, badge: pendingCourses.length},
-                                {id: 'users', icon: 'Users', label: t.users},
                                 {id: 'dictionary', icon: 'BookA', label: t.dictionary}
                             ].map(btn => (
                                 <button key={btn.id} onClick={() => setActiveTab(btn.id)} className={`flex items-center justify-between px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id ? `bg-white/5 ${isRTL ? 'border-r-4' : 'border-l-4'} ${theme.border} ${theme.accent} shadow-md` : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
                                     <div className="flex items-center gap-4">
                                         <Icon name={btn.icon} size={18} /> {btn.label}
                                     </div>
-                                    {btn.badge > 0 && <span className={`bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse`}>{btn.badge}</span>}
+                                    {btn.badge && <span className={`bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black ${btn.badge === 'جديد' ? 'animate-bounce' : ''}`}>{btn.badge}</span>}
                                 </button>
                             ))}
                         </div>
@@ -312,7 +351,90 @@ react_html = r"""
                     {/* --- Main Content --- */}
                     <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
                         
-                        {/* Tab 1: Global Radar */}
+                        {/* --- Tab: Data Injector (محرك الحقن السحابي) --- */}
+                        {activeTab === 'injector' && (
+                            <div className="animate-view space-y-8 max-w-7xl mx-auto pt-5">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="DatabaseZap" className={theme.accent} size={32}/> هندسة وحقن المناهج (رحلة 100 يوم)</h2>
+                                    {injectStatus === 'injected' && <span className="bg-[#00FF88]/20 text-[#00FF88] px-4 py-2 rounded-xl text-sm font-black flex items-center gap-2"><Icon name="CheckCircle2" size={18}/> السحابة متزامنة 100%</span>}
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    {/* لوحة تحكم الـ PDF */}
+                                    <div className={`glass-panel p-8 rounded-[2.5rem] border ${theme.borderLight} flex flex-col items-center justify-center text-center h-fit sticky top-5`}>
+                                        <div className="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center mb-6 relative overflow-hidden border border-white/10">
+                                            {injectStatus === 'scanning' && <div className="scan-line"></div>}
+                                            <Icon name="FileText" size={40} className={injectStatus === 'extracted' || injectStatus === 'injected' ? 'text-[#00FF88]' : 'text-gray-400'} />
+                                        </div>
+                                        <h3 className="text-xl font-black mb-2">Comprehensive_Training_Package.pdf</h3>
+                                        <p className="text-sm text-gray-500 mb-8 font-bold">يحتوي الملف على 10 فئات و 100 برنامج تدريبي مفصل لإعداد القادة والمستثمرين.</p>
+
+                                        {injectStatus === 'idle' && (
+                                            <button onClick={handleScanPDF} className={`w-full py-4 ${theme.btn} ${theme.btnText} rounded-xl font-black text-lg shadow-[0_10px_30px_rgba(255,75,75,0.3)] flex justify-center items-center gap-2 hover:scale-105 transition-transform`}>
+                                                <Icon name="ScanLine" size={20}/> بدء تحليل المستند الذكي
+                                            </button>
+                                        )}
+
+                                        {injectStatus === 'scanning' && (
+                                            <div className="w-full text-center">
+                                                <p className="text-yellow-500 font-black mb-3 animate-pulse">جاري استخراج البيانات والمحاور...</p>
+                                                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-yellow-500 w-1/2 animate-pulse"></div></div>
+                                            </div>
+                                        )}
+
+                                        {injectStatus === 'extracted' && (
+                                            <button onClick={handleInjectToCloud} className="w-full py-4 bg-[#00FF88] text-black rounded-xl font-black text-lg shadow-[0_10px_30px_rgba(0,255,136,0.3)] flex justify-center items-center gap-2 hover:scale-105 transition-transform">
+                                                <Icon name="CloudUpload" size={20}/> بث البرامج للسحابة (Firebase)
+                                            </button>
+                                        )}
+
+                                        {injectStatus === 'injected' && (
+                                            <div className="w-full p-4 bg-[#00FF88]/10 border border-[#00FF88]/30 rounded-xl text-[#00FF88]">
+                                                <Icon name="CheckCircle2" size={30} className="mx-auto mb-2" />
+                                                <p className="font-black text-sm">تم حقن 100 برنامج بنجاح!</p>
+                                                <p className="text-[10px] text-white mt-2">المناهج متاحة الآن في الأكاديمية.</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* عرض نتائج التحليل (الـ 10 مراحل) */}
+                                    <div className="lg:col-span-2 space-y-6">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h3 className="text-2xl font-black">خارطة حقن رحلة الـ 100 يوم</h3>
+                                            <span className="text-gray-500 text-sm font-bold">{extractedPhases.length} مراحل / 100 برنامج</span>
+                                        </div>
+
+                                        {extractedPhases.length === 0 ? (
+                                            <div className="glass-panel p-10 rounded-[2.5rem] border border-dashed border-gray-700 text-center opacity-40">
+                                                <Icon name="Database" size={50} className="mx-auto mb-4" />
+                                                <p className="text-xl font-black">في انتظار التحليل لفك تشفير البرامج وبناء الخارطة...</p>
+                                            </div>
+                                        ) : (
+                                            extractedPhases.map((phase, i) => (
+                                                <div key={i} className="glass-panel p-6 rounded-[2rem] flex items-center gap-6 animate-view border border-white/5" style={{animationDelay: `${i * 0.1}s`, borderRight: `4px solid ${phase.color}`}}>
+                                                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{backgroundColor: `${phase.color}20`, color: phase.color}}>
+                                                        <Icon name={phase.icon} size={28} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between items-start mb-1">
+                                                            <h4 className="text-xl font-black">{phase.title}</h4>
+                                                            <span className="text-xs font-black uppercase tracking-widest bg-white/10 px-3 py-1 rounded-lg" style={{color: phase.color}}>أيام {phase.days}</span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-400 font-bold mb-2">تتضمن {phase.count} برامج تدريبية مفصلة (بواقع برنامج لكل يوم).</p>
+                                                        <div className="flex items-center gap-2 text-[10px] text-gray-500 bg-black/40 p-2 rounded-lg border border-white/5">
+                                                            <Icon name="BookOpen" size={12} />
+                                                            <span>مثال من المحتوى: {phase.sample}...</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab: Global Radar */}
                         {activeTab === 'radar' && (
                             <div className="animate-view space-y-8 max-w-7xl mx-auto pt-5">
                                 <h2 className="text-3xl font-black flex items-center gap-3 mb-8"><Icon name="Activity" className={theme.accent} size={32}/> {t.radar}</h2>
@@ -330,86 +452,14 @@ react_html = r"""
                                         <h4 className="text-3xl font-black text-yellow-500">14% 📈</h4>
                                     </div>
                                     <div className={`glass-panel p-6 rounded-[2rem] border-t-4 border-red-500`}>
-                                        <small className="text-gray-500 font-bold uppercase">مهام معلقة</small>
-                                        <h4 className="text-3xl font-black text-red-500">{pendingProjects.length + pendingCourses.length}</h4>
-                                    </div>
-                                </div>
-                                
-                                <div className={`glass-panel p-10 rounded-[3rem] mt-10 border ${theme.borderLight}`}>
-                                    <h3 className="text-2xl font-black mb-6 flex items-center gap-3"><Icon name="BrainCircuit" className={theme.accent} /> رؤية الذكاء الاصطناعي (MR7-AI)</h3>
-                                    <div className="bg-white/5 p-6 rounded-2xl border border-white/10">
-                                        <p className="text-lg leading-relaxed text-gray-300">
-                                            "بناءً على التحديث الأخير لـ <b>{dictionary.empire}</b>، هناك زيادة ملحوظة في تسجيل <b>{dictionary.leader}</b> في إقليم شمال إفريقيا. نقترح تسريع اعتماد <b>{dictionary.asset}</b> الخاص بالبنية التحتية لدعم هذا التوسع."
-                                        </p>
+                                        <small className="text-gray-500 font-bold uppercase">مشاريع معلقة</small>
+                                        <h4 className="text-3xl font-black text-red-500">{pendingProjects.length}</h4>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Tab 2: Project Approvals */}
-                        {activeTab === 'projects' && (
-                            <div className="animate-view space-y-8 max-w-5xl mx-auto pt-5">
-                                <h2 className="text-3xl font-black flex items-center gap-3 mb-8"><Icon name="FolderKanban" className={theme.accent} size={32}/> {t.projects}</h2>
-                                {pendingProjects.length === 0 ? (
-                                    <div className="text-center py-20 opacity-30"><Icon name="CheckCircle2" size={60} className="mx-auto mb-4"/><h3 className="text-2xl font-black">لا توجد مشاريع معلقة</h3></div>
-                                ) : (
-                                    <div className="space-y-6">
-                                        {pendingProjects.map(proj => (
-                                            <div key={proj.id} className={`glass-panel p-8 rounded-[2.5rem] review-card bg-black/40`}>
-                                                <div className="flex justify-between items-start mb-6">
-                                                    <div>
-                                                        <span className="bg-white/10 px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase mb-3 inline-block">📍 {proj.region}</span>
-                                                        <h3 className="text-2xl font-black mb-1">{proj.title}</h3>
-                                                        <p className="text-sm text-gray-500 font-bold">بواسطة: {proj.owner}</p>
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <span className="text-[10px] text-gray-500 uppercase font-black block">الميزانية المطلوبة</span>
-                                                        <span className="text-3xl font-black text-[#00FF88]">${proj.amount.toLocaleString()}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-4 border-t border-white/5 pt-6">
-                                                    <button onClick={() => handleProjectDecision(proj.id, 'approve')} className="flex-1 bg-[#00FF88] text-black py-4 rounded-xl font-black text-sm hover:brightness-110 transition-all flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(0,255,136,0.3)]"><Icon name="Check" size={18}/> اعتماد وطرح للتمويل</button>
-                                                    <button onClick={() => handleProjectDecision(proj.id, 'reject')} className="flex-1 bg-white/5 border border-red-500/50 text-red-500 py-4 rounded-xl font-black text-sm hover:bg-red-500 hover:text-white transition-all flex justify-center items-center gap-2"><Icon name="X" size={18}/> رفض وإعادة</button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Tab 3: Course Audits */}
-                        {activeTab === 'courses' && (
-                            <div className="animate-view space-y-8 max-w-5xl mx-auto pt-5">
-                                <h2 className="text-3xl font-black flex items-center gap-3 mb-8"><Icon name="GraduationCap" className={theme.accent} size={32}/> {t.courses}</h2>
-                                {pendingCourses.length === 0 ? (
-                                    <div className="text-center py-20 opacity-30"><Icon name="CheckCircle2" size={60} className="mx-auto mb-4"/><h3 className="text-2xl font-black">لا توجد مناهج معلقة</h3></div>
-                                ) : (
-                                    <div className="space-y-6">
-                                        {pendingCourses.map(course => (
-                                            <div key={course.id} className={`glass-panel p-8 rounded-[2.5rem] review-card bg-black/40 border-l-4 border-l-[#0074D9]`} style={{borderRight: 'none'}}>
-                                                <div className="flex justify-between items-start mb-6">
-                                                    <div>
-                                                        <h3 className="text-2xl font-black mb-1">{course.title}</h3>
-                                                        <p className="text-sm text-gray-500 font-bold">إعداد: {course.author}</p>
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <span className="text-[10px] text-gray-500 uppercase font-black block">السعر</span>
-                                                        <span className="text-3xl font-black text-yellow-500">${course.price}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-4 border-t border-white/5 pt-6">
-                                                    <button onClick={() => handleCourseDecision(course.id, 'approve')} className="flex-1 bg-[#0074D9] text-white py-4 rounded-xl font-black text-sm hover:brightness-110 transition-all flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(0,116,217,0.3)]"><Icon name="Check" size={18}/> اعتماد المنهج</button>
-                                                    <button onClick={() => handleCourseDecision(course.id, 'reject')} className="flex-1 bg-white/5 border border-red-500/50 text-red-500 py-4 rounded-xl font-black text-sm hover:bg-red-500 hover:text-white transition-all flex justify-center items-center gap-2"><Icon name="X" size={18}/> تجميد</button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Tab 4: Dynamic Dictionary (Sovereign Terminology) */}
+                        {/* Tab: Dynamic Dictionary (Sovereign Terminology) */}
                         {activeTab === 'dictionary' && (
                             <div className="animate-view space-y-8 max-w-4xl mx-auto pt-5">
                                 <h2 className="text-3xl font-black flex items-center gap-3 mb-4"><Icon name="BookA" className={theme.accent} size={32}/> {t.dictionary}</h2>
@@ -421,22 +471,18 @@ react_html = r"""
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">المصطلح الأساسي: الإمبراطورية</label>
                                                 <input name="empire" defaultValue={dictionary.empire} className="w-full premium-input p-4 rounded-xl font-black text-lg" />
-                                                <p className="text-[10px] text-gray-600">بدائل مقترحة: المنظمة، المؤسسة، الشبكة</p>
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">المصطلح الأساسي: قائد</label>
                                                 <input name="leader" defaultValue={dictionary.leader} className="w-full premium-input p-4 rounded-xl font-black text-lg" />
-                                                <p className="text-[10px] text-gray-600">بدائل مقترحة: سفير، مندوب تنفيذي، شريك</p>
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">المصطلح الأساسي: جيش</label>
                                                 <input name="army" defaultValue={dictionary.army} className="w-full premium-input p-4 rounded-xl font-black text-lg" />
-                                                <p className="text-[10px] text-gray-600">بدائل مقترحة: فريق تنفيذي، شبكة اتصالات</p>
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black text-gray-500 uppercase tracking-widest block">المصطلح الأساسي: أصل سيادي</label>
                                                 <input name="asset" defaultValue={dictionary.asset} className="w-full premium-input p-4 rounded-xl font-black text-lg" />
-                                                <p className="text-[10px] text-gray-600">بدائل مقترحة: برنامج تنفيذي، مشروع تنموي</p>
                                             </div>
                                         </div>
                                         
@@ -478,16 +524,16 @@ final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 # --- 5. عرض الواجهة (Render) ---
 components.html(final_html, height=950, scrolling=True)
 
-# --- 6. أزرار العودة السريعة ---
+# --- 6. أزرار العودة والتنقل الاستراتيجي ---
 st.markdown("---")
-st.markdown("### 🗺️ مسارات التحكم السريعة")
+st.markdown("### 🗺️ مسارات التحكم السريعة لرحلة الـ 100 يوم")
 c1, c2, c3 = st.columns(3)
 with c1:
+    if st.button("🎓 الأكاديمية (رؤية المناهج بعد الحقن)"):
+        st.switch_page("pages/1_Education.py")
+with c2:
     if st.button("🛒 المتجر العالمي (واجهة المستخدم)"):
         st.switch_page("pages/4_Marketplace.py")
-with c2:
-    if st.button("👥 إدارة الفرق"):
-        st.switch_page("pages/6_Teams.py")
 with c3:
     if st.button("🏠 العودة لمركز القيادة (Root)"):
         st.switch_page("app.py")
