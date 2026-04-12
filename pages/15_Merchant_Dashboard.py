@@ -2,20 +2,20 @@ import streamlit as st
 import streamlit.components.v1 as components
 import json
 
-# --- 1. بنيادي صفحي جي سيٽنگ ---
+# --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
     page_title="MR7 Merchant Dashboard", 
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ڪلائوڊ سيٽنگون ۽ ٿيم آڻيو ---
+# --- 2. جلب إعدادات السحابة والنمط ---
 fb_config_str = st.secrets.get("__firebase_config", "{}")
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
-current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
+current_theme = st.session_state.get('app_theme', "أسود قيادي 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. خودمختيار واپاري ڊيش بورڊ لاءِ React انٽرفيس (V5.0 - Affiliate & Marketing Hub Added) ---
+# --- 3. واجهة React للوحة التاجر (نظام العمولات المتعدد وتحديث الهوية اللفظية) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -111,7 +111,7 @@ react_html = r"""
 <body>
     <div id="loading-screen">
         <div class="loader-spinner"></div>
-        <h2 style="margin:0;">جاري تهيئة مركز العمليات السيادي...</h2>
+        <h2 style="margin:0;">جاري تهيئة مركز العمليات الاستراتيجي...</h2>
         <p style="color:#888; font-size:14px; margin-top:10px;">MR7 Ecosystem Initialization</p>
     </div>
 
@@ -123,7 +123,7 @@ react_html = r"""
             if (loader) loader.style.display = 'none';
             document.body.innerHTML += `
                 <div style="padding:40px; background:#220000; color:#FF5555; text-align:left; direction:ltr; position:absolute; top:0; width:100%; min-height:100vh; z-index:999999;">
-                    <h2 style="font-family:sans-serif;">⚠️ تحفظ وارو نظام: ٽيڪنيڪل نقص مليو آهي</h2>
+                    <h2 style="font-family:sans-serif;">⚠️ نظام الحماية: تم رصد خطأ تقني</h2>
                     <p style="font-size:1.2rem;">${msg}</p>
                 </div>
             `;
@@ -170,27 +170,71 @@ react_html = r"""
             </svg>
         );
 
-        // قاموس الترجمة الشامل
+        // قاموس الترجمة الشامل (بمصطلحات ريادية واحترافية)
         const translations = {
             ar: {
-                dashboardTitle: "لوحة التاجر", dashboardSub: "Sovereign Merchant Hub", searchPlaceholder: "البحث الشامل...",
-                liquidity: "خزنة السيولة", overview: "نظرة عامة", assets: "إدارة الأصول", team: "جيش التاجر", services: "الخدمات الذكية",
-                affiliate: "نظام الإحالة والتسويق", certified: "تاجر معتمد", gen: "الجيل الثالث", kpiTitle: "مؤشرات الأداء 📊", sales: "المبيعات الإجمالية",
-                activeAssets: "الأصول النشطة", views: "الزيارات", teamMembers: "الفريق", newProduct: "طرح أصل جديد", addAsset: "اعتماد الأصل",
+                dashboardTitle: "لوحة التاجر", dashboardSub: "Elite Merchant Hub", searchPlaceholder: "البحث عن الأصول الريادية...",
+                liquidity: "المحفظة الاستثمارية", overview: "نظرة عامة", assets: "إدارة الأصول", team: "شركاء النجاح", services: "الخدمات الذكية",
+                affiliate: "نظام الشراكات والعمولات", certified: "رائد أعمال معتمد", gen: "الجيل المتقدم", kpiTitle: "مؤشرات الأداء 📊", sales: "إجمالي المبيعات",
+                activeAssets: "الأصول النشطة", views: "المشاهدات", teamMembers: "شركاء الشبكة", newProduct: "طرح أصل جديد", addAsset: "اعتماد الأصل",
                 inventory: "مخزون الأصول", edit: "تعديل", delete: "حذف", active: "نشط", inactive: "مخفي", targetProgress: "نسبة الهدف", bonus: "مكافأة",
-                affTitle: "هندسة العمولات والمكتبة التسويقية 🔗", affSub1: "إعدادات العمولة العامة لمتجرك", affSub2: "المكتبة التسويقية للمسوقين (Assets Vault)",
-                uploadAd: "رفع مادة إعلانية", globalRate: "العمولة العامة للجيل الأول (%)", saveRate: "تحديث النظام המالي"
+                affTitle: "هندسة العمولات والمكتبة التسويقية 🔗", affSub1: "نظام العمولات متعدد المستويات", affSub2: "المكتبة التسويقية (Assets Vault)",
+                uploadAd: "إضافة مادة إعلانية", saveRate: "تحديث النظام المالي", successAdded: "تم رفع الأصل للمراجعة بنجاح! 🚀"
             },
             en: {
-                dashboardTitle: "Merchant Hub", dashboardSub: "Sovereign Merchant Hub", searchPlaceholder: "Global Search...",
-                liquidity: "Liquidity Vault", overview: "Overview", assets: "Asset Mgmt", team: "Merchant Army", services: "Smart Services",
-                affiliate: "Affiliate & Marketing", certified: "Certified", gen: "3rd Gen", kpiTitle: "Strategic KPIs 📊", sales: "Total Sales",
-                activeAssets: "Active Assets", views: "Total Views", teamMembers: "Team Members", newProduct: "List New Asset", addAsset: "Submit Asset",
+                dashboardTitle: "Merchant Hub", dashboardSub: "Elite Merchant Hub", searchPlaceholder: "Search Elite Assets...",
+                liquidity: "Investment Wallet", overview: "Overview", assets: "Asset Mgmt", team: "Success Partners", services: "Smart Services",
+                affiliate: "Partnerships & Commissions", certified: "Certified Entrepreneur", gen: "Advanced Gen", kpiTitle: "Performance KPIs 📊", sales: "Total Sales",
+                activeAssets: "Active Assets", views: "Total Views", teamMembers: "Network Partners", newProduct: "List New Asset", addAsset: "Submit Asset",
                 inventory: "Inventory", edit: "Edit", delete: "Delete", active: "Active", inactive: "Hidden", targetProgress: "Target Progress", bonus: "Bonus",
-                affTitle: "Commission Engineering & Marketing Vault 🔗", affSub1: "Global Store Commission Settings", affSub2: "Marketing Assets Vault",
-                uploadAd: "Upload Creative", globalRate: "Global Level 1 Commission (%)", saveRate: "Update Financial Engine"
+                affTitle: "Commission Engineering & Marketing Vault 🔗", affSub1: "Multi-Level Commission Settings", affSub2: "Marketing Assets Vault",
+                uploadAd: "Upload Creative", saveRate: "Update Financial Engine", successAdded: "Asset successfully submitted for review! 🚀"
+            },
+            fr: {
+                dashboardTitle: "Hub Marchand", dashboardSub: "Hub Marchand d'Élite", searchPlaceholder: "Rechercher des Actifs...",
+                liquidity: "Portefeuille d'Investissement", overview: "Aperçu", assets: "Gestion des Actifs", team: "Partenaires de Succès", services: "Services Intelligents",
+                affiliate: "Partenariats et Commissions", certified: "Entrepreneur Certifié", gen: "Génération Avancée", kpiTitle: "KPI de Performance 📊", sales: "Ventes Totales",
+                activeAssets: "Actifs Actifs", views: "Vues Totales", teamMembers: "Partenaires du Réseau", newProduct: "Lister Nouvel Actif", addAsset: "Soumettre pour Examen",
+                inventory: "Inventaire", edit: "Modifier", delete: "Supprimer", active: "Actif", inactive: "Masqué", targetProgress: "Progression Cible", bonus: "Bonus",
+                affTitle: "Ingénierie des Commissions 🔗", affSub1: "Paramètres de Commission Multi-Niveaux", affSub2: "Coffre de Ressources Marketing",
+                uploadAd: "Télécharger une Création", saveRate: "Mettre à jour le Moteur Financier", successAdded: "Actif soumis avec succès ! 🚀"
+            },
+            es: {
+                dashboardTitle: "Centro Comercial", dashboardSub: "Centro Comercial de Élite", searchPlaceholder: "Buscar Activos...",
+                liquidity: "Billetera de Inversión", overview: "Visión General", assets: "Gestión de Activos", team: "Socios de Éxito", services: "Servicios Inteligentes",
+                affiliate: "Asociaciones y Comisiones", certified: "Emprendedor Certificado", gen: "Generación Avanzada", kpiTitle: "KPI de Rendimiento 📊", sales: "Ventas Totales",
+                activeAssets: "Activos Activos", views: "Vistas Totales", teamMembers: "Socios de Red", newProduct: "Listar Nuevo Activo", addAsset: "Enviar para Revisión",
+                inventory: "Inventario", edit: "Editar", delete: "Eliminar", active: "Activo", inactive: "Oculto", targetProgress: "Progreso Objetivo", bonus: "Bono",
+                affTitle: "Ingeniería de Comisiones 🔗", affSub1: "Configuración de Comisiones Multinivel", affSub2: "Bóveda de Recursos de Marketing",
+                uploadAd: "Subir Creatividad", saveRate: "Actualizar Motor Financiero", successAdded: "¡Activo enviado con éxito! 🚀"
+            },
+            zh: {
+                dashboardTitle: "商家中心", dashboardSub: "精英商家中心", searchPlaceholder: "搜索优质资产...",
+                liquidity: "投资钱包", overview: "概览", assets: "资产与库存管理", team: "成功合作伙伴", services: "智能辅助服务",
+                affiliate: "合伙与佣金系统", certified: "认证企业家", gen: "高级一代", kpiTitle: "绩效指标 📊", sales: "总销售额",
+                activeAssets: "活跃资产", views: "总浏览量", teamMembers: "网络合伙人", newProduct: "发布新资产", addAsset: "提交审核",
+                inventory: "库存", edit: "编辑", delete: "删除", active: "活跃", inactive: "隐藏", targetProgress: "目标进度", bonus: "奖金",
+                affTitle: "佣金工程与营销资源库 🔗", affSub1: "多级佣金设置", affSub2: "营销资源库",
+                uploadAd: "上传广告素材", saveRate: "更新财务引擎", successAdded: "资产已成功提交审核！ 🚀"
+            },
+            fa: {
+                dashboardTitle: "داشبورد تاجر", dashboardSub: "مرکز تجارت نخبگان", searchPlaceholder: "جستجوی دارایی‌های برتر...",
+                liquidity: "کیف پول سرمایه‌گذاری", overview: "نمای کلی", assets: "مدیریت دارایی", team: "شرکای موفقیت", services: "خدمات هوشمند",
+                affiliate: "سیستم مشارکت و پورسانت", certified: "کارآفرین تایید شده", gen: "نسل پیشرفته", kpiTitle: "شاخص‌های عملکرد 📊", sales: "کل فروش",
+                activeAssets: "دارایی‌های فعال", views: "کل بازدیدها", teamMembers: "شرکای شبکه", newProduct: "عرضه دارایی جدید", addAsset: "تایید و ارسال",
+                inventory: "موجودی", edit: "ویرایش", delete: "حذف", active: "فعال", inactive: "پنهان", targetProgress: "پیشرفت هدف", bonus: "پاداش",
+                affTitle: "مهندسی پورسانت و کتابخانه بازاریابی 🔗", affSub1: "تنظیمات پورسانت چند سطحی", affSub2: "کتابخانه بازاریابی",
+                uploadAd: "بارگذاری محتوای تبلیغاتی", saveRate: "بروزرسانی سیستم مالی", successAdded: "دارایی با موفقیت برای بررسی ارسال شد! 🚀"
+            },
+            sw: {
+                dashboardTitle: "Kituo cha Mfanyabiashara", dashboardSub: "Kituo cha Biashara cha Wasomi", searchPlaceholder: "Tafuta Mali za Wasomi...",
+                liquidity: "Mkoba wa Uwekezaji", overview: "Muhtasari", assets: "Usimamizi wa Mali", team: "Washirika wa Mafanikio", services: "Huduma za Kisasa",
+                affiliate: "Ushirikiano na Kamisheni", certified: "Mjasiriamali Aliyeidhinishwa", gen: "Kizazi cha Juu", kpiTitle: "Viashiria vya Utendaji 📊", sales: "Mauzo ya Jumla",
+                activeAssets: "Mali Zinazofanya Kazi", views: "Mionekano ya Jumla", teamMembers: "Washirika wa Mtandao", newProduct: "Zindua Mali Mpya", addAsset: "Wasilisha kwa Ukaguzi",
+                inventory: "Orodha", edit: "Hariri", delete: "Futa", active: "Inayofanya Kazi", inactive: "Iliyofichwa", targetProgress: "Maendeleo ya Lengo", bonus: "Bonasi",
+                affTitle: "Uhandisi wa Kamisheni 🔗", affSub1: "Mipangilio ya Kamisheni ya Ngazi Nyingi", affSub2: "Maktaba ya Masoko",
+                uploadAd: "Pakia Tangazo", saveRate: "Sasisha Mfumo wa Kifedha", successAdded: "Mali imewasilishwa kwa ukaguzi kikamilifu! 🚀"
             }
-            // ... (Other languages follow same pattern, keeping minimal here for code length)
         };
 
         const App = () => {
@@ -201,13 +245,16 @@ react_html = r"""
 
             const themes = {
                 "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#FFFFFF" },
-                "غامق إمبراطوري 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
+                "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
                 "أزرق القيادة 💙": { bg: "bg-[#000814]", text: "text-white", card: "bg-[#00122B]/80", border: "border-[#0074D9]", borderLight: "border-[#0074D9]/20", accent: "text-[#0074D9]", btn: "bg-[#0074D9]", btnText: "text-white", hex: "#0074D9" },
-                "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", border: "border-[#00FF88]", borderLight: "border-[#00FF88]/20", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" }
+                "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", border: "border-[#00FF88]", borderLight: "border-[#00FF88]/20", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" },
+                "أحمر القوة 🔴": { bg: "bg-[#140000]", text: "text-white", card: "bg-[#2B0000]/80", border: "border-[#FF4136]", borderLight: "border-[#FF4136]/20", accent: "text-[#FF4136]", btn: "bg-[#FF4136]", btnText: "text-white", hex: "#FF4136" },
+                "أصفر الريادة 🟡": { bg: "bg-[#141400]", text: "text-white", card: "bg-[#2B2B00]/80", border: "border-[#FFDC00]", borderLight: "border-[#FFDC00]/20", accent: "text-[#FFDC00]", btn: "bg-[#FFDC00]", btnText: "text-black", hex: "#FFDC00" },
+                "روز الفخامة 🌸": { bg: "bg-[#14000A]", text: "text-white", card: "bg-[#2B0015]/80", border: "border-[#F012BE]", borderLight: "border-[#F012BE]/20", accent: "text-[#F012BE]", btn: "bg-[#F012BE]", btnText: "text-white", hex: "#F012BE" }
             };
             
-            const [activeThemeName, setActiveThemeName] = useState("CURRENT_THEME_PLACEHOLDER" || "غامق إمبراطوري 🖤");
-            const activeTheme = themes[activeThemeName] || themes["غامق إمبراطوري 🖤"];
+            const [activeThemeName, setActiveThemeName] = useState("CURRENT_THEME_PLACEHOLDER" || "أسود قيادي 🖤");
+            const activeTheme = themes[activeThemeName] || themes["أسود قيادي 🖤"];
             const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
             const [lang, setLang] = useState('ar');
@@ -222,23 +269,23 @@ react_html = r"""
             const [toasts, setToasts] = useState([]);
             
             const [products, setProducts] = useState([
-                { id: 'p1', name: 'برج السيادة الإداري', price: 1500000, category: 'عقارات', sales: 12, views: 1500, status: 'نشط', commRate: 10 },
+                { id: 'p1', name: 'أكاديمية الريادة المتقدمة', price: 1500000, category: 'عقارات نخبوية', sales: 12, views: 1500, status: 'نشط', commRate: 10 },
                 { id: 'p2', name: 'دبلوم هندسة الأرباح', price: 499, category: 'تعليم', sales: 1240, views: 5600, status: 'مخفي', commRate: 15 }
             ]);
             
             const [team, setTeam] = useState([
-                { id: 1, name: 'أحمد المصري', role: 'مدير إقليمي', sales: 124000, target: 150000, status: 'نشط 🟢' },
-                { id: 2, name: 'سارة خالد', role: 'دعم كبار العملاء', sales: 45000, target: 50000, status: 'نشط 🟢' }
+                { id: 1, name: 'أحمد المصري', role: 'مدير المبيعات', sales: 124000, target: 150000, status: 'نشط 🟢' },
+                { id: 2, name: 'سارة خالد', role: 'استشاري استثمار', sales: 45000, target: 50000, status: 'نشط 🟢' }
             ]);
 
-            // Affiliate State
-            const [globalCommRate, setGlobalCommRate] = useState(10);
+            // Affiliate State (Multi-Level)
+            const [commRates, setCommRates] = useState({ l1: 10, l2: 5, l3: 2 });
             const [marketingAssets, setMarketingAssets] = useState([
-                { id: 1, title: 'فيديو ترويجي للبرج (TikTok)', type: 'Video', views: 4500, url: '#' },
-                { id: 2, title: 'بنر إعلاني للمنصة', type: 'Image', views: 1200, url: '#' }
+                { id: 1, title: 'فيديو ترويجي للمنصة (TikTok)', type: 'Video', views: 4500, url: '#' },
+                { id: 2, title: 'تصميم جرافيك للحملات', type: 'Image', views: 1200, url: '#' }
             ]);
 
-            const [newProd, setNewProd] = useState({ name: '', price: '', category: 'عقارات', desc: '' });
+            const [newProd, setNewProd] = useState({ name: '', price: '', category: 'عقارات نخبوية', desc: '' });
 
             const showToast = useCallback((msg, type = 'success') => {
                 const id = Date.now();
@@ -251,8 +298,8 @@ react_html = r"""
                 e.preventDefault();
                 if(!newProd.name || !newProd.price) { showToast('يرجى استكمال البيانات', 'warning'); return; }
                 const p_price = parseFloat(newProd.price);
-                setProducts([{...newProd, price: p_price, id: Date.now().toString(), sales: 0, views: 0, status: 'نشط', commRate: globalCommRate}, ...products]);
-                setNewProd({ name: '', price: '', category: 'عقارات', desc: '' });
+                setProducts([{...newProd, price: p_price, id: Date.now().toString(), sales: 0, views: 0, status: 'نشط', commRate: commRates.l1}, ...products]);
+                setNewProd({ name: '', price: '', category: 'عقارات نخبوية', desc: '' });
                 showToast(t.successAdded);
                 setProductSubTab('inventory');
             };
@@ -295,7 +342,7 @@ react_html = r"""
                                 </button>
                                 {isLangMenuOpen && (
                                     <div className={`absolute top-10 ${isRTL ? 'left-0' : 'right-0'} glass-panel p-2 rounded-xl flex flex-col gap-1 shadow-2xl animate-view min-w-[100px]`}>
-                                        {['ar', 'en'].map(l => (
+                                        {['ar', 'en', 'fr', 'es', 'zh', 'fa', 'sw'].map(l => (
                                             <button key={l} onClick={() => {setLang(l); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === l ? activeTheme.accent : 'text-white'}`}>{l.toUpperCase()}</button>
                                         ))}
                                     </div>
@@ -315,7 +362,7 @@ react_html = r"""
                             {[
                                 {id: 'overview', icon: 'LayoutDashboard', label: t.overview},
                                 {id: 'products', icon: 'Package', label: t.assets},
-                                {id: 'affiliate', icon: 'Share2', label: t.affiliate}, // TAB الجديد
+                                {id: 'affiliate', icon: 'Share2', label: t.affiliate},
                                 {id: 'team', icon: 'Users', label: t.team},
                                 {id: 'services', icon: 'Zap', label: t.services}
                             ].map(tab => (
@@ -364,7 +411,7 @@ react_html = r"""
                                         <div className={`absolute ${isRTL?'-left-4':'-right-4'} -top-4 opacity-5 text-white group-hover:scale-110 transition-transform`}><Icon name="Package" size={120} /></div>
                                     </div>
                                     <div className={`${activeTheme.card} p-6 rounded-[2rem] border ${activeTheme.borderLight} relative overflow-hidden group transition-colors shadow-lg`}>
-                                        <p className="text-gray-400 font-bold mb-1 text-xs uppercase tracking-widest">إجمالي المسوقين النشطين</p>
+                                        <p className="text-gray-400 font-bold mb-1 text-xs uppercase tracking-widest">{t.teamMembers}</p>
                                         <h4 className="text-3xl font-black text-white">450</h4>
                                         <Sparkline color="#0074D9" />
                                         <div className={`absolute ${isRTL?'-left-4':'-right-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Share2" size={120} /></div>
@@ -373,7 +420,7 @@ react_html = r"""
                             </div>
                         )}
 
-                        {/* --- Tab: Affiliate & Marketing (NEW) --- */}
+                        {/* --- Tab: Affiliate & Marketing (Multi-Level) --- */}
                         {activeTab === 'affiliate' && (
                             <div className="animate-view space-y-8 max-w-[1600px] mx-auto">
                                 <h2 className="text-3xl font-black mb-8 border-b border-white/10 pb-6 flex items-center gap-4">
@@ -381,22 +428,32 @@ react_html = r"""
                                 </h2>
                                 
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                    {/* 1. إعدادات العمولات */}
+                                    {/* 1. إعدادات العمولات متعددة المستويات */}
                                     <div className={`lg:col-span-1 ${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} shadow-xl`}>
                                         <h3 className="text-xl font-black mb-6">{t.affSub1}</h3>
-                                        <div className="space-y-6">
+                                        <div className="space-y-5">
                                             <div>
-                                                <label className="text-xs font-black text-gray-400 uppercase block mb-3">{t.globalRate}</label>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase block mb-2">عمولة المستوى الأول (%)</label>
                                                 <div className="flex items-center gap-4">
-                                                    <input 
-                                                        type="range" min="1" max="50" value={globalCommRate} 
-                                                        onChange={(e) => setGlobalCommRate(e.target.value)}
-                                                        className="flex-1 accent-yellow-500" 
-                                                    />
-                                                    <span className={`text-2xl font-black ${activeTheme.accent}`}>{globalCommRate}%</span>
+                                                    <input type="range" min="1" max="50" value={commRates.l1} onChange={(e) => setCommRates({...commRates, l1: e.target.value})} className="flex-1 accent-yellow-500" />
+                                                    <span className={`text-xl font-black ${activeTheme.accent}`}>{commRates.l1}%</span>
                                                 </div>
                                             </div>
-                                            <button onClick={()=>showToast('تم تحديث السياسة المالية للمتجر')} className={`w-full py-4 rounded-xl font-black text-lg ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic`}>
+                                            <div>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase block mb-2">عمولة المستوى الثاني (%)</label>
+                                                <div className="flex items-center gap-4">
+                                                    <input type="range" min="0" max="30" value={commRates.l2} onChange={(e) => setCommRates({...commRates, l2: e.target.value})} className="flex-1 accent-yellow-500" />
+                                                    <span className={`text-xl font-black ${activeTheme.accent}`}>{commRates.l2}%</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase block mb-2">عمولة المستوى الثالث (%)</label>
+                                                <div className="flex items-center gap-4">
+                                                    <input type="range" min="0" max="15" value={commRates.l3} onChange={(e) => setCommRates({...commRates, l3: e.target.value})} className="flex-1 accent-yellow-500" />
+                                                    <span className={`text-xl font-black ${activeTheme.accent}`}>{commRates.l3}%</span>
+                                                </div>
+                                            </div>
+                                            <button onClick={()=>showToast('تم تحديث نظام العمولات بنجاح')} className={`w-full py-4 mt-2 rounded-xl font-black text-lg ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic`}>
                                                 {t.saveRate}
                                             </button>
                                         </div>
@@ -410,7 +467,7 @@ react_html = r"""
                                                 <tr className="text-gray-400 text-xs uppercase tracking-widest border-b border-white/10">
                                                     <th className="pb-4 font-black text-right pl-4">اسم الأصل</th>
                                                     <th className="pb-4 font-black">القيمة</th>
-                                                    <th className="pb-4 font-black text-center">العمولة المخصصة</th>
+                                                    <th className="pb-4 font-black text-center">عمولة الشراكة (م1)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -420,7 +477,7 @@ react_html = r"""
                                                         <td className="py-4 font-black text-[#00FF88]">${Number(p.price).toLocaleString()}</td>
                                                         <td className="py-4 text-center">
                                                             <div className="flex items-center justify-center gap-2">
-                                                                <input type="number" defaultValue={p.commRate || globalCommRate} className="premium-input w-20 text-center rounded-lg py-1 font-bold text-sm" /> %
+                                                                <input type="number" defaultValue={p.commRate || commRates.l1} className="premium-input w-20 text-center rounded-lg py-1 font-bold text-sm" /> %
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -429,11 +486,11 @@ react_html = r"""
                                         </table>
                                     </div>
 
-                                    {/* 3. المكتبة التسويقية (Assets Vault) */}
+                                    {/* 3. المكتبة التسويقية */}
                                     <div className={`lg:col-span-3 ${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} shadow-xl mt-4`}>
                                         <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
                                             <h3 className="text-xl font-black">{t.affSub2}</h3>
-                                            <button onClick={()=>showToast('سيتم تفعيل رفع الملفات السحابية قريباً', 'warning')} className={`px-5 py-2 rounded-xl font-bold text-sm bg-white/10 hover:bg-white/20 transition-all flex items-center gap-2`}>
+                                            <button onClick={()=>showToast('سيتم تفعيل رفع المواد الإعلانية قريباً', 'warning')} className={`px-5 py-2 rounded-xl font-bold text-sm bg-white/10 hover:bg-white/20 transition-all flex items-center gap-2`}>
                                                 <Icon name="Upload" size={16} /> {t.uploadAd}
                                             </button>
                                         </div>
@@ -503,10 +560,10 @@ react_html = r"""
                                     <form onSubmit={handleAddProduct} className={`${activeTheme.card} p-8 md:p-10 rounded-[3rem] border ${activeTheme.borderLight} shadow-2xl transition-colors animate-fade-in max-w-4xl mx-auto`}>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                             <div className="space-y-3">
-                                                <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder="اسم الأصل..." required />
+                                                <input type="text" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'اسم الأصل...' : 'Asset Name...'} required />
                                             </div>
                                             <div className="space-y-3">
-                                                <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder="السعر ($)" required />
+                                                <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'السعر ($)' : 'Price ($)'} required />
                                             </div>
                                         </div>
                                         <button type="submit" className={`w-full py-6 rounded-[2rem] font-black text-xl ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.3)]`}>
@@ -516,11 +573,22 @@ react_html = r"""
                                 )}
                             </div>
                         )}
-                        
-                        {/* --- Tab: Team / Services (Skipped logic here to keep output concise, assuming they remain identical to v4.0) --- */}
-                        {(activeTab === 'team' || activeTab === 'services') && (
-                            <div className="text-center mt-20 opacity-50">
-                                <h3 className="text-2xl">أقسام تحت التحديث (راجع الكود الأصلي)</h3>
+
+                        {/* --- Tab: Team --- */}
+                        {activeTab === 'team' && (
+                            <div className="animate-view space-y-8 max-w-6xl mx-auto">
+                                <h2 className="text-3xl font-black mb-8 border-b border-white/10 pb-6 flex items-center gap-4">
+                                    <Icon name="Users" className={activeTheme.accent} size={32} /> {t.teamMembers}
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {team.map(member => (
+                                        <div key={member.id} className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} relative overflow-hidden transition-colors`}>
+                                            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-4 text-2xl">👤</div>
+                                            <h4 className="text-xl font-black mb-1">{member.name}</h4>
+                                            <p className={`text-sm font-bold mb-6 ${activeTheme.accent}`}>{member.role}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
@@ -537,19 +605,19 @@ react_html = r"""
 </html>
 """
 
-# --- 4. ڪلائوڊ متغيرن کي محفوظ طريقي سان انجيڪٽ ڪريو ---
+# --- 4. حقن المتغيرات (آمن بدون Syntax Error) ---
 final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 final_html = final_html.replace("LEADER_BALANCE_PLACEHOLDER", str(current_balance))
 
-# --- 5. انٽرفيس ڏيکاريو ---
+# --- 5. تشغيل واجهة React ---
 components.html(final_html, height=1050, scrolling=True)
 
-# --- 6. ڪنٽرول ۽ واپس وڃڻ وارا بٽڻ ---
+# --- 6. أزرار التحكم والرجوع ---
 st.markdown("---")
 c1, c2 = st.columns(2)
 with c1:
-    if st.button("🛒 گلوبل مارڪيٽ ۾ واپس وڃو"):
+    if st.button("🛒 العودة للمتجر (Marketplace)"):
         st.switch_page("pages/4_Marketplace.py")
 with c2:
-    if st.button("🏠 مين ڪمانڊ سينٽر ڏانھن واپس وڃو"):
+    if st.button("🏠 العودة للرئيسية"):
         st.switch_page("app.py")
