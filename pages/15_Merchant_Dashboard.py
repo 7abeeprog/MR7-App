@@ -15,7 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (مستقرة 100% - تم حل روابط السيرفرات) ---
+# --- 3. واجهة React للوحة التاجر السيادي (مستقرة ومصفحة بالكامل) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -25,11 +25,11 @@ react_html = r"""
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- السيرفرات السحابية الأصلية المستقرة لضمان الإقلاع الفوري -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- السيرفرات السحابية الأسرع والأكثر استقراراً (JSDelivr) -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.292.0/dist/umd/lucide.min.js"></script>
     
     <style>
         body { 
@@ -59,6 +59,7 @@ react_html = r"""
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s ease;
+            color: white;
         }
         .premium-input:focus {
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
@@ -117,7 +118,8 @@ react_html = r"""
     <script type="text/babel">
         // 1. نظام التقاط الأخطاء العالمي 
         window.onerror = function(msg, url, line, col, error) {
-            document.getElementById('loading-screen').style.display = 'none';
+            const loader = document.getElementById('loading-screen');
+            if (loader) loader.style.display = 'none';
             document.getElementById('root').innerHTML = `
                 <div style="padding:40px; background:#220000; color:#FF5555; text-align:left; direction:ltr; min-height:100vh;">
                     <h2 style="font-family:sans-serif;">⚠️ نظام الحماية: تم رصد خطأ تقني</h2>
@@ -140,7 +142,8 @@ react_html = r"""
             }
             componentDidCatch(error, errorInfo) {
                 this.setState({ errorInfo: error.toString() + "\n" + errorInfo.componentStack });
-                document.getElementById('loading-screen').style.display = 'none';
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.style.display = 'none';
             }
             render() {
                 if (this.state.hasError) {
@@ -338,7 +341,7 @@ react_html = r"""
         };
 
         const App = () => {
-            // إخفاء شاشة التحميل بمجرد إقلاع تطبيق React
+            // إخفاء شاشة التحميل بمجرد إقلاع تطبيق React بنجاح
             useEffect(() => {
                 const loader = document.getElementById('loading-screen');
                 if (loader) {
@@ -374,11 +377,35 @@ react_html = r"""
             // --- State ---
             const [activeTab, setActiveTab] = useState('overview'); 
             const [toasts, setToasts] = useState([]);
+            
+            // استرجاع البيانات الفخمة والمتكاملة لحل مشكلة الـ TypeError
             const [products, setProducts] = useState([
-                { id: 1, name: 'عقار تجاري في التجمع', price: 250000, category: 'عقارات سيادية', sales: 4, views: 1240, status: 'نشط' }
+                { 
+                    id: 'p1', name: 'برج السيادة الإداري', price: 1500000, country: 'مصر', category: 'عقارات سيادية', vendor: 'مجموعة النبت العقارية', 
+                    img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800', rating: 5.0, sales: 12, views: 1500, status: 'نشط',
+                    desc: 'تحفة معمارية في العاصمة الإدارية الجديدة، مصممة بأعلى معايير الاستدامة.'
+                },
+                { 
+                    id: 'p2', name: 'منظومة الطاقة X10', price: 12500, country: 'ليبيا', category: 'طاقة مستدامة', vendor: 'تكنو-صحراء', 
+                    img: 'https://images.unsplash.com/photo-1509391366360-fe5bb58583bb?w=800', rating: 4.8, sales: 85, views: 820, status: 'نشط',
+                    desc: 'محطة طاقة شمسية هجينة متنقلة قادرة على تغذية مجمعات سكنية كاملة.'
+                },
+                { 
+                    id: 'p3', name: 'دبلوم هندسة الأرباح', price: 499, country: 'السعودية', category: 'أكاديمية القيادة', vendor: 'MR7 Academy', 
+                    img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800', rating: 4.9, sales: 1240, views: 5600, status: 'نشط',
+                    desc: 'المنهج الدراسي الأكثر تأثيراً لبناء العقلية الاستثمارية السيادية.'
+                },
+                { 
+                    id: 'p4', name: 'وكيل الذكاء الاصطناعي', price: 2500, country: 'عالمي', category: 'تقنيات المستقبل', vendor: 'مختبرات السيادة', 
+                    img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', rating: 5.0, sales: 320, views: 900, status: 'نشط',
+                    desc: 'عميل مستقل مبرمج لخدمتك حصرياً، يقوم بإدارة محفظتك المالية وتحليل الأسواق.'
+                }
             ]);
+            
             const [team, setTeam] = useState([
-                { id: 1, name: 'أحمد المصري', role: 'مدير مبيعات', sales: '$124,000', status: 'نشط 🟢' }
+                { id: 1, name: 'أحمد المصري', role: 'مدير مبيعات إقليمي', sales: '$124,000', status: 'نشط 🟢' },
+                { id: 2, name: 'سارة خالد', role: 'دعم فني كبار العملاء', sales: '-', status: 'نشط 🟢' },
+                { id: 3, name: 'إدريس عثمان', role: 'مسوق سيادي', sales: '$45,200', status: 'خامل 🟡' }
             ]);
 
             const [newProd, setNewProd] = useState({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
@@ -396,7 +423,19 @@ react_html = r"""
                     return;
                 }
                 const p_price = parseFloat(newProd.price);
-                setProducts([{...newProd, price: p_price, id: Date.now(), sales: 0, views: 0, status: 'قيد المراجعة'}, ...products]);
+                const newProductEntry = {
+                    ...newProd, 
+                    price: p_price, 
+                    id: Date.now().toString(), 
+                    sales: 0, 
+                    views: 0, 
+                    status: 'قيد المراجعة',
+                    country: 'عالمي',
+                    vendor: 'متجرك السيادي',
+                    img: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800',
+                    rating: 0
+                };
+                setProducts([newProductEntry, ...products]);
                 setNewProd({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
                 showToast(t.successAdded);
                 setActiveTab('overview');
@@ -548,6 +587,36 @@ react_html = r"""
                                         <div className={`absolute ${isRTL?'-right-4':'-left-4'} -top-4 opacity-5 ${activeTheme.accent} group-hover:scale-110 transition-transform`}><Icon name="Users" size={120} /></div>
                                         <p className="text-gray-400 font-bold mb-2 text-sm uppercase tracking-widest">{t.teamMembers}</p>
                                         <h4 className="text-3xl font-black text-white">{team.length}</h4>
+                                    </div>
+                                </div>
+
+                                <div className={`${activeTheme.card} p-8 rounded-[2rem] border ${activeTheme.borderLight} transition-colors`}>
+                                    <h3 className="text-xl font-black mb-6 border-b border-white/5 pb-4">حالة الأصول الاستراتيجية</h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-dir border-collapse">
+                                            <thead>
+                                                <tr className="text-gray-400 text-sm uppercase tracking-widest border-b border-white/10">
+                                                    <th className="pb-4 font-black">اسم الأصل</th>
+                                                    <th className="pb-4 font-black">القسم</th>
+                                                    <th className="pb-4 font-black">القيمة</th>
+                                                    <th className="pb-4 font-black">المبيعات</th>
+                                                    <th className="pb-4 font-black">الحالة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {products.map(p => (
+                                                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                        <td className="py-4 font-bold">{p.name}</td>
+                                                        <td className="py-4 text-gray-400 text-sm">{p.category}</td>
+                                                        <td className="py-4 font-black text-[#00FF88]">${Number(p.price).toLocaleString()}</td>
+                                                        <td className="py-4 font-bold">{p.sales}</td>
+                                                        <td className="py-4">
+                                                            <span className={`px-3 py-1 rounded-lg text-xs font-black ${p.status === 'نشط' ? 'bg-[#00FF88]/20 text-[#00FF88]' : `${activeTheme.bg} ${activeTheme.accent} opacity-80`}`}>{p.status}</span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
