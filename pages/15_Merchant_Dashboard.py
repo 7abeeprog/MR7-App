@@ -2,20 +2,20 @@ import streamlit as st
 import streamlit.components.v1 as components
 import json
 
-# --- 1. إعدادات الصفحة الأساسية ---
+# --- 1. بنيادي صفحي جي سيٽنگ ---
 st.set_page_config(
     page_title="MR7 Merchant Dashboard", 
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. جلب إعدادات السحابة والنمط ---
+# --- 2. ڪلائوڊ سيٽنگون ۽ ٿيم آڻيو ---
 fb_config_str = st.secrets.get("__firebase_config", "{}")
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 current_theme = st.session_state.get('app_theme', "غامق إمبراطوري 🖤")
 current_balance = st.session_state.get('cash_balance', 1250000)
 
-# --- 3. واجهة React للوحة التاجر السيادي (مستقرة ومصفحة بالكامل) ---
+# --- 3. خودمختيار واپاري ڊيش بورڊ لاءِ React انٽرفيس (مڪمل طور تي محفوظ) ---
 react_html = r"""
 <!DOCTYPE html>
 <html dir="rtl">
@@ -25,11 +25,11 @@ react_html = r"""
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- السيرفرات السحابية الأسرع والأكثر استقراراً (JSDelivr) -->
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide@0.292.0/dist/umd/lucide.min.js"></script>
+    <!-- سرور لنڪس -->
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"></script>
     
     <style>
         body { 
@@ -85,12 +85,11 @@ react_html = r"""
         }
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-        /* تعديلات الاتجاه للغات الأجنبية */
         html[dir="ltr"] .dir-invert { flex-direction: row-reverse; }
         html[dir="ltr"] .text-dir { text-align: left; }
         html[dir="rtl"] .text-dir { text-align: right; }
 
-        /* شاشة التحميل المبدئية */
+        /* شاشة التحميل */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background: #000; color: #FFD700; display: flex; flex-direction: column;
@@ -107,31 +106,32 @@ react_html = r"""
     </style>
 </head>
 <body>
+    <!-- لوڈنگ اسڪرين -->
     <div id="loading-screen">
         <div class="loader-spinner"></div>
-        <h2 style="margin:0;">جاري تهيئة مركز العمليات السيادي...</h2>
+        <h2 style="margin:0;">خودمختيار آپريشن سينٽر کي ترتيب ڏنو پيو وڃي...</h2>
         <p style="color:#888; font-size:14px; margin-top:10px;">MR7 Ecosystem Initialization</p>
     </div>
 
     <div id="root"></div>
 
-    <script type="text/babel">
-        // 1. نظام التقاط الأخطاء العالمي 
+    <!-- نقص روڪڻ جو نظام -->
+    <script>
         window.onerror = function(msg, url, line, col, error) {
-            const loader = document.getElementById('loading-screen');
+            var loader = document.getElementById('loading-screen');
             if (loader) loader.style.display = 'none';
-            document.getElementById('root').innerHTML = `
-                <div style="padding:40px; background:#220000; color:#FF5555; text-align:left; direction:ltr; min-height:100vh;">
-                    <h2 style="font-family:sans-serif;">⚠️ نظام الحماية: تم رصد خطأ تقني</h2>
+            document.body.innerHTML += `
+                <div style="padding:40px; background:#220000; color:#FF5555; text-align:left; direction:ltr; position:absolute; top:0; width:100%; min-height:100vh; z-index:999999;">
+                    <h2 style="font-family:sans-serif;">⚠️ تحفظ وارو نظام: ٽيڪنيڪل نقص مليو آهي</h2>
                     <p style="font-size:1.2rem;">${msg}</p>
-                    <pre style="background:#000; padding:20px; border-radius:10px; color:#FFF;">${error ? error.stack : 'No stack trace'}</pre>
                 </div>
             `;
         };
+    </script>
 
+    <script type="text/babel">
         const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
-        // 2. درع حماية React (Error Boundary)
         class ErrorBoundary extends React.Component {
             constructor(props) {
                 super(props);
@@ -156,7 +156,6 @@ react_html = r"""
             }
         }
 
-        // 3. مكون أيقونة محمي بالكامل من التعارضات
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
             const iconRef = useRef(null);
 
@@ -175,7 +174,6 @@ react_html = r"""
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- قاموس الترجمة الشامل ---
         const translations = {
             ar: {
                 dashboardTitle: "لوحة التاجر",
@@ -223,98 +221,6 @@ react_html = r"""
                 legalDoc: "Legal Documentation",
                 successAdded: "Asset successfully submitted for review! 🚀"
             },
-            fr: {
-                dashboardTitle: "Hub Marchand",
-                dashboardSub: "Hub Marchand Souverain",
-                searchPlaceholder: "Rechercher des Actifs...",
-                liquidity: "Coffre de Liquidité",
-                overview: "Aperçu",
-                assets: "Gestion des Actifs",
-                team: "Armée Marchande",
-                services: "Services Intelligents",
-                certified: "Marchand Certifié",
-                gen: "3ème Génération",
-                kpiTitle: "KPI Stratégiques 📊",
-                sales: "Ventes Totales",
-                activeAssets: "Actifs Actifs",
-                views: "Vues des Actifs",
-                teamMembers: "Équipe de Soutien",
-                newProduct: "Lister Nouvel Actif",
-                addAsset: "Soumettre pour Examen",
-                aiAgent: "Agent de Vente IA",
-                regionalCamp: "Campagne Régionale",
-                legalDoc: "Documentation Légale",
-                successAdded: "Actif soumis avec succès ! 🚀"
-            },
-            es: {
-                dashboardTitle: "Centro Comercial",
-                dashboardSub: "Centro Comercial Soberano",
-                searchPlaceholder: "Buscar Activos...",
-                liquidity: "Bóveda de Liquidez",
-                overview: "Visión General",
-                assets: "Gestión de Activos",
-                team: "Ejército Comercial",
-                services: "Servicios Inteligentes",
-                certified: "Comerciante Certificado",
-                gen: "3ª Generación",
-                kpiTitle: "KPI Estratégicos 📊",
-                sales: "Ventas Totales",
-                activeAssets: "Activos Activos",
-                views: "Vistas de Activos",
-                teamMembers: "Equipo de Apoyo",
-                newProduct: "Listar Nuevo Activo",
-                addAsset: "Enviar para Revisión",
-                aiAgent: "Agente de Ventas IA",
-                regionalCamp: "Campaña Regional",
-                legalDoc: "Documentación Legal",
-                successAdded: "¡Activo enviado con éxito! 🚀"
-            },
-            zh: {
-                dashboardTitle: "商家中心",
-                dashboardSub: "主权商家中心",
-                searchPlaceholder: "搜索帝国资产...",
-                liquidity: "流动性金库",
-                overview: "概览",
-                assets: "资产与库存管理",
-                team: "商家辅助团队",
-                services: "智能辅助服务",
-                certified: "认证商家",
-                gen: "第三代",
-                kpiTitle: "战略绩效指标 📊",
-                sales: "总销售额",
-                activeAssets: "市场活跃资产",
-                views: "您的资产浏览量",
-                teamMembers: "辅助团队",
-                newProduct: "向市场推出新资产",
-                addAsset: "批准并发送进行主权审查",
-                aiAgent: "AI销售代理",
-                regionalCamp: "区域注资活动",
-                legalDoc: "主权法律文件",
-                successAdded: "资产已成功提交主权审查！ 🚀"
-            },
-            fa: {
-                dashboardTitle: "داشبورد تاجر",
-                dashboardSub: "مرکز تجارت حاکمیتی",
-                searchPlaceholder: "جستجوی دارایی‌های امپراتوری...",
-                liquidity: "خزانه نقدینگی",
-                overview: "نمای کلی",
-                assets: "مدیریت دارایی و موجودی",
-                team: "ارتش کمکی تاجر",
-                services: "خدمات کمکی هوشمند",
-                certified: "تاجر تایید شده",
-                gen: "نسل سوم",
-                kpiTitle: "شاخص‌های عملکرد استراتژیک 📊",
-                sales: "کل فروش",
-                activeAssets: "دارایی‌های فعال در بازار",
-                views: "بازدید دارایی‌های شما",
-                teamMembers: "تیم کمکی",
-                newProduct: "عرضه دارایی جدید به بازار",
-                addAsset: "تایید و ارسال برای بررسی حاکمیتی",
-                aiAgent: "نماینده فروش هوش مصنوعی",
-                regionalCamp: "کمپین تزریق منطقه‌ای",
-                legalDoc: "مستندات حقوقی حاکمیتی",
-                successAdded: "دارایی با موفقیت برای بررسی حاکمیتی ارسال شد! 🚀"
-            },
             sw: {
                 dashboardTitle: "Kituo cha Mfanyabiashara",
                 dashboardSub: "Kituo cha Biashara cha Kifalme",
@@ -341,7 +247,6 @@ react_html = r"""
         };
 
         const App = () => {
-            // إخفاء شاشة التحميل بمجرد إقلاع تطبيق React بنجاح
             useEffect(() => {
                 const loader = document.getElementById('loading-screen');
                 if (loader) {
@@ -350,7 +255,6 @@ react_html = r"""
                 }
             }, []);
 
-            // --- 7 الأنماط الديناميكية (7 Dynamic Themes) ---
             const themes = {
                 "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#E5B80B" },
                 "غامق إمبراطوري 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#FFD700" },
@@ -365,47 +269,28 @@ react_html = r"""
             const activeTheme = themes[activeThemeName] || themes["غامق إمبراطوري 🖤"];
             const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
-            // --- Multi-language State ---
             const [lang, setLang] = useState('ar');
             const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-            const t = translations[lang];
+            const t = translations[lang] || translations['ar'];
 
             useEffect(() => {
                 document.documentElement.dir = (lang === 'ar' || lang === 'fa') ? 'rtl' : 'ltr';
             }, [lang]);
 
-            // --- State ---
             const [activeTab, setActiveTab] = useState('overview'); 
             const [toasts, setToasts] = useState([]);
             
-            // استرجاع البيانات الفخمة والمتكاملة لحل مشكلة الـ TypeError
             const [products, setProducts] = useState([
                 { 
                     id: 'p1', name: 'برج السيادة الإداري', price: 1500000, country: 'مصر', category: 'عقارات سيادية', vendor: 'مجموعة النبت العقارية', 
                     img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800', rating: 5.0, sales: 12, views: 1500, status: 'نشط',
                     desc: 'تحفة معمارية في العاصمة الإدارية الجديدة، مصممة بأعلى معايير الاستدامة.'
-                },
-                { 
-                    id: 'p2', name: 'منظومة الطاقة X10', price: 12500, country: 'ليبيا', category: 'طاقة مستدامة', vendor: 'تكنو-صحراء', 
-                    img: 'https://images.unsplash.com/photo-1509391366360-fe5bb58583bb?w=800', rating: 4.8, sales: 85, views: 820, status: 'نشط',
-                    desc: 'محطة طاقة شمسية هجينة متنقلة قادرة على تغذية مجمعات سكنية كاملة.'
-                },
-                { 
-                    id: 'p3', name: 'دبلوم هندسة الأرباح', price: 499, country: 'السعودية', category: 'أكاديمية القيادة', vendor: 'MR7 Academy', 
-                    img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800', rating: 4.9, sales: 1240, views: 5600, status: 'نشط',
-                    desc: 'المنهج الدراسي الأكثر تأثيراً لبناء العقلية الاستثمارية السيادية.'
-                },
-                { 
-                    id: 'p4', name: 'وكيل الذكاء الاصطناعي', price: 2500, country: 'عالمي', category: 'تقنيات المستقبل', vendor: 'مختبرات السيادة', 
-                    img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', rating: 5.0, sales: 320, views: 900, status: 'نشط',
-                    desc: 'عميل مستقل مبرمج لخدمتك حصرياً، يقوم بإدارة محفظتك المالية وتحليل الأسواق.'
                 }
             ]);
             
             const [team, setTeam] = useState([
                 { id: 1, name: 'أحمد المصري', role: 'مدير مبيعات إقليمي', sales: '$124,000', status: 'نشط 🟢' },
-                { id: 2, name: 'سارة خالد', role: 'دعم فني كبار العملاء', sales: '-', status: 'نشط 🟢' },
-                { id: 3, name: 'إدريس عثمان', role: 'مسوق سيادي', sales: '$45,200', status: 'خامل 🟡' }
+                { id: 2, name: 'سارة خالد', role: 'دعم فني كبار العملاء', sales: '-', status: 'نشط 🟢' }
             ]);
 
             const [newProd, setNewProd] = useState({ name: '', price: '', category: 'عقارات سيادية', desc: '' });
@@ -457,10 +342,8 @@ react_html = r"""
             return (
                 <div className={`min-h-screen ${activeTheme.bg} ${activeTheme.text} flex flex-col md:flex-row overflow-hidden transition-colors duration-500`}>
                     
-                    {/* --- Sidebar --- */}
                     <div className={`w-full md:w-72 md:min-h-screen ${activeTheme.card} border-b md:border-b-0 md:border-l ${activeTheme.borderLight} flex flex-col transition-colors duration-500`}>
                         
-                        {/* Global Controls */}
                         <div className="p-6 pb-2 flex justify-between items-center dir-invert">
                             <div className="relative z-[200]">
                                 <button 
@@ -497,10 +380,6 @@ react_html = r"""
                                     <div className={`absolute top-10 ${isRTL ? 'left-0' : 'right-0'} glass-panel p-2 rounded-xl flex flex-col gap-1 shadow-2xl animate-view min-w-[100px]`}>
                                         <button onClick={() => {setLang('ar'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'ar' ? activeTheme.accent : 'text-white'}`}>العربية</button>
                                         <button onClick={() => {setLang('en'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'en' ? activeTheme.accent : 'text-white'}`}>English</button>
-                                        <button onClick={() => {setLang('fr'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'fr' ? activeTheme.accent : 'text-white'}`}>Français</button>
-                                        <button onClick={() => {setLang('es'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'es' ? activeTheme.accent : 'text-white'}`}>Español</button>
-                                        <button onClick={() => {setLang('zh'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'zh' ? activeTheme.accent : 'text-white'}`}>中文</button>
-                                        <button onClick={() => {setLang('fa'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'fa' ? activeTheme.accent : 'text-white'}`}>فارسی</button>
                                         <button onClick={() => {setLang('sw'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'sw' ? activeTheme.accent : 'text-white'}`}>Swahili</button>
                                     </div>
                                 )}
@@ -539,10 +418,8 @@ react_html = r"""
                         </div>
                     </div>
 
-                    {/* --- Main Content --- */}
                     <div className="flex-1 p-4 md:p-10 h-screen overflow-y-auto no-scrollbar text-dir">
                         
-                        {/* Search & Wallet Bar */}
                         <div className="flex flex-col md:flex-row gap-6 mb-10 items-center">
                             <div className="flex-1 relative w-full">
                                 <Icon name="Search" size={18} className={`absolute ${isRTL?'right-5':'left-5'} top-1/2 -translate-y-1/2 text-gray-400`} />
@@ -555,7 +432,8 @@ react_html = r"""
                             <div className={`glass-panel px-8 py-3 rounded-2xl border ${activeTheme.borderLight} flex items-center gap-4`}>
                                 <div className="flex flex-col">
                                     <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{t.liquidity}</span>
-                                    <span className="text-[#00FF88] font-black text-xl">${LEADER_BALANCE_PLACEHOLDER.toLocaleString()}</span>
+                                    {/* اهم حل جذري - تجنب الانهيار بتحويل القيمة لرقم */}
+                                    <span className="text-[#00FF88] font-black text-xl">${Number(LEADER_BALANCE_PLACEHOLDER).toLocaleString()}</span>
                                 </div>
                                 <Icon name="Wallet" size={24} className={activeTheme.accent} />
                             </div>
@@ -591,7 +469,6 @@ react_html = r"""
                                 </div>
 
                                 <div className={`${activeTheme.card} p-8 rounded-[2rem] border ${activeTheme.borderLight} transition-colors`}>
-                                    <h3 className="text-xl font-black mb-6 border-b border-white/5 pb-4">حالة الأصول الاستراتيجية</h3>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-dir border-collapse">
                                             <thead>
@@ -599,7 +476,6 @@ react_html = r"""
                                                     <th className="pb-4 font-black">اسم الأصل</th>
                                                     <th className="pb-4 font-black">القسم</th>
                                                     <th className="pb-4 font-black">القيمة</th>
-                                                    <th className="pb-4 font-black">المبيعات</th>
                                                     <th className="pb-4 font-black">الحالة</th>
                                                 </tr>
                                             </thead>
@@ -609,7 +485,6 @@ react_html = r"""
                                                         <td className="py-4 font-bold">{p.name}</td>
                                                         <td className="py-4 text-gray-400 text-sm">{p.category}</td>
                                                         <td className="py-4 font-black text-[#00FF88]">${Number(p.price).toLocaleString()}</td>
-                                                        <td className="py-4 font-bold">{p.sales}</td>
                                                         <td className="py-4">
                                                             <span className={`px-3 py-1 rounded-lg text-xs font-black ${p.status === 'نشط' ? 'bg-[#00FF88]/20 text-[#00FF88]' : `${activeTheme.bg} ${activeTheme.accent} opacity-80`}`}>{p.status}</span>
                                                         </td>
@@ -636,9 +511,6 @@ react_html = r"""
                                         <div className="space-y-3">
                                             <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'السعر ($)' : 'Price ($)'} />
                                         </div>
-                                        <div className="md:col-span-2 space-y-3">
-                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border} text-dir`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'الوصف...' : 'Description...'}></textarea>
-                                        </div>
                                     </div>
                                     <button type="submit" className={`w-full py-6 rounded-[2rem] font-black text-xl ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic flex items-center justify-center gap-3`}>
                                         <Icon name="UploadCloud" /> {t.addAsset}
@@ -659,11 +531,6 @@ react_html = r"""
                                         <div className={`bg-white/10 ${activeTheme.accent} p-5 rounded-3xl mb-6`}><Icon name="Megaphone" size={40} /></div>
                                         <h4 className="text-xl font-black mb-3">{t.regionalCamp}</h4>
                                         <button className={`mt-auto w-full py-4 bg-white/5 hover:${activeTheme.btn} hover:${activeTheme.btnText} rounded-xl font-black transition-all`}>تفعيل</button>
-                                    </div>
-                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:border-[#0074D9] transition-colors`}>
-                                        <div className="bg-[#0074D9]/10 text-[#0074D9] p-5 rounded-3xl mb-6"><Icon name="FileSignature" size={40} /></div>
-                                        <h4 className="text-xl font-black mb-3">{t.legalDoc}</h4>
-                                        <button className="mt-auto w-full py-4 bg-white/5 hover:bg-[#0074D9] hover:text-white rounded-xl font-black transition-all">تفعيل</button>
                                     </div>
                                 </div>
                             </div>
@@ -698,20 +565,19 @@ react_html = r"""
 </html>
 """
 
-# --- 4. حقن المتغيرات السحابية بشكل آمن ---
-# استخدام Replace لحماية الكود من تعارضات f-string
+# --- 4. ڪلائوڊ متغيرن کي محفوظ طريقي سان انجيڪٽ ڪريو ---
 final_html = react_html.replace("CURRENT_THEME_PLACEHOLDER", current_theme)
 final_html = final_html.replace("LEADER_BALANCE_PLACEHOLDER", str(current_balance))
 
-# --- 5. عرض الواجهة (Render) ---
+# --- 5. انٽرفيس ڏيکاريو ---
 components.html(final_html, height=950, scrolling=True)
 
-# --- 6. أزرار التحكم والرجوع ---
+# --- 6. ڪنٽرول ۽ واپس وڃڻ وارا بٽڻ ---
 st.markdown("---")
 c1, c2 = st.columns(2)
 with c1:
-    if st.button("🛒 العودة للسوق العالمي (Marketplace)"):
+    if st.button("🛒 گلوبل مارڪيٽ ۾ واپس وڃو"):
         st.switch_page("pages/4_Marketplace.py")
 with c2:
-    if st.button("🏠 العودة لمركز القيادة الرئيسي (Home)"):
+    if st.button("🏠 مين ڪمانڊ سينٽر ڏانھن واپس وڃو"):
         st.switch_page("app.py")
