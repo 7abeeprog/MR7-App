@@ -221,6 +221,98 @@ react_html = r"""
                 legalDoc: "Legal Documentation",
                 successAdded: "Asset successfully submitted for review! 🚀"
             },
+            fr: {
+                dashboardTitle: "Hub Marchand",
+                dashboardSub: "Hub Marchand Souverain",
+                searchPlaceholder: "Rechercher des Actifs...",
+                liquidity: "Coffre de Liquidité",
+                overview: "Aperçu",
+                assets: "Gestion des Actifs",
+                team: "Armée Marchande",
+                services: "Services Intelligents",
+                certified: "Marchand Certifié",
+                gen: "3ème Génération",
+                kpiTitle: "KPI Stratégiques 📊",
+                sales: "Ventes Totales",
+                activeAssets: "Actifs Actifs",
+                views: "Vues des Actifs",
+                teamMembers: "Équipe de Soutien",
+                newProduct: "Lister Nouvel Actif",
+                addAsset: "Soumettre pour Examen",
+                aiAgent: "Agent de Vente IA",
+                regionalCamp: "Campagne Régionale",
+                legalDoc: "Documentation Légale",
+                successAdded: "Actif soumis avec succès ! 🚀"
+            },
+            es: {
+                dashboardTitle: "Centro Comercial",
+                dashboardSub: "Centro Comercial Soberano",
+                searchPlaceholder: "Buscar Activos...",
+                liquidity: "Bóveda de Liquidez",
+                overview: "Visión General",
+                assets: "Gestión de Activos",
+                team: "Ejército Comercial",
+                services: "Servicios Inteligentes",
+                certified: "Comerciante Certificado",
+                gen: "3ª Generación",
+                kpiTitle: "KPI Estratégicos 📊",
+                sales: "Ventas Totales",
+                activeAssets: "Activos Activos",
+                views: "Vistas de Activos",
+                teamMembers: "Equipo de Apoyo",
+                newProduct: "Listar Nuevo Activo",
+                addAsset: "Enviar para Revisión",
+                aiAgent: "Agente de Ventas IA",
+                regionalCamp: "Campaña Regional",
+                legalDoc: "Documentación Legal",
+                successAdded: "¡Activo enviado con éxito! 🚀"
+            },
+            zh: {
+                dashboardTitle: "商家中心",
+                dashboardSub: "主权商家中心",
+                searchPlaceholder: "搜索帝国资产...",
+                liquidity: "流动性金库",
+                overview: "概览",
+                assets: "资产与库存管理",
+                team: "商家辅助团队",
+                services: "智能辅助服务",
+                certified: "认证商家",
+                gen: "第三代",
+                kpiTitle: "战略绩效指标 📊",
+                sales: "总销售额",
+                activeAssets: "市场活跃资产",
+                views: "您的资产浏览量",
+                teamMembers: "辅助团队",
+                newProduct: "向市场推出新资产",
+                addAsset: "批准并发送进行主权审查",
+                aiAgent: "AI销售代理",
+                regionalCamp: "区域注资活动",
+                legalDoc: "主权法律文件",
+                successAdded: "资产已成功提交主权审查！ 🚀"
+            },
+            fa: {
+                dashboardTitle: "داشبورد تاجر",
+                dashboardSub: "مرکز تجارت حاکمیتی",
+                searchPlaceholder: "جستجوی دارایی‌های امپراتوری...",
+                liquidity: "خزانه نقدینگی",
+                overview: "نمای کلی",
+                assets: "مدیریت دارایی و موجودی",
+                team: "ارتش کمکی تاجر",
+                services: "خدمات کمکی هوشمند",
+                certified: "تاجر تایید شده",
+                gen: "نسل سوم",
+                kpiTitle: "شاخص‌های عملکرد استراتژیک 📊",
+                sales: "کل فروش",
+                activeAssets: "دارایی‌های فعال در بازار",
+                views: "بازدید دارایی‌های شما",
+                teamMembers: "تیم کمکی",
+                newProduct: "عرضه دارایی جدید به بازار",
+                addAsset: "تایید و ارسال برای بررسی حاکمیتی",
+                aiAgent: "نماینده فروش هوش مصنوعی",
+                regionalCamp: "کمپین تزریق منطقه‌ای",
+                legalDoc: "مستندات حقوقی حاکمیتی",
+                successAdded: "دارایی با موفقیت برای بررسی حاکمیتی ارسال شد! 🚀"
+            },
             sw: {
                 dashboardTitle: "Kituo cha Mfanyabiashara",
                 dashboardSub: "Kituo cha Biashara cha Kifalme",
@@ -256,8 +348,8 @@ react_html = r"""
             }, []);
 
             const themes = {
-                "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#E5B80B" },
-                "غامق إمبراطوري 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#FFD700" },
+                "فاتح ملكي ✨": { bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]", card: "bg-white/90", border: "border-[#B8860B]", borderLight: "border-[#B8860B]/20", accent: "text-[#B8860B]", btn: "bg-[#B8860B]", btnText: "text-white", hex: "#FFFFFF" },
+                "غامق إمبراطوري 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
                 "أزرق القيادة 💙": { bg: "bg-[#000814]", text: "text-white", card: "bg-[#00122B]/80", border: "border-[#0074D9]", borderLight: "border-[#0074D9]/20", accent: "text-[#0074D9]", btn: "bg-[#0074D9]", btnText: "text-white", hex: "#0074D9" },
                 "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", border: "border-[#00FF88]", borderLight: "border-[#00FF88]/20", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" },
                 "أحمر القوة 🔴": { bg: "bg-[#140000]", text: "text-white", card: "bg-[#2B0000]/80", border: "border-[#FF4136]", borderLight: "border-[#FF4136]/20", accent: "text-[#FF4136]", btn: "bg-[#FF4136]", btnText: "text-white", hex: "#FF4136" },
@@ -380,6 +472,10 @@ react_html = r"""
                                     <div className={`absolute top-10 ${isRTL ? 'left-0' : 'right-0'} glass-panel p-2 rounded-xl flex flex-col gap-1 shadow-2xl animate-view min-w-[100px]`}>
                                         <button onClick={() => {setLang('ar'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'ar' ? activeTheme.accent : 'text-white'}`}>العربية</button>
                                         <button onClick={() => {setLang('en'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'en' ? activeTheme.accent : 'text-white'}`}>English</button>
+                                        <button onClick={() => {setLang('fr'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'fr' ? activeTheme.accent : 'text-white'}`}>Français</button>
+                                        <button onClick={() => {setLang('es'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'es' ? activeTheme.accent : 'text-white'}`}>Español</button>
+                                        <button onClick={() => {setLang('zh'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'zh' ? activeTheme.accent : 'text-white'}`}>中文</button>
+                                        <button onClick={() => {setLang('fa'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'fa' ? activeTheme.accent : 'text-white'}`}>فارسی</button>
                                         <button onClick={() => {setLang('sw'); setIsLangMenuOpen(false);}} className={`px-4 py-2 rounded-lg text-sm font-bold text-dir hover:bg-white/10 ${lang === 'sw' ? activeTheme.accent : 'text-white'}`}>Swahili</button>
                                     </div>
                                 )}
@@ -432,7 +528,6 @@ react_html = r"""
                             <div className={`glass-panel px-8 py-3 rounded-2xl border ${activeTheme.borderLight} flex items-center gap-4`}>
                                 <div className="flex flex-col">
                                     <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{t.liquidity}</span>
-                                    {/* اهم حل جذري - تجنب الانهيار بتحويل القيمة لرقم */}
                                     <span className="text-[#00FF88] font-black text-xl">${Number(LEADER_BALANCE_PLACEHOLDER).toLocaleString()}</span>
                                 </div>
                                 <Icon name="Wallet" size={24} className={activeTheme.accent} />
@@ -511,6 +606,9 @@ react_html = r"""
                                         <div className="space-y-3">
                                             <input type="number" className={`w-full premium-input rounded-2xl py-4 px-5 font-bold focus:${activeTheme.border} text-dir`} value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'السعر ($)' : 'Price ($)'} />
                                         </div>
+                                        <div className="md:col-span-2 space-y-3">
+                                            <textarea className={`w-full premium-input rounded-2xl py-4 px-5 font-bold min-h-[120px] focus:${activeTheme.border} text-dir`} value={newProd.desc} onChange={e => setNewProd({...newProd, desc: e.target.value})} placeholder={lang === 'ar' || lang === 'fa' ? 'الوصف...' : 'Description...'}></textarea>
+                                        </div>
                                     </div>
                                     <button type="submit" className={`w-full py-6 rounded-[2rem] font-black text-xl ${activeTheme.btn} ${activeTheme.btnText} btn-hover-dynamic flex items-center justify-center gap-3`}>
                                         <Icon name="UploadCloud" /> {t.addAsset}
@@ -531,6 +629,11 @@ react_html = r"""
                                         <div className={`bg-white/10 ${activeTheme.accent} p-5 rounded-3xl mb-6`}><Icon name="Megaphone" size={40} /></div>
                                         <h4 className="text-xl font-black mb-3">{t.regionalCamp}</h4>
                                         <button className={`mt-auto w-full py-4 bg-white/5 hover:${activeTheme.btn} hover:${activeTheme.btnText} rounded-xl font-black transition-all`}>تفعيل</button>
+                                    </div>
+                                    <div className={`${activeTheme.card} p-8 rounded-[2.5rem] border ${activeTheme.borderLight} text-center flex flex-col items-center hover:border-[#0074D9] transition-colors`}>
+                                        <div className="bg-[#0074D9]/10 text-[#0074D9] p-5 rounded-3xl mb-6"><Icon name="FileSignature" size={40} /></div>
+                                        <h4 className="text-xl font-black mb-3">{t.legalDoc}</h4>
+                                        <button className="mt-auto w-full py-4 bg-white/5 hover:bg-[#0074D9] hover:text-white rounded-xl font-black transition-all">تفعيل</button>
                                     </div>
                                 </div>
                             </div>
