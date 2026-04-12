@@ -1,6 +1,9 @@
 import streamlit as st
-from datetime import datetime
 import time
+import json
+import requests
+import uuid
+from datetime import datetime
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -33,17 +36,9 @@ t = themes[st.session_state.app_theme]
 
 st.markdown(f"""
     <style>
-    /* التنسيق العام */
-    .stApp {{
-        background-color: {t['bg']} !important;
-        color: {t['text']} !important;
-    }}
+    .stApp {{ background-color: {t['bg']} !important; color: {t['text']} !important; }}
+    [data-testid="stSidebar"] {{ background-color: {t['sidebar']} !important; border-right: 2px solid {t['accent']} !important; }}
     
-    [data-testid="stSidebar"] {{
-        background-color: {t['sidebar']} !important;
-        border-right: 2px solid {t['accent']} !important;
-    }}
-
     div[data-testid="stMarkdownContainer"] p, h2, h3, h4, span, label, li {{ 
         color: {t['text']} !important; 
         font-weight: 700 !important; 
@@ -59,10 +54,9 @@ st.markdown(f"""
         font-size: 3.5rem !important; 
     }}
 
-    /* بطاقة التنبيه الاحترافية */
-    .notification-card {{
+    .noti-card {{
         background: {t['card']};
-        border-left: 6px solid {t['accent']};
+        border-right: 6px solid {t['accent']};
         border-radius: 20px;
         padding: 25px;
         margin-bottom: 20px;
@@ -72,30 +66,15 @@ st.markdown(f"""
         box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         transition: 0.3s ease;
     }}
-    .notification-card:hover {{
-        transform: scale(1.02);
-        border-left-color: #00FF88;
-    }}
+    .noti-card:hover {{ transform: scale(1.02); border-right-color: #00FF88; }}
     
-    .noti-type {{
+    .noti-badge-type {{
         background: {t['accent']};
         color: #000 !important;
         padding: 2px 10px;
         border-radius: 8px;
         font-size: 0.75rem;
-        font-weight: 900;
-        margin-bottom: 5px;
-        display: inline-block;
-    }}
-
-    /* إصلاح مدخلات القوائم المنسدلة */
-    div[data-baseweb="select"] > div {{
-        background-color: {t['select_bg']} !important;
-        color: {t['select_text']} !important;
-    }}
-    div[data-baseweb="popover"] li {{
-        color: {t['select_text']} !important;
-        background-color: {t['select_bg']} !important;
+        font-weight: 950;
     }}
 
     .stButton>button {{
@@ -108,60 +87,75 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. إدارة البيانات (Notification Storage) ---
-if 'notifications' not in st.session_state or len(st.session_state.notifications) == 0:
-    st.session_state.notifications = [
-        {"msg": "تم إيداع عمولة جديدة بقيمة $500 من الجيل الثاني.", "time": "10:30 AM", "icon": "💰", "type": "مالي"},
-        {"msg": "مشروعك 'مزرعة الهيدروبونيك' حصل على تمويل جديد!", "time": "09:15 AM", "icon": "🤝", "type": "تمويل"},
-        {"msg": "تمت ترقية رتبتك إلى 'قائد استراتيجي' بنجاح.", "time": "أمس", "icon": "🏆", "type": "نظام"},
-        {"msg": "مرحباً بك في مركز التنبيهات الإمبراطوري MR7.", "time": "2026-04-10", "icon": "🔔", "type": "ترحيب"}
-    ]
+# --- 2. محرك قاعدة البيانات (Live Firestore REST) ---
+fb_config = json.loads(st.secrets.get("__firebase_config", "{}"))
+app_id = st.secrets.get("__app_id", "mr7-empire-v1")
+project_id = fb_config.get("projectId", "mr7-app")
+BASE_URL = "https://firestore.googleapis.com/v1/"
+
+if 'user_id' not in st.session_state: st.session_state.user_id = str(uuid.uuid4())
+
+def fetch_live_notifications():
+    """جلب التنبيهات من مسار المستخدم الخاص"""
+    path = f"projects/{project_id}/databases/(default)/documents/artifacts/{app_id}/users/{st.session_state.user_id}/notifications"
+    try:
+        res = requests.get(f"{BASE_URL}{path}")
+        if res.status_code == 200:
+            docs = res.json().get("documents", [])
+            notis = []
+            for doc in docs:
+                f = doc.get("fields", {})
+                notis.append({
+                    "id": doc["name"].split("/")[-1],
+                    "msg": f.get("msg", {}).get("stringValue", ""),
+                    "type": f.get("type", {}).get("stringValue", "عام"),
+                    "icon": f.get("icon", {}).get("stringValue", "🔔"),
+                    "time": f.get("time", {}).get("stringValue", "غير معروف")
+                })
+            return sorted(notis, key=lambda x: x['time'], reverse=True)
+        return []
+    except: return []
 
 # --- 3. واجهة مركز التنبيهات ---
 st.title("🔔 مركز التنبيهات الإمبراطوري")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>نظام المتابعة اللحظية لإمبراطورية MR7</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.4rem; margin-top:-25px;'>نظام المتابعة السيادية اللحظية</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# أدوات التحكم في التنبيهات
-col_filter, col_actions = st.columns([2, 1])
+# جلب البيانات الحية
+live_notis = fetch_live_notifications()
 
-with col_filter:
-    category = st.selectbox("تصفية التنبيهات حسب النوع:", ["الكل", "مالي", "تمويل", "نظام"])
+# في حال عدم وجود بيانات حية، نعرض بيانات افتراضية للتوضيح
+if not live_notis:
+    live_notis = [
+        {"id": "1", "msg": "تم إيداع عمولة بقيمة $500 من مبيعات الجيل الثاني.", "type": "مالي", "icon": "💰", "time": "10:30 AM"},
+        {"id": "2", "msg": "طلب تمويل جديد لمشروعك 'مدينة النبت' ينتظر المراجعة.", "type": "تمويل", "icon": "🤝", "time": "09:15 AM"},
+        {"id": "3", "msg": "تهانينا! لقد حققت رتبة 'قائد استراتيجي' بنجاح.", "type": "نظام", "icon": "🏆", "time": "أمس"}
+    ]
 
-with col_actions:
-    st.write("") # مسافة تجميلية
-    if st.button("🗑️ مسح السجل بالكامل"):
-        st.session_state.notifications = []
-        st.rerun()
+col_f, col_a = st.columns([2, 1])
+with col_f:
+    filter_type = st.selectbox("تصفية التنبيهات:", ["الكل", "مالي", "تمويل", "نظام"])
+with col_a:
+    st.write("") # مباعدة
+    if st.button("🔄 تحديث"): st.rerun()
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# عرض التنبيهات بناءً على الفلتر
-display_list = st.session_state.notifications if category == "الكل" else [n for n in st.session_state.notifications if n['type'] == category]
+display_list = live_notis if filter_type == "الكل" else [n for n in live_notis if n['type'] == filter_type]
 
-if not display_list:
-    st.info(f"لا توجد تنبيهات جديدة في قسم '{category}' حالياً.")
-else:
-    for n in display_list:
-        st.markdown(f"""
-        <div class="notification-card">
-            <div style="font-size: 3rem;">{n['icon']}</div>
-            <div style="flex-grow: 1;">
-                <span class="noti-type">{n['type']}</span>
-                <div style="font-size: 1.3rem; font-weight: 800; color: {t['text']};">{n['msg']}</div>
-                <div style="color: #888; font-size: 0.95rem; margin-top: 5px;">📅 {n['time']}</div>
-            </div>
+for n in display_list:
+    st.markdown(f"""
+    <div class="noti-card">
+        <div style="font-size: 3rem;">{n['icon']}</div>
+        <div style="flex-grow: 1;">
+            <span class="noti-badge-type">{n['type']}</span>
+            <div style="font-size: 1.2rem; font-weight: 800;">{n['msg']}</div>
+            <div style="color: #888; font-size: 0.85rem; margin-top: 5px;">📅 {n['time']}</div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
 st.divider()
-
-# العودة
-col_back, col_home = st.columns(2)
-with col_back:
-    if st.button("🏠 العودة للرئيسية"):
-        st.switch_page("app.py")
-with col_home:
-    if st.button("🤝 مجمع التمويل الجماعي"):
-        st.switch_page("pages/9_Crowdfunding.py")
+if st.button("🏠 العودة لمركز القيادة"):
+    st.switch_page("app.py")
