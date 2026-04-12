@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+from datetime import datetime
 
 # --- 1. محرك الأنماط الشامل (Theme Engine) ---
 if 'app_theme' not in st.session_state:
@@ -57,8 +58,22 @@ st.markdown(f"""
         padding: 25px;
         margin-bottom: 25px;
         transition: 0.4s ease;
+        position: relative;
+        overflow: hidden;
     }}
-    .project-card:hover {{ border-color: #00FF88; transform: translateY(-5px); }}
+    .project-card:hover {{ border-color: #00FF88; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,255,136,0.2); }}
+
+    .country-tag {{
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        border: 1px solid {t['accent']};
+    }}
 
     .stTextInput input, .stTextArea textarea, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {{
         background-color: #FFFFFF !important;
@@ -79,16 +94,51 @@ st.markdown(f"""
     .stProgress > div > div > div > div {{
         background-color: #00FF88 !important;
     }}
-    
-    .status-badge {{
-        padding: 5px 15px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: bold;
-    }}
     </style>
     """, unsafe_allow_html=True)
 
+# --- 2. إدارة البيانات الاستراتيجية ---
+if 'crowd_projects' not in st.session_state:
+    st.session_state.crowd_projects = [
+        {
+            "title": "مدينة النبت الذكية (Nabt Smart City)", 
+            "category": "مدن مستدامة", 
+            "country": "مصر / عالمي",
+            "owner": "منظومة MR7", 
+            "goal": 2000000000, 
+            "raised": 150000000, 
+            "desc": "نموذج بملياري دولار للحياة المستدامة، مع خطط لتكراره 100 مرة عالمياً. يشمل مزارع متخصصة، مراكز أبحاث، ومناطق سكنية ذكية.", 
+            "status": "approved"
+        },
+        {
+            "title": "مدينة السيارات الكهربائية (EV City)", 
+            "category": "تصنيع ثقيل", 
+            "country": "مصر",
+            "owner": "التحالف الصناعي MR7", 
+            "goal": 3600000000, 
+            "raised": 500000000, 
+            "desc": "استثمار بقيمة 3.6 مليار دولار لبناء 600 مصنع، لإعادة صياغة القيادة الصناعية في المنطقة وتوطين تكنولوجيا النقل الذكي.", 
+            "status": "approved"
+        },
+        {
+            "title": "مبادرة الـ 20,000 مشروع صغرى", 
+            "category": "ريادة أعمال مجتمعية", 
+            "country": "ليبيا / السودان",
+            "owner": "مؤسسة قادة الغد", 
+            "goal": 700000000, 
+            "raised": 85000000, 
+            "desc": "محفز بقيمة 700 مليون دولار لدعم رواد الأعمال في القاعدة الشعبية عبر ليبيا والسودان، وخلق فرص عمل لآلاف الشباب.", 
+            "status": "approved"
+        }
+    ]
+
+if 'notifications' not in st.session_state:
+    st.session_state.notifications = []
+
+def add_notification(msg, icon="💰"):
+    st.session_state.notifications.insert(0, {"msg": msg, "time": datetime.now().strftime("%Y-%m-%d %H:%M"), "icon": icon})
+
+# --- 3. الشريط الجانبي (فلترة الدول) ---
 with st.sidebar:
     st.markdown(f"### 🎨 تخصيص المظهر")
     theme_choice = st.selectbox("النمط الحالي:", options=list(themes.keys()), index=list(themes.keys()).index(st.session_state.app_theme))
@@ -96,49 +146,55 @@ with st.sidebar:
         st.session_state.app_theme = theme_choice
         st.rerun()
     st.divider()
+    
+    st.markdown("### 🌍 نطاق العمليات")
+    country_filter = st.multiselect(
+        "فلترة حسب الدولة:", 
+        ["مصر", "ليبيا", "السودان", "عالمي"],
+        default=["مصر", "ليبيا", "السودان", "عالمي"]
+    )
+    
+    st.divider()
     st.markdown("### 🏛️ رصيد الاستثمار")
-    st.success("المحفظة الاستثمارية: 50,000 EGP")
+    st.success("المحفظة الاستثمارية: 50,000 $")
 
-# --- 2. إدارة البيانات مع إضافة حالة المشروع (Status) ---
-if 'crowd_projects' not in st.session_state:
-    st.session_state.crowd_projects = [
-        {"title": "مزرعة الهيدروبونيك الذكية", "category": "زراعة ذكية", "owner": "م. يوسف القائد", "goal": 100000, "raised": 45000, "desc": "إنشاء أول مزرعة مائية مؤتمتة بالكامل بالذكاء الاصطناعي لإنتاج محاصيل عضوية عالية الجودة.", "status": "approved"},
-        {"title": "منصة تعليم البرمجة للأطفال", "category": "تعليم تقني", "owner": "ليلى المبدعة", "goal": 50000, "raised": 48000, "desc": "تطبيق لتبسيط منطق البرمجة باستخدام الألعاب لجيل التريليون القادم.", "status": "approved"}
-    ]
-
-st.title("🤝 مجمع التمويل الجماعي")
-st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>دعم المشاريع الناشئة وتبادل الاستثمارات الاستراتيجية</p>", unsafe_allow_html=True)
+# --- 4. واجهة مجمع التمويل الجماعي ---
+st.title("🤝 مجمع التمويل الملياري")
+st.markdown(f"<p style='text-align:center; color:{t['accent']}; font-size:1.3rem; margin-top:-20px;'>نظام تمويل المشاريع السيادية والاقتصاد التشاركي العالمي</p>", unsafe_allow_html=True)
 
 st.divider()
 
-tabs = st.tabs(["🌎 استكشاف المشاريع", "🚀 اطرح مشروعك باحترافية", "💰 استثماراتي", "📊 إحصائيات السوق"])
+tabs = st.tabs(["🌎 استكشاف المشاريع الإمبراطورية", "🚀 طرح مشروع سيادي", "💰 محفظتي الاستثمارية", "📊 إحصائيات النمو"])
 
-# --- Tab 1: استكشاف المشاريع (المعتمدة فقط) ---
+# --- Tab 1: استكشاف المشاريع ---
 with tabs[0]:
-    st.subheader("🌎 منصة عرض أفكار النخبة")
+    st.subheader("🌎 منصة المشاريع الكبرى")
     
-    # فلترة المشاريع المعتمدة فقط
-    approved_projects = [p for p in st.session_state.crowd_projects if p.get('status') == "approved"]
+    # فلترة المشاريع بناءً على الدول المختارة
+    display_projects = [
+        p for p in st.session_state.crowd_projects 
+        if any(country in p['country'] for country in country_filter) and p.get('status') == "approved"
+    ]
     
-    if not approved_projects:
-        st.info("لا توجد مشاريع معتمدة حالياً. كن أول من يطرح فكرة مليار دولار!")
+    if not display_projects:
+        st.info("لا توجد مشاريع تطابق نطاق البحث الجغرافي حالياً.")
     else:
-        for idx, proj in enumerate(approved_projects):
+        for idx, proj in enumerate(display_projects):
             with st.container():
                 st.markdown(f"""
                 <div class="project-card">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <span style="background: {t['accent']}; color: black; padding: 2px 8px; border-radius: 5px; font-size: 0.8rem;">{proj.get('category', 'عام')}</span>
-                            <h2 style="color: {t['accent']}; margin-top: 5px;">{proj['title']}</h2>
-                        </div>
-                        <span style="color: #888; font-size: 0.9rem;">👤 صاحب المشروع: {proj['owner']}</span>
+                    <div class="country-tag">📍 {proj['country']}</div>
+                    <div style="margin-top: 25px;">
+                        <span style="color: {t['accent']}; font-size: 0.9rem; font-weight: 900;">{proj['category']}</span>
+                        <h2 style="color: {t['accent']}; margin: 5px 0;">{proj['title']}</h2>
+                        <p style="color: #888; font-size: 0.9rem;">بواسطة: {proj['owner']}</p>
                     </div>
-                    <p style="color: #ccc; margin-top: 10px;">{proj['desc']}</p>
-                    <div style="margin: 20px 0;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>الهدف: {proj['goal']:,} EGP</span>
-                            <span>تم جمع: {proj['raised']:,} EGP</span>
+                    <p style="color: #ddd; line-height: 1.6; margin: 15px 0;">{proj['desc']}</p>
+                    
+                    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>الهدف المالي: <b>${proj['goal']:,.0f}</b></span>
+                            <span style="color: #00FF88;">تم جمع: <b>${proj['raised']:,.0f}</b></span>
                         </div>
                     </div>
                 </div>
@@ -147,84 +203,66 @@ with tabs[0]:
                 progress = min(proj['raised'] / proj['goal'], 1.0)
                 st.progress(progress)
                 
-                col_in, col_btn = st.columns([1, 1])
-                with col_in:
-                    fund_amt = st.number_input(f"مبلغ التمويل (EGP):", min_value=100, key=f"amt_{idx}", step=500)
+                col_amt, col_btn = st.columns([2, 1])
+                with col_amt:
+                    fund_val = st.number_input("مبلغ الضخ المالي ($):", min_value=10, key=f"fund_{idx}", step=100)
                 with col_btn:
-                    st.write("") # تعويض المسافة
-                    if st.button(f"🤝 تمويل الآن", key=f"btn_{idx}"):
-                        # تحديث المشروع الأصلي في القائمة الكبيرة
-                        for original_p in st.session_state.crowd_projects:
-                            if original_p['title'] == proj['title']:
-                                original_p['raised'] += fund_amt
-                        st.success(f"تم تسجيل استثمارك في {proj['title']}!")
+                    st.write("") # تباعد
+                    if st.button("🤝 ضخ استثماري", key=f"btn_fund_{idx}"):
+                        for original in st.session_state.crowd_projects:
+                            if original['title'] == proj['title']:
+                                original['raised'] += fund_val
+                                add_notification(f"تم ضخ {fund_val:,} $ في مشروع '{proj['title']}'", "⚡")
+                        st.success(f"تمت المساهمة بنجاح! أنت الآن شريك في بناء '{proj['title']}'")
                         time.sleep(1)
                         st.rerun()
 
-# --- Tab 2: اطرح مشروعك (مع حالة الانتظار) ---
+# --- Tab 2: طرح مشروعك ---
 with tabs[1]:
-    st.subheader("🚀 نموذج طرح المشروع الاستراتيجي")
-    st.info("املأ البيانات التالية بعناية. سيتم مراجعة مشروعك من قبل الإدارة قبل نشره في السوق العالمي.")
+    st.subheader("🚀 طرح رؤية اقتصادية للمراجعة")
+    st.warning("تحذير: المشاريع المليارية تتطلب دراسة جدوى موثقة من مكتب MR7 الاستشاري.")
     
-    with st.form("professional_pitch"):
-        col_t, col_c = st.columns(2)
-        with col_t:
-            p_title = st.text_input("اسم المشروع (العنوان الجاذب):")
-        with col_c:
-            p_cat = st.selectbox("تصنيف المشروع:", ["تقني (AI/Software)", "زراعي", "عقاري", "تعليمي", "تجاري", "صناعي"])
+    with st.form("strategic_pitch_form"):
+        p_name = st.text_input("اسم المشروع الاستراتيجي:")
+        p_loc = st.selectbox("الدولة الرئيسية للعمليات:", ["مصر", "ليبيا", "السودان", "الجزائر", "عالمي"])
+        p_goal = st.number_input("الميزانية المطلوبة للتأسيس ($):", min_value=1000)
+        p_desc = st.text_area("وصف الرؤية والناتج القومي المتوقع:", height=150)
         
-        p_goal = st.number_input("المبلغ المطلوب للتمويل الإجمالي (EGP):", min_value=1000, step=1000)
-        p_summary = st.text_input("ملخص فكرة المشروع (Hook):")
-        p_desc = st.text_area("شرح تفصيلي للمشروع وجدواه الاقتصادية:", height=150)
-        p_risks = st.text_area("المخاطر والتحديات وكيفية مواجهتها:")
-        p_timeline = st.text_input("الجدول الزمني المتوقع:")
-        p_video = st.text_input("رابط فيديو تعريفي (يوتيوب):")
-        
-        if st.form_submit_button("إرسال المشروع للمراجعة والنشر 📤"):
-            if p_title and p_desc and p_goal > 0:
-                # إضافة المشروع بحالة "pending"
+        if st.form_submit_button("إرسال للتدقيق الإمبراطوري 📤"):
+            if p_name and p_desc:
                 st.session_state.crowd_projects.append({
-                    "title": p_title, 
-                    "category": p_cat,
-                    "owner": "أنت (القائد الحالي)", 
-                    "goal": p_goal, 
-                    "raised": 0, 
-                    "desc": f"{p_summary}\n\n{p_desc}",
-                    "status": "pending"
+                    "title": p_name, "category": "مشروع ناشئ", "country": p_loc,
+                    "owner": "أنت (قائد)", "goal": p_goal, "raised": 0,
+                    "desc": p_desc, "status": "pending"
                 })
-                st.success("تم إرسال مشروعك بنجاح! هو الآن قيد المراجعة الإدارية وسنقوم بإشعارك فور اعتماده.")
-                st.balloons()
+                st.success("تم إرسال مشروعك بنجاح. ستصلك النتيجة عبر مركز التنبيهات قريباً.")
+                add_notification(f"مشروعك الجديد '{p_name}' قيد التدقيق الآن.", "⏳")
             else:
-                st.error("يرجى التأكد من ملء الحقول الأساسية.")
+                st.error("يرجى إكمال البيانات الأساسية.")
 
-# --- Tab 3: استثماراتي ---
+# --- Tab 3: محفظتي ---
 with tabs[2]:
-    st.subheader("💰 محفظة استثماراتي الجماعية")
-    my_investments = [
-        {"المشروع": "منصة تعليم البرمجة", "المبلغ المستثمر": "5,000 EGP", "النسبة من الهدف": "10%", "الحالة": "نشط ✅"},
+    st.subheader("💰 سجل الأصول والمساهمات")
+    # محاكاة لأصول القائد
+    my_assets = [
+        {"المشروع": "مدينة السيارات الكهربائية", "المساهمة": "$5,000", "الحصة المتوقعة": "0.00014%", "الحالة": "نشط ✅"},
+        {"المشروع": "مشاريع صغرى ليبيا", "المساهمة": "$1,000", "الحصة المتوقعة": "0.00014%", "الحالة": "نشط ✅"}
     ]
-    st.table(my_investments)
-    
-    # عرض حالة المشاريع التي طرحها المستخدم
-    st.markdown("---")
-    st.subheader("📤 مشاريعي المطروحة")
-    my_projects = [p for p in st.session_state.crowd_projects if p['owner'] == "أنت (القائد الحالي)"]
-    if my_projects:
-        for p in my_projects:
-            status_text = "قيد المراجعة ⏳" if p['status'] == "pending" else "معتمد ومتاح للتمويل ✅"
-            st.write(f"- **{p['title']}**: {status_text}")
-    else:
-        st.caption("لم تقم بطرح أي مشاريع بعد.")
+    st.table(my_assets)
 
 # --- Tab 4: إحصائيات السوق ---
 with tabs[3]:
-    st.subheader("📊 أداء سوق التمويل")
+    st.subheader("📊 أداء المحرك المالي العام")
     c1, c2, c3 = st.columns(3)
-    c1.metric("إجمالي الضخ المالي", "245,000 EGP", "+15%")
-    c2.metric("مشاريع معتمدة", f"{len(approved_projects)}", "+2")
-    c3.metric("المستثمرون", "142", "🚀")
+    c1.metric("إجمالي الضخ العالمي", "$6.1B", "+12% سنوي")
+    c2.metric("معدل نجاح المشاريع", "94%", "فائق")
+    c3.metric("المستثمرون القادة", "1.2M", "🚀")
+    
+    st.markdown("### 🗺️ التوزيع الجغرافي للسيولة")
+    st.write("مصر: 45% | ليبيا: 20% | السودان: 15% | أخرى: 20%")
+    st.progress(0.45) # تمثيل لمصر
 
 st.divider()
 
-if st.button("👑 الانتقال للوحة التحكم العليا"):
+if st.button("👑 الانتقال للوحة التحكم العليا (Admin)"):
     st.switch_page("pages/8_Admin_Panel.py")
