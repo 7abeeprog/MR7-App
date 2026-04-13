@@ -15,7 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.0 - محرك الـ LMS والشهادات) ---
+# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.1 - إصدار مستقر ومحصن) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -82,6 +82,26 @@ react_html = """
         }
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
+
+    <!-- نظام طوارئ لضمان عدم بقاء شاشة التحميل للأبد -->
+    <script>
+        window.addEventListener('error', function(e) {
+            const loader = document.getElementById('loading-screen');
+            if (loader) {
+                loader.innerHTML = `<h3 style="color:#FF4B4B; margin-top:20px; text-align:center;">خطأ تقني: ${e.message}<br><small>يرجى إبلاغ الإدارة</small></h3>`;
+                loader.style.opacity = '1';
+                loader.style.display = 'flex';
+            }
+        });
+        // إخفاء إجباري بعد 5 ثوانٍ
+        setTimeout(() => {
+            const loader = document.getElementById('loading-screen');
+            if (loader && loader.style.display !== 'none') {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
+        }, 5000);
+    </script>
 </head>
 <body>
     <div id="loading-screen">
@@ -107,18 +127,24 @@ react_html = """
 
         // --- المكون 1: مشغل الكورس التفاعلي (LMS Player for Unlocked Courses) ---
         const CoursePlayer = ({ course, onBack, theme, showToast }) => {
-            const [activeLessonId, setActiveLessonId] = useState(course.curriculum[0].lessons[0].id);
+            // صمام أمان للتأكد من وجود دروس قبل تعيين الحالة
+            const firstLessonId = course.curriculum?.[0]?.lessons?.[0]?.id || null;
+            const [activeLessonId, setActiveLessonId] = useState(firstLessonId);
             const [completedLessons, setCompletedLessons] = useState([]);
             const [quizAnswers, setQuizAnswers] = useState({});
             const [showCertificate, setShowCertificate] = useState(false);
 
-            // البحث عن الدرس الحالي
+            // البحث عن الدرس الحالي بأمان
             let currentLesson = null;
             let currentModule = null;
-            course.curriculum.forEach(mod => {
-                const lesson = mod.lessons.find(l => l.id === activeLessonId);
-                if(lesson) { currentLesson = lesson; currentModule = mod; }
-            });
+            if (course.curriculum) {
+                course.curriculum.forEach(mod => {
+                    if (mod.lessons) {
+                        const lesson = mod.lessons.find(l => l.id === activeLessonId);
+                        if(lesson) { currentLesson = lesson; currentModule = mod; }
+                    }
+                });
+            }
 
             const handleComplete = (lessonId, isQuiz = false, isCorrect = false) => {
                 if (isQuiz && !isCorrect) {
@@ -135,12 +161,15 @@ react_html = """
                 // المنطق للانتقال للدرس التالي
                 let foundCurrent = false;
                 let nextLessonId = null;
-                for (const mod of course.curriculum) {
-                    for (const l of mod.lessons) {
-                        if (foundCurrent) { nextLessonId = l.id; break; }
-                        if (l.id === lessonId) foundCurrent = true;
+                if (course.curriculum) {
+                    for (const mod of course.curriculum) {
+                        if (!mod.lessons) continue;
+                        for (const l of mod.lessons) {
+                            if (foundCurrent) { nextLessonId = l.id; break; }
+                            if (l.id === lessonId) foundCurrent = true;
+                        }
+                        if (nextLessonId) break;
                     }
-                    if (nextLessonId) break;
                 }
 
                 if (nextLessonId) {
@@ -151,6 +180,10 @@ react_html = """
                     setShowCertificate(true);
                 }
             };
+
+            // حساب الإجمالي للدروس بأمان
+            const totalLessonsCount = course.curriculum ? course.curriculum.reduce((acc, mod) => acc + (mod.lessons ? mod.lessons.length : 0), 0) : 0;
+            const progressPercent = totalLessonsCount === 0 ? 0 : (completedLessons.length / totalLessonsCount) * 100;
 
             if (showCertificate) {
                 return (
@@ -192,7 +225,7 @@ react_html = """
                         <div className="text-left">
                             <span className="text-[10px] text-gray-500 font-bold uppercase block mb-1">التقدم الكلي</span>
                             <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full" style={{width: `${(completedLessons.length / course.curriculum.reduce((a,b)=>a+b.lessons.length,0))*100}%`, backgroundColor: theme.hex}}></div>
+                                <div className="h-full" style={{width: `${progressPercent}%`, backgroundColor: theme.hex}}></div>
                             </div>
                         </div>
                     </nav>
@@ -200,56 +233,66 @@ react_html = """
                     <div className="flex flex-1 overflow-hidden h-[calc(100vh-80px)]">
                         {/* Main Content Area */}
                         <div className="flex-1 flex flex-col bg-black overflow-y-auto no-scrollbar relative">
-                            {currentLesson?.type === 'video' && (
-                                <div className="w-full aspect-video bg-[#111] border-b border-white/5 flex items-center justify-center relative">
-                                    <img src={course.img} className="absolute inset-0 w-full h-full object-cover opacity-20" />
-                                    <div className="z-10 text-center">
-                                        <button className="w-20 h-20 bg-yellow-500 hover:bg-yellow-400 text-black rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] mb-4 mx-auto">
-                                            <Icon name="Play" size={30} className="ml-2" />
-                                        </button>
-                                        <p className="font-bold text-gray-400">فيديو: {currentLesson.title}</p>
-                                    </div>
+                            {!currentLesson ? (
+                                <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center h-full">
+                                    <Icon name="BookOpen" size={60} className="mb-4 opacity-50"/>
+                                    <h2 className="text-2xl font-black">المحتوى قيد التجهيز</h2>
+                                    <p>سيتم توفير دروس هذا المنهج قريباً.</p>
                                 </div>
-                            )}
-
-                            <div className="p-8 md:p-12 max-w-4xl mx-auto w-full">
-                                <h1 className="text-3xl font-black mb-4">{currentLesson?.title}</h1>
-                                
-                                {currentLesson?.type === 'quiz' ? (
-                                    <div className="bg-white/5 border border-white/10 p-8 rounded-2xl">
-                                        <h3 className="text-xl font-bold mb-6 text-yellow-500"><Icon name="HelpCircle" className="inline mr-2"/> سؤال تقييمي:</h3>
-                                        <p className="text-lg mb-6">{currentLesson.question}</p>
-                                        <div className="space-y-3">
-                                            {currentLesson.options.map((opt, i) => (
-                                                <button 
-                                                    key={i}
-                                                    onClick={() => setQuizAnswers({...quizAnswers, [currentLesson.id]: opt})}
-                                                    className={`w-full text-right p-4 rounded-xl font-bold border transition-all ${quizAnswers[currentLesson.id] === opt ? 'bg-yellow-500/20 border-yellow-500 text-white' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
-                                                >
-                                                    {opt}
+                            ) : (
+                                <>
+                                    {currentLesson.type === 'video' && (
+                                        <div className="w-full aspect-video bg-[#111] border-b border-white/5 flex items-center justify-center relative">
+                                            <img src={course.img} className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                                            <div className="z-10 text-center">
+                                                <button className="w-20 h-20 bg-yellow-500 hover:bg-yellow-400 text-black rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] mb-4 mx-auto">
+                                                    <Icon name="Play" size={30} className="ml-2" />
                                                 </button>
-                                            ))}
+                                                <p className="font-bold text-gray-400">فيديو: {currentLesson.title}</p>
+                                            </div>
                                         </div>
-                                        <button 
-                                            onClick={() => handleComplete(currentLesson.id, true, quizAnswers[currentLesson.id] === currentLesson.correct)}
-                                            disabled={!quizAnswers[currentLesson.id]}
-                                            className="mt-8 w-full py-4 bg-yellow-500 text-black font-black rounded-xl disabled:opacity-50"
-                                        >
-                                            تأكيد الإجابة
-                                        </button>
+                                    )}
+
+                                    <div className="p-8 md:p-12 max-w-4xl mx-auto w-full">
+                                        <h1 className="text-3xl font-black mb-4">{currentLesson.title}</h1>
+                                        
+                                        {currentLesson.type === 'quiz' ? (
+                                            <div className="bg-white/5 border border-white/10 p-8 rounded-2xl">
+                                                <h3 className="text-xl font-bold mb-6 text-yellow-500"><Icon name="HelpCircle" className="inline mr-2"/> سؤال تقييمي:</h3>
+                                                <p className="text-lg mb-6">{currentLesson.question}</p>
+                                                <div className="space-y-3">
+                                                    {currentLesson.options && currentLesson.options.map((opt, i) => (
+                                                        <button 
+                                                            key={i}
+                                                            onClick={() => setQuizAnswers({...quizAnswers, [currentLesson.id]: opt})}
+                                                            className={`w-full text-right p-4 rounded-xl font-bold border transition-all ${quizAnswers[currentLesson.id] === opt ? 'bg-yellow-500/20 border-yellow-500 text-white' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
+                                                        >
+                                                            {opt}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleComplete(currentLesson.id, true, quizAnswers[currentLesson.id] === currentLesson.correct)}
+                                                    disabled={!quizAnswers[currentLesson.id]}
+                                                    className="mt-8 w-full py-4 bg-yellow-500 text-black font-black rounded-xl disabled:opacity-50"
+                                                >
+                                                    تأكيد الإجابة
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <div className="text-gray-300 leading-relaxed text-lg mb-8" dangerouslySetInnerHTML={{__html: currentLesson.content || ''}}></div>
+                                                <button 
+                                                    onClick={() => handleComplete(currentLesson.id)}
+                                                    className="w-full py-4 bg-[#00FF88] hover:bg-[#00cc66] text-black font-black rounded-xl transition-colors shadow-[0_0_20px_rgba(0,255,136,0.2)]"
+                                                >
+                                                    إتمام الدرس والانتقال للتالي <Icon name="CheckCircle2" className="inline ml-2" size={20}/>
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                ) : (
-                                    <div>
-                                        <div className="text-gray-300 leading-relaxed text-lg mb-8" dangerouslySetInnerHTML={{__html: currentLesson?.content}}></div>
-                                        <button 
-                                            onClick={() => handleComplete(currentLesson.id)}
-                                            className="w-full py-4 bg-[#00FF88] hover:bg-[#00cc66] text-black font-black rounded-xl transition-colors shadow-[0_0_20px_rgba(0,255,136,0.2)]"
-                                        >
-                                            إتمام الدرس والانتقال للتالي <Icon name="CheckCircle2" className="inline ml-2" size={20}/>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Sidebar Curriculum */}
@@ -258,12 +301,12 @@ react_html = """
                                 <h3 className="font-black text-lg mb-1">محتوى المنهج</h3>
                             </div>
                             <div className="flex flex-col">
-                                {course.curriculum.map((mod, mIdx) => (
-                                    <div key={mod.id} className="border-b border-white/5">
+                                {course.curriculum && course.curriculum.map((mod, mIdx) => (
+                                    <div key={mod.id || mIdx} className="border-b border-white/5">
                                         <div className="p-4 bg-white/5 font-black text-sm text-yellow-500">
                                             القسم {mIdx + 1}: {mod.title}
                                         </div>
-                                        {mod.lessons.map(lesson => (
+                                        {mod.lessons && mod.lessons.map(lesson => (
                                             <div 
                                                 key={lesson.id} 
                                                 onClick={() => setActiveLessonId(lesson.id)}
@@ -335,8 +378,8 @@ react_html = """
                                 <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
                                     <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center text-2xl">👤</div>
                                     <div>
-                                        <h4 className="font-black text-lg">{course.instructor}</h4>
-                                        <p className="text-xs text-yellow-500 font-bold uppercase">{course.instructor_title}</p>
+                                        <h4 className="font-black text-lg">{course.instructor || 'أكاديمية MR7'}</h4>
+                                        <p className="text-xs text-yellow-500 font-bold uppercase">{course.instructor_title || 'خبير استراتيجي'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -355,31 +398,37 @@ react_html = """
                         <div className="w-full lg:w-2/3">
                             <h3 className="text-2xl font-black mb-8 border-b border-white/10 pb-4">المحتوى الأكاديمي (Curriculum)</h3>
                             <div className="space-y-6">
-                                {course.curriculum.map((mod, i) => (
-                                    <div key={i} className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
-                                        <div className="bg-white/5 p-5 font-black text-lg flex justify-between items-center">
-                                            <span>القسم {i+1}: {mod.title}</span>
-                                            <span className="text-xs text-gray-500">{mod.lessons.length} دروس</span>
-                                        </div>
-                                        <div className="p-2">
-                                            {mod.lessons.map((lesson, j) => (
-                                                <div key={j} className="flex items-center justify-between p-4 hover:bg-white/5 rounded-xl transition-colors border-b border-white/5 last:border-0">
-                                                    <div className="flex items-center gap-3">
-                                                        <Icon name={lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText'} size={18} className="text-gray-500" />
-                                                        <span className="font-bold text-sm text-gray-300">{lesson.title}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        {lesson.isPreview ? (
-                                                            <button onClick={() => showToast('هذا الدرس متاح للمعاينة! سيتم فتحه في المشغل.', 'info')} className="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-md font-black uppercase flex items-center gap-1"><Icon name="Eye" size={12}/> معاينة مجانية</button>
-                                                        ) : (
-                                                            <Icon name="Lock" size={16} className="text-gray-600" />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                {!course.curriculum || course.curriculum.length === 0 ? (
+                                    <div className="text-center py-10 bg-white/5 rounded-xl border border-dashed border-white/10 text-gray-500">
+                                        يتم تجهيز الفصول الدراسية حالياً.
                                     </div>
-                                ))}
+                                ) : (
+                                    course.curriculum.map((mod, i) => (
+                                        <div key={i} className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+                                            <div className="bg-white/5 p-5 font-black text-lg flex justify-between items-center">
+                                                <span>القسم {i+1}: {mod.title}</span>
+                                                <span className="text-xs text-gray-500">{mod.lessons ? mod.lessons.length : 0} دروس</span>
+                                            </div>
+                                            <div className="p-2">
+                                                {mod.lessons && mod.lessons.map((lesson, j) => (
+                                                    <div key={j} className="flex items-center justify-between p-4 hover:bg-white/5 rounded-xl transition-colors border-b border-white/5 last:border-0">
+                                                        <div className="flex items-center gap-3">
+                                                            <Icon name={lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText'} size={18} className="text-gray-500" />
+                                                            <span className="font-bold text-sm text-gray-300">{lesson.title}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            {lesson.isPreview ? (
+                                                                <button onClick={() => showToast('هذا الدرس متاح للمعاينة! سيتم فتحه في المشغل.', 'info')} className="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-md font-black uppercase flex items-center gap-1"><Icon name="Eye" size={12}/> معاينة مجانية</button>
+                                                            ) : (
+                                                                <Icon name="Lock" size={16} className="text-gray-600" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
@@ -412,7 +461,7 @@ react_html = """
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
             };
 
-            // --- بناء المناهج من الـ PDF ---
+            // --- بناء المناهج من الـ PDF مع معالجة الأخطاء المحتملة (صمامات أمان) ---
             const [coursesDB, setCoursesDB] = useState([
                 { 
                     id: 1, phase: 'القيادة والإدارة الاستراتيجية', title: 'القيادة التحويلية في العصر الرقمي', hours: 20, price: 299, 
@@ -468,7 +517,35 @@ react_html = """
                         }
                     ]
                 },
-                { id: 3, phase: 'التكنولوجيا والتحول', title: 'الذكاء الاصطناعي في الأعمال', hours: 15, price: 350, img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', desc: 'استخدام AI في التسويق والمالية وخدمة العملاء.', locked: true, progress: 0, instructor: "نور الدين تقني", instructor_title: "مهندس ذكاء اصطناعي", curriculum: [{id:1, title: "المقدمة", lessons:[{id:1, title:"ما هو الـ AI", type:"video", isPreview:true}]}] },
+                { 
+                    id: 3, phase: 'التكنولوجيا والتحول', title: 'الذكاء الاصطناعي في الأعمال', hours: 15, price: 350, 
+                    img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', 
+                    desc: 'استخدام AI في التسويق والمالية وخدمة العملاء.', 
+                    locked: true, progress: 0, instructor: "نور الدين تقني", instructor_title: "مهندس ذكاء اصطناعي", 
+                    curriculum: [{id:1, title: "المقدمة", lessons:[{id:1, title:"ما هو الـ AI", type:"video", isPreview:true}]}] 
+                },
+                // إضافة صمامات الأمان للكورسات الأخرى لضمان عدم انهيار التطبيق
+                { 
+                    id: 4, phase: 'ريادة الأعمال', title: 'من الفكرة إلى المشروع الشامل', hours: 25, price: 399, 
+                    img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800', 
+                    desc: 'نموذج العمل، دراسة الجدوى، والتمويل الأولي.', 
+                    locked: true, progress: 0, instructor: 'خبير مجهول', instructor_title: 'مدرب', 
+                    curriculum: [] 
+                },
+                { 
+                    id: 5, phase: 'المهارات الشخصية', title: 'الذكاء العاطفي في بيئة العمل', hours: 14, price: 150, 
+                    img: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=800', 
+                    desc: 'الوعي الذاتي، إدارة العلاقات، والتأثير الإيجابي.', 
+                    locked: true, progress: 0, instructor: 'خبير مجهول', instructor_title: 'مدرب', 
+                    curriculum: [] 
+                },
+                { 
+                    id: 6, phase: 'الاقتصاد المستدام', title: 'الاستثمار في الطاقة المتجددة', hours: 16, price: 450, 
+                    img: 'https://images.unsplash.com/photo-1509391366360-fe5bb58583bb?w=800', 
+                    desc: 'السندات الخضراء، طاقة الرياح، والتمويل المستدام.', 
+                    locked: true, progress: 0, instructor: 'خبير مجهول', instructor_title: 'مدرب', 
+                    curriculum: [] 
+                },
             ];
 
             const categories = ["الكل", ...new Set(coursesDB.map(c => c.phase))];
@@ -571,7 +648,11 @@ react_html = """
 
                                 {/* Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                    {filteredCourses.map(course => (
+                                    {filteredCourses.map(course => {
+                                        // حساب عدد الدروس بأمان
+                                        const lessonCount = course.curriculum ? course.curriculum.reduce((acc, mod) => acc + (mod.lessons ? mod.lessons.length : 0), 0) : 0;
+                                        
+                                        return (
                                         <div key={course.id} onClick={() => setSelectedCourse(course)} className="course-card rounded-[2rem] border border-white/10 overflow-hidden cursor-pointer group flex flex-col h-full relative bg-[#0a0a0a]">
                                             {/* صورة الكورس */}
                                             <div className="relative h-56 w-full overflow-hidden">
@@ -595,7 +676,7 @@ react_html = """
                                                 <h3 className="text-xl font-black mb-3 line-clamp-2 text-white leading-tight">{course.title}</h3>
                                                 <div className="flex items-center gap-4 text-xs font-bold text-gray-500 mb-6">
                                                     <span className="flex items-center gap-1"><Icon name="Clock" size={14}/> {course.hours} ساعة</span>
-                                                    <span className="flex items-center gap-1"><Icon name="BookOpen" size={14}/> {course.curriculum.reduce((a,b)=>a+b.lessons.length,0)} درس</span>
+                                                    <span className="flex items-center gap-1"><Icon name="BookOpen" size={14}/> {lessonCount} درس</span>
                                                 </div>
                                                 
                                                 <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
@@ -613,7 +694,7 @@ react_html = """
                                                 </div>
                                             </div>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                             </div>
                         )}
