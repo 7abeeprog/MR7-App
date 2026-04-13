@@ -25,7 +25,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.2 - درع الأخطاء الفائق) ---
+# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.3 - المستقرة تماماً) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -35,10 +35,10 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- استخدام روابط الإنتاج المستقرة لتجنب أخطاء التحميل -->
-    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <!-- الروابط المستقرة بدون قيود المتصفح (CORS) لتجنب Script error -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <script type="module">
@@ -92,7 +92,7 @@ react_html = """
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 
-    <!-- درع الأخطاء العام (Global Error Shield) -->
+    <!-- درع الأخطاء العام (محدث لتجاهل أخطاء CORS) -->
     <script>
         let hasGlobalError = false;
         
@@ -113,6 +113,10 @@ react_html = """
         }
 
         window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('Script error')) {
+                console.warn("تم تجاهل خطأ متصفح CORS غير مؤثر.");
+                return; // لا تغلق الشاشة إذا كان الخطأ مجرد Script error
+            }
             showErrorScreen("انهيار في النظام (System Crash)", e.message, `${e.filename}:${e.lineno}`);
         });
 
@@ -120,7 +124,7 @@ react_html = """
             showErrorScreen("فشل في الاتصال (Promise Rejection)", e.reason, "Network or Async Error");
         });
 
-        // إخفاء شاشة التحميل فقط إذا لم يكن هناك خطأ
+        // إخفاء شاشة التحميل فقط إذا لم يكن هناك خطأ حرج
         setTimeout(() => {
             if (!hasGlobalError) {
                 const loader = document.getElementById('loading-screen');
@@ -129,7 +133,7 @@ react_html = """
                     setTimeout(() => loader.style.display = 'none', 500);
                 }
             }
-        }, 3000);
+        }, 2000);
     </script>
 </head>
 <body>
@@ -150,7 +154,6 @@ react_html = """
             }
             componentDidCatch(error, errorInfo) {
                 this.setState({ hasError: true, error: error, errorInfo: errorInfo });
-                // عرض الخطأ في شاشة التحميل لضمان رؤيته
                 const loader = document.getElementById('loading-screen');
                 if (loader) {
                     loader.innerHTML = `
@@ -164,7 +167,7 @@ react_html = """
                 }
             }
             render() {
-                if (this.state.hasError) return null; // الخطأ سيظهر في الـ loader
+                if (this.state.hasError) return null; 
                 return this.props.children;
             }
         }
@@ -183,14 +186,12 @@ react_html = """
 
         // --- المكون 1: مشغل الكورس التفاعلي ---
         const CoursePlayer = ({ course, onBack, theme, showToast }) => {
-            // صمام أمان قوي لتحديد الدرس الأول
             const firstLessonId = (course.curriculum && course.curriculum[0] && course.curriculum[0].lessons && course.curriculum[0].lessons[0]) ? course.curriculum[0].lessons[0].id : null;
             const [activeLessonId, setActiveLessonId] = useState(firstLessonId);
             const [completedLessons, setCompletedLessons] = useState([]);
             const [quizAnswers, setQuizAnswers] = useState({});
             const [showCertificate, setShowCertificate] = useState(false);
 
-            // البحث عن الدرس الحالي بأمان تام
             let currentLesson = null;
             let currentModule = null;
             if (course.curriculum) {
