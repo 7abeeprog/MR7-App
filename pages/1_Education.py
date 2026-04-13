@@ -9,13 +9,23 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. جلب إعدادات السحابة (Firebase) ---
+# --- 2. جلب إعدادات السحابة (Firebase) بأمان تام ---
 fb_config = st.secrets.get("__firebase_config", "{}")
+try:
+    if isinstance(fb_config, dict):
+        fb_config_safe = json.dumps(fb_config)
+    elif hasattr(fb_config, "to_dict"):
+        fb_config_safe = json.dumps(fb_config.to_dict())
+    else:
+        fb_config_safe = str(fb_config)
+except Exception:
+    fb_config_safe = "{}"
+
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.1 - إصدار مستقر ومحصن) ---
+# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.2 - درع الأخطاء الفائق) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -25,9 +35,10 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- استخدام روابط الإنتاج المستقرة لتجنب أخطاء التحميل -->
+    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <script type="module">
@@ -61,7 +72,6 @@ react_html = """
         .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* تأثيرات الشهادة */
         .certificate-bg {
             background: linear-gradient(135deg, #111, #000);
             border: 10px solid var(--accent-color);
@@ -75,7 +85,6 @@ react_html = """
 
         #loading-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; }
         
-        /* Toast Animation */
         @keyframes toastEnter {
             0% { opacity: 0; transform: translateY(100%) scale(0.9); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -83,24 +92,44 @@ react_html = """
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 
-    <!-- نظام طوارئ لضمان عدم بقاء شاشة التحميل للأبد -->
+    <!-- درع الأخطاء العام (Global Error Shield) -->
     <script>
-        window.addEventListener('error', function(e) {
+        let hasGlobalError = false;
+        
+        function showErrorScreen(title, message, details) {
+            hasGlobalError = true;
             const loader = document.getElementById('loading-screen');
             if (loader) {
-                loader.innerHTML = `<h3 style="color:#FF4B4B; margin-top:20px; text-align:center;">خطأ تقني: ${e.message}<br><small>يرجى إبلاغ الإدارة</small></h3>`;
+                loader.innerHTML = `
+                    <div style="background:rgba(50,0,0,0.9); padding:40px; border:2px solid #FF4B4B; border-radius:20px; z-index:999999; position:relative; max-width:80%; text-align:center; box-shadow:0 0 50px rgba(255,0,0,0.5);">
+                        <h2 style="color:#FF4B4B; margin-top:0; font-size:28px;">🚨 ${title}</h2>
+                        <p style="color:white; font-size:18px; direction:ltr;">${message}</p>
+                        <p style="color:gray; font-size:12px; direction:ltr; margin-top:10px;">${details}</p>
+                        <p style="color:#FFD700; margin-top:30px; font-weight:bold;">قم بتصوير هذه الشاشة وإرسالها للمهندس فوراً.</p>
+                    </div>`;
                 loader.style.opacity = '1';
                 loader.style.display = 'flex';
             }
+        }
+
+        window.addEventListener('error', function(e) {
+            showErrorScreen("انهيار في النظام (System Crash)", e.message, `${e.filename}:${e.lineno}`);
         });
-        // إخفاء إجباري بعد 5 ثوانٍ
+
+        window.addEventListener('unhandledrejection', function(e) {
+            showErrorScreen("فشل في الاتصال (Promise Rejection)", e.reason, "Network or Async Error");
+        });
+
+        // إخفاء شاشة التحميل فقط إذا لم يكن هناك خطأ
         setTimeout(() => {
-            const loader = document.getElementById('loading-screen');
-            if (loader && loader.style.display !== 'none') {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
+            if (!hasGlobalError) {
+                const loader = document.getElementById('loading-screen');
+                if (loader && loader.style.display !== 'none') {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
             }
-        }, 5000);
+        }, 3000);
     </script>
 </head>
 <body>
@@ -111,7 +140,34 @@ react_html = """
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, Component } = React;
+
+        // --- درع أخطاء ريأكت (React Error Boundary) ---
+        class ErrorBoundary extends Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null, errorInfo: null };
+            }
+            componentDidCatch(error, errorInfo) {
+                this.setState({ hasError: true, error: error, errorInfo: errorInfo });
+                // عرض الخطأ في شاشة التحميل لضمان رؤيته
+                const loader = document.getElementById('loading-screen');
+                if (loader) {
+                    loader.innerHTML = `
+                        <div style="background:rgba(50,0,0,0.9); padding:40px; border:2px solid #FF4B4B; border-radius:20px; z-index:999999; position:relative; max-width:80%; text-align:center;">
+                            <h2 style="color:#FF4B4B; margin-top:0;">🚨 خطأ داخلي في الواجهة (React Crash)</h2>
+                            <p style="color:white; direction:ltr; font-family:monospace;">${error.toString()}</p>
+                            <p style="color:gray; font-size:10px; direction:ltr; text-align:left; overflow:auto; max-height:200px;">${errorInfo.componentStack}</p>
+                        </div>`;
+                    loader.style.opacity = '1';
+                    loader.style.display = 'flex';
+                }
+            }
+            render() {
+                if (this.state.hasError) return null; // الخطأ سيظهر في الـ loader
+                return this.props.children;
+            }
+        }
 
         const Icon = ({ name, size = 24, className = "" }) => {
             const iconRef = React.useRef(null);
@@ -125,16 +181,16 @@ react_html = """
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- المكون 1: مشغل الكورس التفاعلي (LMS Player for Unlocked Courses) ---
+        // --- المكون 1: مشغل الكورس التفاعلي ---
         const CoursePlayer = ({ course, onBack, theme, showToast }) => {
-            // صمام أمان للتأكد من وجود دروس قبل تعيين الحالة
-            const firstLessonId = course.curriculum?.[0]?.lessons?.[0]?.id || null;
+            // صمام أمان قوي لتحديد الدرس الأول
+            const firstLessonId = (course.curriculum && course.curriculum[0] && course.curriculum[0].lessons && course.curriculum[0].lessons[0]) ? course.curriculum[0].lessons[0].id : null;
             const [activeLessonId, setActiveLessonId] = useState(firstLessonId);
             const [completedLessons, setCompletedLessons] = useState([]);
             const [quizAnswers, setQuizAnswers] = useState({});
             const [showCertificate, setShowCertificate] = useState(false);
 
-            // البحث عن الدرس الحالي بأمان
+            // البحث عن الدرس الحالي بأمان تام
             let currentLesson = null;
             let currentModule = null;
             if (course.curriculum) {
@@ -158,7 +214,6 @@ react_html = """
                     else showToast('تم إنجاز الدرس! +20 XP 🪙', 'success');
                 }
 
-                // المنطق للانتقال للدرس التالي
                 let foundCurrent = false;
                 let nextLessonId = null;
                 if (course.curriculum) {
@@ -175,13 +230,11 @@ react_html = """
                 if (nextLessonId) {
                     setActiveLessonId(nextLessonId);
                 } else {
-                    // تم إنهاء الدورة!
                     showToast('أكملت المنهج بنجاح! +1000 XP 🏆', 'success');
                     setShowCertificate(true);
                 }
             };
 
-            // حساب الإجمالي للدروس بأمان
             const totalLessonsCount = course.curriculum ? course.curriculum.reduce((acc, mod) => acc + (mod.lessons ? mod.lessons.length : 0), 0) : 0;
             const progressPercent = totalLessonsCount === 0 ? 0 : (completedLessons.length / totalLessonsCount) * 100;
 
@@ -210,7 +263,6 @@ react_html = """
 
             return (
                 <div className="min-h-screen bg-[#050505] flex flex-col animate-fade-in" dir="rtl">
-                    {/* Header */}
                     <nav className="glass-panel border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
                         <div className="flex items-center gap-6">
                             <button onClick={onBack} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl font-bold text-gray-300 hover:text-white transition-all">
@@ -231,7 +283,6 @@ react_html = """
                     </nav>
 
                     <div className="flex flex-1 overflow-hidden h-[calc(100vh-80px)]">
-                        {/* Main Content Area */}
                         <div className="flex-1 flex flex-col bg-black overflow-y-auto no-scrollbar relative">
                             {!currentLesson ? (
                                 <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center h-full">
@@ -306,20 +357,21 @@ react_html = """
                                         <div className="p-4 bg-white/5 font-black text-sm text-yellow-500">
                                             القسم {mIdx + 1}: {mod.title}
                                         </div>
-                                        {mod.lessons && mod.lessons.map(lesson => (
-                                            <div 
-                                                key={lesson.id} 
-                                                onClick={() => setActiveLessonId(lesson.id)}
-                                                className={`p-4 pl-6 cursor-pointer flex items-center gap-3 transition-colors ${activeLessonId === lesson.id ? 'bg-white/10 border-r-4 border-yellow-500' : 'hover:bg-white/5 border-r-4 border-transparent'}`}
-                                            >
-                                                <Icon 
-                                                    name={completedLessons.includes(lesson.id) ? 'CheckCircle2' : (lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText')} 
-                                                    size={16} 
-                                                    className={completedLessons.includes(lesson.id) ? 'text-[#00FF88]' : (activeLessonId === lesson.id ? 'text-yellow-500' : 'text-gray-500')} 
-                                                />
-                                                <span className={`text-sm font-bold ${activeLessonId === lesson.id ? 'text-white' : 'text-gray-400'}`}>{lesson.title}</span>
-                                            </div>
-                                        ))}
+                                        {mod.lessons && mod.lessons.map(lesson => {
+                                            const iconName = completedLessons.includes(lesson.id) ? 'CheckCircle2' : (lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText');
+                                            const iconColor = completedLessons.includes(lesson.id) ? 'text-[#00FF88]' : (activeLessonId === lesson.id ? 'text-yellow-500' : 'text-gray-500');
+                                            
+                                            return (
+                                                <div 
+                                                    key={lesson.id} 
+                                                    onClick={() => setActiveLessonId(lesson.id)}
+                                                    className={`p-4 pl-6 cursor-pointer flex items-center gap-3 transition-colors ${activeLessonId === lesson.id ? 'bg-white/10 border-r-4 border-yellow-500' : 'hover:bg-white/5 border-r-4 border-transparent'}`}
+                                                >
+                                                    <Icon name={iconName} size={16} className={iconColor} />
+                                                    <span className={`text-sm font-bold ${activeLessonId === lesson.id ? 'text-white' : 'text-gray-400'}`}>{lesson.title}</span>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
                                 ))}
                             </div>
@@ -329,11 +381,10 @@ react_html = """
             );
         };
 
-        // --- المكون 2: صفحة هبوط المنهج المشفر (Sales Page / Preview) ---
+        // --- المكون 2: صفحة الهبوط (Sales Page) ---
         const CourseSalesPage = ({ course, onBack, theme, onBuy, showToast }) => {
             return (
                 <div className="min-h-screen bg-[#050505] animate-fade-in overflow-y-auto no-scrollbar pb-20" dir="rtl">
-                    {/* Hero Section */}
                     <div className="relative h-[60vh] w-full border-b border-white/10">
                         <img src={course.img} className="absolute inset-0 w-full h-full object-cover opacity-40" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent"></div>
@@ -351,7 +402,6 @@ react_html = """
                                 <p className="text-xl text-gray-300 max-w-2xl font-medium leading-relaxed">{course.desc}</p>
                             </div>
                             
-                            {/* صندوق الشراء (Purchase Box) */}
                             <div className="bg-black/80 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] w-full md:w-96 shadow-2xl flex-shrink-0">
                                 <div className="flex justify-between items-center mb-6">
                                     <span className="text-gray-500 uppercase font-black text-xs tracking-widest">قيمة الاستثمار</span>
@@ -369,9 +419,7 @@ react_html = """
                         </div>
                     </div>
 
-                    {/* Content Section */}
                     <div className="max-w-[1400px] mx-auto w-full px-8 md:px-16 py-16 flex flex-col lg:flex-row gap-16">
-                        {/* Instructor & Details */}
                         <div className="w-full lg:w-1/3 space-y-10">
                             <div>
                                 <h3 className="text-xl font-black mb-6 border-b border-white/10 pb-4">المدرب / المهندس الاستراتيجي</h3>
@@ -394,7 +442,6 @@ react_html = """
                             </div>
                         </div>
 
-                        {/* Curriculum Overview */}
                         <div className="w-full lg:w-2/3">
                             <h3 className="text-2xl font-black mb-8 border-b border-white/10 pb-4">المحتوى الأكاديمي (Curriculum)</h3>
                             <div className="space-y-6">
@@ -410,21 +457,24 @@ react_html = """
                                                 <span className="text-xs text-gray-500">{mod.lessons ? mod.lessons.length : 0} دروس</span>
                                             </div>
                                             <div className="p-2">
-                                                {mod.lessons && mod.lessons.map((lesson, j) => (
-                                                    <div key={j} className="flex items-center justify-between p-4 hover:bg-white/5 rounded-xl transition-colors border-b border-white/5 last:border-0">
-                                                        <div className="flex items-center gap-3">
-                                                            <Icon name={lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText'} size={18} className="text-gray-500" />
-                                                            <span className="font-bold text-sm text-gray-300">{lesson.title}</span>
+                                                {mod.lessons && mod.lessons.map((lesson, j) => {
+                                                    const iName = lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText';
+                                                    return (
+                                                        <div key={j} className="flex items-center justify-between p-4 hover:bg-white/5 rounded-xl transition-colors border-b border-white/5 last:border-0">
+                                                            <div className="flex items-center gap-3">
+                                                                <Icon name={iName} size={18} className="text-gray-500" />
+                                                                <span className="font-bold text-sm text-gray-300">{lesson.title}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                {lesson.isPreview ? (
+                                                                    <button onClick={() => showToast('هذا الدرس متاح للمعاينة! سيتم فتحه في المشغل.', 'info')} className="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-md font-black uppercase flex items-center gap-1"><Icon name="Eye" size={12}/> معاينة مجانية</button>
+                                                                ) : (
+                                                                    <Icon name="Lock" size={16} className="text-gray-600" />
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3">
-                                                            {lesson.isPreview ? (
-                                                                <button onClick={() => showToast('هذا الدرس متاح للمعاينة! سيتم فتحه في المشغل.', 'info')} className="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-md font-black uppercase flex items-center gap-1"><Icon name="Eye" size={12}/> معاينة مجانية</button>
-                                                            ) : (
-                                                                <Icon name="Lock" size={16} className="text-gray-600" />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                })}
                                             </div>
                                         </div>
                                     ))
@@ -436,8 +486,7 @@ react_html = """
             );
         };
 
-        const App = () => {
-            // --- The 7x7 Engine ---
+        const AppContent = () => {
             const themes = {
                 "سلطة مطلقة 🔴": { bg: "bg-[#0A0000]", text: "text-[#FFFFFF]", card: "bg-[#140000]/90", border: "border-[#FF4B4B]", accent: "text-[#FF4B4B]", btn: "bg-[#FF4B4B]", btnText: "text-white", hex: "#FF4B4B" },
                 "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", border: "border-[#FFD700]", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
@@ -461,7 +510,6 @@ react_html = """
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
             };
 
-            // --- بناء المناهج من الـ PDF مع معالجة الأخطاء المحتملة (صمامات أمان) ---
             const [coursesDB, setCoursesDB] = useState([
                 { 
                     id: 1, phase: 'القيادة والإدارة الاستراتيجية', title: 'القيادة التحويلية في العصر الرقمي', hours: 20, price: 299, 
@@ -524,7 +572,6 @@ react_html = """
                     locked: true, progress: 0, instructor: "نور الدين تقني", instructor_title: "مهندس ذكاء اصطناعي", 
                     curriculum: [{id:1, title: "المقدمة", lessons:[{id:1, title:"ما هو الـ AI", type:"video", isPreview:true}]}] 
                 },
-                // إضافة صمامات الأمان للكورسات الأخرى لضمان عدم انهيار التطبيق
                 { 
                     id: 4, phase: 'ريادة الأعمال', title: 'من الفكرة إلى المشروع الشامل', hours: 25, price: 399, 
                     img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800', 
@@ -558,19 +605,12 @@ react_html = """
                 });
             }, [searchQ, selectedCategory, coursesDB]);
 
-            useEffect(() => {
-                const loader = document.getElementById('loading-screen');
-                if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }
-            }, []);
-
             const handleBuyCourse = (course) => {
                 showToast(`تم شراء المنهج '${course.title}' بنجاح! تم الخصم من محفظتك.`, 'success');
-                // تحديث الحالة لفتح الكورس
                 setCoursesDB(prev => prev.map(c => c.id === course.id ? {...c, locked: false} : c));
-                setSelectedCourse({...course, locked: false}); // تحديث الكورس المحدد ليفتح المشغل
+                setSelectedCourse({...course, locked: false}); 
             };
 
-            // إدارة العرض: هل نحن في المشغل، في صفحة البيع، أم في الأكاديمية الرئيسية؟
             if (selectedCourse) {
                 if (selectedCourse.locked) {
                     return <CourseSalesPage course={selectedCourse} onBack={() => setSelectedCourse(null)} theme={theme} onBuy={handleBuyCourse} showToast={showToast} />;
@@ -579,11 +619,8 @@ react_html = """
                 }
             }
 
-            // الواجهة الرئيسية للأكاديمية
             return (
                 <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col font-['Tajawal']`} dir="rtl">
-                    
-                    {/* Toast Container */}
                     <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
                         {toasts.map(t => (
                             <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'error' ? 'bg-black/90 border-red-500/40 text-red-500' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
@@ -634,7 +671,6 @@ react_html = """
                     <main className="flex-1 max-w-[1600px] mx-auto w-full px-6 md:px-10 py-10">
                         {activeTab === 'courses' && (
                             <div className="animate-fade-in">
-                                {/* Categories */}
                                 <div className="flex gap-3 overflow-x-auto no-scrollbar mb-10 pb-2">
                                     {categories.map(cat => (
                                         <button 
@@ -646,15 +682,12 @@ react_html = """
                                     ))}
                                 </div>
 
-                                {/* Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                     {filteredCourses.map(course => {
-                                        // حساب عدد الدروس بأمان
                                         const lessonCount = course.curriculum ? course.curriculum.reduce((acc, mod) => acc + (mod.lessons ? mod.lessons.length : 0), 0) : 0;
                                         
                                         return (
                                         <div key={course.id} onClick={() => setSelectedCourse(course)} className="course-card rounded-[2rem] border border-white/10 overflow-hidden cursor-pointer group flex flex-col h-full relative bg-[#0a0a0a]">
-                                            {/* صورة الكورس */}
                                             <div className="relative h-56 w-full overflow-hidden">
                                                 <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10"></div>
                                                 <img src={course.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -670,7 +703,6 @@ react_html = """
                                                 )}
                                             </div>
                                             
-                                            {/* بيانات الكورس */}
                                             <div className="p-6 flex flex-col flex-1">
                                                 <span className="text-[10px] font-black uppercase tracking-widest mb-3" style={{color: theme.hex}}>{course.phase}</span>
                                                 <h3 className="text-xl font-black mb-3 line-clamp-2 text-white leading-tight">{course.title}</h3>
@@ -736,6 +768,12 @@ react_html = """
                 </div>
             );
         };
+
+        const App = () => (
+            <ErrorBoundary>
+                <AppContent />
+            </ErrorBoundary>
+        );
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
