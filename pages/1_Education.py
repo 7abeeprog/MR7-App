@@ -10,7 +10,8 @@ st.set_page_config(
 )
 
 # --- 2. جلب إعدادات السحابة (Firebase) ---
-fb_config_str = st.secrets.get("__firebase_config", "{}")
+# تم تصحيح اسم المتغير هنا ليطابق الاستخدام في الأسفل
+fb_config = st.secrets.get("__firebase_config", "{}")
 app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
