@@ -15,7 +15,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V13.0 - قاعة الدراسة المستقلة) ---
+# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.0 - محرك الـ LMS والشهادات) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -61,11 +61,26 @@ react_html = """
         .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
-        .module-item { transition: 0.2s; border-right: 3px solid transparent; }
-        .module-item:hover { background: rgba(255,255,255,0.05); border-right-color: var(--accent-color); }
-        .module-item.active { background: rgba(255,255,255,0.1); border-right-color: var(--accent-color); }
+        /* تأثيرات الشهادة */
+        .certificate-bg {
+            background: linear-gradient(135deg, #111, #000);
+            border: 10px solid var(--accent-color);
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 0 50px rgba(255,215,0,0.2) inset;
+        }
+        .certificate-bg::before {
+            content: ''; position: absolute; inset: 5px; border: 2px dashed rgba(255,215,0,0.3); pointer-events: none;
+        }
 
         #loading-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; }
+        
+        /* Toast Animation */
+        @keyframes toastEnter {
+            0% { opacity: 0; transform: translateY(100%) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
 <body>
@@ -90,28 +105,82 @@ react_html = """
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- واجهة قاعة الدراسة المستقلة (Course Viewer) ---
-        const CourseViewer = ({ course, onBack, theme }) => {
-            const [activeModule, setActiveModule] = useState(1);
-            
-            // هيكل دراسي افتراضي لمحاكاة المحتوى
-            const curriculum = [
-                { id: 1, title: "مقدمة في العقلية السيادية", duration: "15:00", type: "video" },
-                { id: 2, title: "تحليل الأسواق والاتجاهات", duration: "22:30", type: "video" },
-                { id: 3, title: "المهمة الأولى: كتابة الوثيقة", duration: "10:00", type: "document" },
-                { id: 4, title: "قانون الـ 10 للتضاعف", duration: "45:00", type: "video", locked: course.locked },
-                { id: 5, title: "الاختبار الاستراتيجي الأول", duration: "20:00", type: "quiz", locked: course.locked }
-            ];
+        // --- المكون 1: مشغل الكورس التفاعلي (LMS Player for Unlocked Courses) ---
+        const CoursePlayer = ({ course, onBack, theme, showToast }) => {
+            const [activeLessonId, setActiveLessonId] = useState(course.curriculum[0].lessons[0].id);
+            const [completedLessons, setCompletedLessons] = useState([]);
+            const [quizAnswers, setQuizAnswers] = useState({});
+            const [showCertificate, setShowCertificate] = useState(false);
+
+            // البحث عن الدرس الحالي
+            let currentLesson = null;
+            let currentModule = null;
+            course.curriculum.forEach(mod => {
+                const lesson = mod.lessons.find(l => l.id === activeLessonId);
+                if(lesson) { currentLesson = lesson; currentModule = mod; }
+            });
+
+            const handleComplete = (lessonId, isQuiz = false, isCorrect = false) => {
+                if (isQuiz && !isCorrect) {
+                    showToast('إجابة خاطئة، القائد الحقيقي يتعلم من أخطائه. أعد المحاولة!', 'error');
+                    return;
+                }
+                
+                if (!completedLessons.includes(lessonId)) {
+                    setCompletedLessons([...completedLessons, lessonId]);
+                    if(isQuiz) showToast('إجابة صحيحة! +50 XP 🪙', 'success');
+                    else showToast('تم إنجاز الدرس! +20 XP 🪙', 'success');
+                }
+
+                // المنطق للانتقال للدرس التالي
+                let foundCurrent = false;
+                let nextLessonId = null;
+                for (const mod of course.curriculum) {
+                    for (const l of mod.lessons) {
+                        if (foundCurrent) { nextLessonId = l.id; break; }
+                        if (l.id === lessonId) foundCurrent = true;
+                    }
+                    if (nextLessonId) break;
+                }
+
+                if (nextLessonId) {
+                    setActiveLessonId(nextLessonId);
+                } else {
+                    // تم إنهاء الدورة!
+                    showToast('أكملت المنهج بنجاح! +1000 XP 🏆', 'success');
+                    setShowCertificate(true);
+                }
+            };
+
+            if (showCertificate) {
+                return (
+                    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-8 animate-fade-in" dir="rtl">
+                        <div className="certificate-bg w-full max-w-4xl text-center rounded-xl bg-black">
+                            <Icon name="Award" size={80} className="mx-auto mb-6 text-yellow-500" />
+                            <h1 className="text-5xl font-black text-white mb-2 tracking-widest">شهادة إتمام سيادية</h1>
+                            <p className="text-xl text-yellow-500 font-bold mb-8">إمبراطورية MR7 تشهد بأن</p>
+                            <h2 className="text-4xl font-black text-white mb-8 border-b-2 border-white/20 pb-4 inline-block px-10">القائد الاستراتيجي</h2>
+                            <p className="text-2xl text-gray-300 mb-4">قد أتم بنجاح متطلبات المنهج المكثف:</p>
+                            <h3 className="text-3xl font-black text-[#00FF88] mb-10">{course.title}</h3>
+                            <div className="flex justify-between items-center px-10 text-gray-500 font-bold text-sm">
+                                <div>تاريخ الإصدار: {new Date().toLocaleDateString()}</div>
+                                <div>رقم التوثيق: MR7-{Math.floor(Math.random()*1000000)}</div>
+                                <div>الاعتماد: الإدارة العليا</div>
+                            </div>
+                        </div>
+                        <button onClick={onBack} className="mt-10 px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-black transition-colors flex items-center gap-2 border border-white/20">
+                            <Icon name="ArrowRight" size={20} /> العودة للأكاديمية
+                        </button>
+                    </div>
+                );
+            }
 
             return (
                 <div className="min-h-screen bg-[#050505] flex flex-col animate-fade-in" dir="rtl">
-                    {/* شريط التنقل الخاص بقاعة الدراسة */}
+                    {/* Header */}
                     <nav className="glass-panel border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
                         <div className="flex items-center gap-6">
-                            <button 
-                                onClick={onBack} 
-                                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl font-bold transition-all text-gray-300 hover:text-white"
-                            >
+                            <button onClick={onBack} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2.5 rounded-xl font-bold text-gray-300 hover:text-white transition-all">
                                 <Icon name="ArrowRight" size={18} /> العودة للأكاديمية
                             </button>
                             <div className="h-8 w-px bg-white/10"></div>
@@ -120,80 +189,194 @@ react_html = """
                                 <h2 className="text-lg font-black text-white">{course.title}</h2>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <div className="text-left">
-                                <span className="text-[10px] text-gray-500 font-bold uppercase block mb-1">نسبة الإنجاز</span>
-                                <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full" style={{width: `${course.progress}%`, backgroundColor: theme.hex}}></div>
-                                </div>
+                        <div className="text-left">
+                            <span className="text-[10px] text-gray-500 font-bold uppercase block mb-1">التقدم الكلي</span>
+                            <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div className="h-full" style={{width: `${(completedLessons.length / course.curriculum.reduce((a,b)=>a+b.lessons.length,0))*100}%`, backgroundColor: theme.hex}}></div>
                             </div>
-                            <button className={`p-2.5 rounded-xl border border-white/10 hover:bg-white/5`}>
-                                <Icon name="Share2" size={18} />
-                            </button>
                         </div>
                     </nav>
 
                     <div className="flex flex-1 overflow-hidden h-[calc(100vh-80px)]">
-                        {/* مساحة عرض المحتوى (Video/Content Area) */}
-                        <div className="flex-1 flex flex-col bg-black relative overflow-y-auto no-scrollbar">
-                            {course.locked ? (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-10 p-8 text-center">
-                                    <div className="w-24 h-24 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-6 border border-red-500/20">
-                                        <Icon name="Lock" size={40} />
-                                    </div>
-                                    <h2 className="text-3xl font-black mb-4">هذا المحتوى مشفر</h2>
-                                    <p className="text-gray-400 max-w-md mb-8 leading-relaxed">أنت بحاجة إلى صلاحيات سيادية لفتح هذا الأصل المعرفي. استثمر في تطوير ذاتك للوصول إلى هذا المستوى.</p>
-                                    <button className={`px-10 py-5 rounded-2xl font-black text-lg ${theme.btn} ${theme.btnText} shadow-[0_0_30px_rgba(255,215,0,0.3)] hover:scale-105 transition-transform flex items-center gap-3`}>
-                                        <Icon name="CreditCard" size={22} /> دفع ${course.price} لفك التشفير
-                                    </button>
-                                </div>
-                            ) : (
+                        {/* Main Content Area */}
+                        <div className="flex-1 flex flex-col bg-black overflow-y-auto no-scrollbar relative">
+                            {currentLesson?.type === 'video' && (
                                 <div className="w-full aspect-video bg-[#111] border-b border-white/5 flex items-center justify-center relative">
-                                    {/* محاكي مشغل الفيديو */}
-                                    <img src={course.img} className="absolute inset-0 w-full h-full object-cover opacity-30" />
-                                    <button className="w-20 h-20 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 transition-all z-10 hover:scale-110">
-                                        <Icon name="Play" size={30} className="text-white ml-2" />
-                                    </button>
+                                    <img src={course.img} className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                                    <div className="z-10 text-center">
+                                        <button className="w-20 h-20 bg-yellow-500 hover:bg-yellow-400 text-black rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-[0_0_30px_rgba(255,215,0,0.4)] mb-4 mx-auto">
+                                            <Icon name="Play" size={30} className="ml-2" />
+                                        </button>
+                                        <p className="font-bold text-gray-400">فيديو: {currentLesson.title}</p>
+                                    </div>
                                 </div>
                             )}
-                            
+
                             <div className="p-8 md:p-12 max-w-4xl mx-auto w-full">
-                                <h1 className="text-3xl font-black mb-6">{curriculum.find(c => c.id === activeModule)?.title || course.title}</h1>
-                                <p className="text-gray-400 leading-relaxed text-lg mb-8">
-                                    {course.desc} هنا سيتم عرض التفاصيل النصية للدرس، المرفقات، وملخص الفيديو. 
-                                    الذكاء الاصطناعي سيقوم بتلخيص هذا المحتوى تلقائياً للقائد لتسريع عملية التعلم والمراجعة.
-                                </p>
+                                <h1 className="text-3xl font-black mb-4">{currentLesson?.title}</h1>
                                 
-                                <div className="flex gap-4">
-                                    <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors">
-                                        <Icon name="FileText" size={18} /> تحميل المرفقات (PDF)
-                                    </button>
-                                    <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors">
-                                        <Icon name="MessageSquare" size={18} /> مناقشة مع القادة
-                                    </button>
-                                </div>
+                                {currentLesson?.type === 'quiz' ? (
+                                    <div className="bg-white/5 border border-white/10 p-8 rounded-2xl">
+                                        <h3 className="text-xl font-bold mb-6 text-yellow-500"><Icon name="HelpCircle" className="inline mr-2"/> سؤال تقييمي:</h3>
+                                        <p className="text-lg mb-6">{currentLesson.question}</p>
+                                        <div className="space-y-3">
+                                            {currentLesson.options.map((opt, i) => (
+                                                <button 
+                                                    key={i}
+                                                    onClick={() => setQuizAnswers({...quizAnswers, [currentLesson.id]: opt})}
+                                                    className={`w-full text-right p-4 rounded-xl font-bold border transition-all ${quizAnswers[currentLesson.id] === opt ? 'bg-yellow-500/20 border-yellow-500 text-white' : 'bg-black border-white/10 text-gray-400 hover:border-white/30'}`}
+                                                >
+                                                    {opt}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button 
+                                            onClick={() => handleComplete(currentLesson.id, true, quizAnswers[currentLesson.id] === currentLesson.correct)}
+                                            disabled={!quizAnswers[currentLesson.id]}
+                                            className="mt-8 w-full py-4 bg-yellow-500 text-black font-black rounded-xl disabled:opacity-50"
+                                        >
+                                            تأكيد الإجابة
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <div className="text-gray-300 leading-relaxed text-lg mb-8" dangerouslySetInnerHTML={{__html: currentLesson?.content}}></div>
+                                        <button 
+                                            onClick={() => handleComplete(currentLesson.id)}
+                                            className="w-full py-4 bg-[#00FF88] hover:bg-[#00cc66] text-black font-black rounded-xl transition-colors shadow-[0_0_20px_rgba(0,255,136,0.2)]"
+                                        >
+                                            إتمام الدرس والانتقال للتالي <Icon name="CheckCircle2" className="inline ml-2" size={20}/>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* القائمة الجانبية للمنهج (Curriculum Sidebar) */}
+                        {/* Sidebar Curriculum */}
                         <div className="w-80 bg-[#0a0a0a] border-r border-white/10 flex flex-col hidden lg:flex h-full overflow-y-auto no-scrollbar">
                             <div className="p-6 border-b border-white/5">
-                                <h3 className="font-black text-lg mb-1">محتوى المنهج السيادي</h3>
-                                <p className="text-xs text-gray-500 font-bold">{curriculum.length} وحدات تدريبية</p>
+                                <h3 className="font-black text-lg mb-1">محتوى المنهج</h3>
                             </div>
                             <div className="flex flex-col">
-                                {curriculum.map((mod, index) => (
-                                    <div 
-                                        key={mod.id} 
-                                        onClick={() => !mod.locked && setActiveModule(mod.id)}
-                                        className={`module-item p-5 cursor-pointer border-b border-white/5 flex items-start gap-4 ${activeModule === mod.id ? 'active' : ''} ${mod.locked ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                    >
-                                        <div className={`mt-1 ${mod.locked ? 'text-red-500' : (activeModule === mod.id ? 'text-['+theme.hex+']' : 'text-gray-500')}`}>
-                                            <Icon name={mod.locked ? 'Lock' : (mod.type === 'video' ? 'PlayCircle' : mod.type === 'quiz' ? 'HelpCircle' : 'FileText')} size={18} />
+                                {course.curriculum.map((mod, mIdx) => (
+                                    <div key={mod.id} className="border-b border-white/5">
+                                        <div className="p-4 bg-white/5 font-black text-sm text-yellow-500">
+                                            القسم {mIdx + 1}: {mod.title}
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className={`font-bold text-sm mb-1 ${activeModule === mod.id ? 'text-white' : 'text-gray-300'}`}>{index + 1}. {mod.title}</h4>
-                                            <span className="text-[10px] text-gray-500 font-black">{mod.duration}</span>
+                                        {mod.lessons.map(lesson => (
+                                            <div 
+                                                key={lesson.id} 
+                                                onClick={() => setActiveLessonId(lesson.id)}
+                                                className={`p-4 pl-6 cursor-pointer flex items-center gap-3 transition-colors ${activeLessonId === lesson.id ? 'bg-white/10 border-r-4 border-yellow-500' : 'hover:bg-white/5 border-r-4 border-transparent'}`}
+                                            >
+                                                <Icon 
+                                                    name={completedLessons.includes(lesson.id) ? 'CheckCircle2' : (lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText')} 
+                                                    size={16} 
+                                                    className={completedLessons.includes(lesson.id) ? 'text-[#00FF88]' : (activeLessonId === lesson.id ? 'text-yellow-500' : 'text-gray-500')} 
+                                                />
+                                                <span className={`text-sm font-bold ${activeLessonId === lesson.id ? 'text-white' : 'text-gray-400'}`}>{lesson.title}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- المكون 2: صفحة هبوط المنهج المشفر (Sales Page / Preview) ---
+        const CourseSalesPage = ({ course, onBack, theme, onBuy, showToast }) => {
+            return (
+                <div className="min-h-screen bg-[#050505] animate-fade-in overflow-y-auto no-scrollbar pb-20" dir="rtl">
+                    {/* Hero Section */}
+                    <div className="relative h-[60vh] w-full border-b border-white/10">
+                        <img src={course.img} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent"></div>
+                        
+                        <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10 max-w-[1400px] mx-auto w-full">
+                            <button onClick={onBack} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white transition-colors border border-white/10">
+                                <Icon name="ArrowRight" size={24} />
+                            </button>
+                        </div>
+
+                        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 max-w-[1400px] mx-auto w-full flex flex-col md:flex-row gap-10 items-end">
+                            <div className="flex-1">
+                                <span className="bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest mb-4 inline-block">{course.phase}</span>
+                                <h1 className="text-4xl md:text-6xl font-black text-white mb-4 leading-tight">{course.title}</h1>
+                                <p className="text-xl text-gray-300 max-w-2xl font-medium leading-relaxed">{course.desc}</p>
+                            </div>
+                            
+                            {/* صندوق الشراء (Purchase Box) */}
+                            <div className="bg-black/80 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] w-full md:w-96 shadow-2xl flex-shrink-0">
+                                <div className="flex justify-between items-center mb-6">
+                                    <span className="text-gray-500 uppercase font-black text-xs tracking-widest">قيمة الاستثمار</span>
+                                    <span className="text-4xl font-black text-[#00FF88]">${course.price}</span>
+                                </div>
+                                <ul className="space-y-4 mb-8 text-sm font-bold text-gray-300">
+                                    <li className="flex items-center gap-3"><Icon name="Check" size={18} className="text-yellow-500"/> وصول مدى الحياة للمحتوى</li>
+                                    <li className="flex items-center gap-3"><Icon name="Check" size={18} className="text-yellow-500"/> شهادة سيادية معتمدة</li>
+                                    <li className="flex items-center gap-3"><Icon name="Check" size={18} className="text-yellow-500"/> تفعيل عمولات التسويق (10-5-1%)</li>
+                                </ul>
+                                <button onClick={() => onBuy(course)} className={`w-full py-5 rounded-2xl font-black text-lg ${theme.btn} ${theme.btnText} hover:scale-105 transition-transform flex justify-center items-center gap-3 shadow-[0_10px_30px_rgba(255,215,0,0.3)]`}>
+                                    <Icon name="Unlock" size={22} /> فك تشفير المنهج
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="max-w-[1400px] mx-auto w-full px-8 md:px-16 py-16 flex flex-col lg:flex-row gap-16">
+                        {/* Instructor & Details */}
+                        <div className="w-full lg:w-1/3 space-y-10">
+                            <div>
+                                <h3 className="text-xl font-black mb-6 border-b border-white/10 pb-4">المدرب / المهندس الاستراتيجي</h3>
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center text-2xl">👤</div>
+                                    <div>
+                                        <h4 className="font-black text-lg">{course.instructor}</h4>
+                                        <p className="text-xs text-yellow-500 font-bold uppercase">{course.instructor_title}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 className="text-xl font-black mb-6 border-b border-white/10 pb-4">ماذا ستتعلم؟</h3>
+                                <ul className="space-y-4 text-gray-400 font-medium">
+                                    <li className="flex items-start gap-3"><Icon name="Target" size={20} className="text-[#00FF88] mt-1 shrink-0"/> إتقان استراتيجيات التحول والتضاعف في بيئة عدم اليقين.</li>
+                                    <li className="flex items-start gap-3"><Icon name="Target" size={20} className="text-[#00FF88] mt-1 shrink-0"/> بناء رؤية مؤسسية وتوصيلها بفعالية لجيشك.</li>
+                                    <li className="flex items-start gap-3"><Icon name="Target" size={20} className="text-[#00FF88] mt-1 shrink-0"/> فهم سيكولوجية الجماهير لتحفيز المبيعات.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Curriculum Overview */}
+                        <div className="w-full lg:w-2/3">
+                            <h3 className="text-2xl font-black mb-8 border-b border-white/10 pb-4">المحتوى الأكاديمي (Curriculum)</h3>
+                            <div className="space-y-6">
+                                {course.curriculum.map((mod, i) => (
+                                    <div key={i} className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden">
+                                        <div className="bg-white/5 p-5 font-black text-lg flex justify-between items-center">
+                                            <span>القسم {i+1}: {mod.title}</span>
+                                            <span className="text-xs text-gray-500">{mod.lessons.length} دروس</span>
+                                        </div>
+                                        <div className="p-2">
+                                            {mod.lessons.map((lesson, j) => (
+                                                <div key={j} className="flex items-center justify-between p-4 hover:bg-white/5 rounded-xl transition-colors border-b border-white/5 last:border-0">
+                                                    <div className="flex items-center gap-3">
+                                                        <Icon name={lesson.type === 'video' ? 'PlayCircle' : lesson.type === 'quiz' ? 'HelpCircle' : 'FileText'} size={18} className="text-gray-500" />
+                                                        <span className="font-bold text-sm text-gray-300">{lesson.title}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {lesson.isPreview ? (
+                                                            <button onClick={() => showToast('هذا الدرس متاح للمعاينة! سيتم فتحه في المشغل.', 'info')} className="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-md font-black uppercase flex items-center gap-1"><Icon name="Eye" size={12}/> معاينة مجانية</button>
+                                                        ) : (
+                                                            <Icon name="Lock" size={16} className="text-gray-600" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 ))}
@@ -218,44 +401,121 @@ react_html = """
             useEffect(() => { document.documentElement.style.setProperty('--accent-color', theme.hex); }, [theme]);
 
             const [activeTab, setActiveTab] = useState('courses'); 
-            const [selectedCourse, setSelectedCourse] = useState(null); // إذا كان له قيمة، يفتح الـ CourseViewer
+            const [selectedCourse, setSelectedCourse] = useState(null); 
             const [searchQ, setSearchQ] = useState('');
             const [selectedCategory, setSelectedCategory] = useState('الكل');
+            const [toasts, setToasts] = useState([]);
+            
+            const showToast = (msg, type = 'success') => {
+                const id = Date.now();
+                setToasts(prev => [...prev, { id, msg, type }]);
+                setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+            };
 
-            // --- قاعدة بيانات الـ 100 برنامج (عينة للفرونت اند) ---
-            const DB_COURSES = [
-                { id: 1, phase: 'القيادة الاستراتيجية', title: 'القيادة التحويلية في العصر الرقمي', hours: 20, price: 299, img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800', desc: 'إدارة التغيير وبناء الرؤية في بيئة عدم اليقين.', locked: false, progress: 45 },
-                { id: 2, phase: 'الاستثمار والمالية', title: 'تحليل الأسهم وأسواق المال', hours: 25, price: 499, img: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800', desc: 'التحليل الأساسي والفني، قراءة القوائم المالية.', locked: true, progress: 0 },
-                { id: 3, phase: 'التكنولوجيا والتحول', title: 'الذكاء الاصطناعي في الأعمال', hours: 15, price: 350, img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', desc: 'استخدام AI في التسويق والمالية وخدمة العملاء.', locked: true, progress: 0 },
-                { id: 4, phase: 'ريادة الأعمال', title: 'من الفكرة إلى المشروع الشامل', hours: 25, price: 399, img: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800', desc: 'نموذج العمل، دراسة الجدوى، والتمويل الأولي.', locked: true, progress: 0 },
-                { id: 5, phase: 'المهارات الشخصية', title: 'الذكاء العاطفي في بيئة العمل', hours: 14, price: 150, img: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=800', desc: 'الوعي الذاتي، إدارة العلاقات، والتأثير الإيجابي.', locked: true, progress: 0 },
-                { id: 6, phase: 'الاقتصاد المستدام', title: 'الاستثمار في الطاقة المتجددة', hours: 16, price: 450, img: 'https://images.unsplash.com/photo-1509391366360-fe5bb58583bb?w=800', desc: 'السندات الخضراء، طاقة الرياح، والتمويل المستدام.', locked: true, progress: 0 },
+            // --- بناء المناهج من الـ PDF ---
+            const [coursesDB, setCoursesDB] = useState([
+                { 
+                    id: 1, phase: 'القيادة والإدارة الاستراتيجية', title: 'القيادة التحويلية في العصر الرقمي', hours: 20, price: 299, 
+                    img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800', 
+                    desc: 'دورة مكثفة تهدف إلى تمكين القادة من قيادة التغيير بفعالية في بيئة رقمية سريعة التطور، وتحفيز فرق العمل لتحقيق رؤى طموحة.', 
+                    locked: false, progress: 0,
+                    instructor: "د. خالد السيادي", instructor_title: "خبير القيادة المؤسسية",
+                    curriculum: [
+                        {
+                            id: 101, title: "فهم القيادة التحويلية",
+                            lessons: [
+                                { id: 1001, title: "مفهوم القيادة التحويلية وأهميتها", type: "video", content: "<p>في هذا الدرس نتناول كيف يختلف القائد التحويلي عن القائد التقليدي...</p>", isPreview: true },
+                                { id: 1002, title: "اختبار الفهم الأول", type: "quiz", question: "ما هي الخاصية الأهم للقائد التحويلي؟", options: ["الحفاظ على الوضع الراهن", "التأثير المثالي والتحفيز الملهم", "إدارة الميزانيات بدقة"], correct: "التأثير المثالي والتحفيز الملهم", isPreview: true },
+                                { id: 1003, title: "خصائص القائد التحويلي المتقدمة", type: "text", content: "<p>الرؤية، التأثير، التحفيز الفكري، والاعتبار الفردي...</p>" },
+                            ]
+                        },
+                        {
+                            id: 102, title: "بناء الرؤية المشتركة",
+                            lessons: [
+                                { id: 2001, title: "كيفية صياغة رؤية واضحة", type: "video", content: "<p>تعلم صياغة رؤية قابلة للقياس...</p>" },
+                                { id: 2002, title: "تقنيات توصيل الرؤية بفعالية", type: "text", content: "<p>استراتيجيات التواصل مع أصحاب المصلحة...</p>" },
+                                { id: 2003, title: "اختبار القسم الثاني", type: "quiz", question: "ما هو الهدف من توصيل الرؤية؟", options: ["بناء الالتزام وتحويلها لأهداف", "إرضاء الإدارة العليا فقط"], correct: "بناء الالتزام وتحويلها لأهداف" },
+                            ]
+                        },
+                        {
+                            id: 103, title: "التقييم النهائي والاعتماد",
+                            lessons: [
+                                { id: 3001, title: "الاختبار الاستراتيجي الشامل", type: "quiz", question: "كيف نتعامل مع مقاومة التغيير؟", options: ["بالتجاهل", "بالقوة", "ببناء ثقافة الثقة والتعاون"], correct: "ببناء ثقافة الثقة والتعاون" }
+                            ]
+                        }
+                    ]
+                },
+                { 
+                    id: 2, phase: 'الاستثمار والمالية', title: 'تحليل الأسهم وأسواق المال', hours: 25, price: 499, 
+                    img: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800', 
+                    desc: 'تعلم قراءة وتحليل القوائم المالية للشركات (الدخل، الميزانية، التدفقات النقدية) واستخدام النسب المالية للتنبؤ المالي واتخاذ القرارات.', 
+                    locked: true, progress: 0,
+                    instructor: "عمار المالي", instructor_title: "محلل مالي معتمد",
+                    curriculum: [
+                        {
+                            id: 201, title: "مقدمة في أسواق الأسهم",
+                            lessons: [
+                                { id: 2001, title: "هيكل سوق الأسهم والبورصات", type: "video", isPreview: true },
+                                { id: 2002, title: "أنواع الأسهم ومفاهيمها", type: "text" },
+                            ]
+                        },
+                        {
+                            id: 202, title: "التحليل الأساسي للأسهم",
+                            lessons: [
+                                { id: 2003, title: "قراءة القوائم المالية", type: "video" },
+                                { id: 2004, title: "نماذج التقييم (خصم الأرباح)", type: "text" },
+                            ]
+                        }
+                    ]
+                },
+                { id: 3, phase: 'التكنولوجيا والتحول', title: 'الذكاء الاصطناعي في الأعمال', hours: 15, price: 350, img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800', desc: 'استخدام AI في التسويق والمالية وخدمة العملاء.', locked: true, progress: 0, instructor: "نور الدين تقني", instructor_title: "مهندس ذكاء اصطناعي", curriculum: [{id:1, title: "المقدمة", lessons:[{id:1, title:"ما هو الـ AI", type:"video", isPreview:true}]}] },
             ];
 
-            const categories = ["الكل", ...new Set(DB_COURSES.map(c => c.phase))];
+            const categories = ["الكل", ...new Set(coursesDB.map(c => c.phase))];
 
             const filteredCourses = useMemo(() => {
-                return DB_COURSES.filter(c => {
+                return coursesDB.filter(c => {
                     const matchSearch = c.title.includes(searchQ) || c.desc.includes(searchQ);
                     const matchCat = selectedCategory === 'الكل' || c.phase === selectedCategory;
                     return matchSearch && matchCat;
                 });
-            }, [searchQ, selectedCategory]);
+            }, [searchQ, selectedCategory, coursesDB]);
 
             useEffect(() => {
                 const loader = document.getElementById('loading-screen');
                 if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }
             }, []);
 
-            // إذا تم اختيار كورس، نعرض واجهة الـ CourseViewer بالكامل وراء الشاشة الرئيسية
+            const handleBuyCourse = (course) => {
+                showToast(`تم شراء المنهج '${course.title}' بنجاح! تم الخصم من محفظتك.`, 'success');
+                // تحديث الحالة لفتح الكورس
+                setCoursesDB(prev => prev.map(c => c.id === course.id ? {...c, locked: false} : c));
+                setSelectedCourse({...course, locked: false}); // تحديث الكورس المحدد ليفتح المشغل
+            };
+
+            // إدارة العرض: هل نحن في المشغل، في صفحة البيع، أم في الأكاديمية الرئيسية؟
             if (selectedCourse) {
-                return <CourseViewer course={selectedCourse} onBack={() => setSelectedCourse(null)} theme={theme} />;
+                if (selectedCourse.locked) {
+                    return <CourseSalesPage course={selectedCourse} onBack={() => setSelectedCourse(null)} theme={theme} onBuy={handleBuyCourse} showToast={showToast} />;
+                } else {
+                    return <CoursePlayer course={selectedCourse} onBack={() => setSelectedCourse(null)} theme={theme} showToast={showToast} />;
+                }
             }
 
-            // الواجهة الرئيسية للأكاديمية (Academy Main View)
+            // الواجهة الرئيسية للأكاديمية
             return (
                 <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col font-['Tajawal']`} dir="rtl">
-                    {/* Header */}
+                    
+                    {/* Toast Container */}
+                    <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
+                        {toasts.map(t => (
+                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'error' ? 'bg-black/90 border-red-500/40 text-red-500' : 'bg-black/90 border-yellow-500/40 text-yellow-500'}`}>
+                                <Icon name={t.type === 'success' ? 'CheckCircle2' : t.type === 'error' ? 'XCircle' : 'AlertCircle'} size={20} />
+                                <span className="font-bold text-sm text-white">{t.msg}</span>
+                            </div>
+                        ))}
+                    </div>
+
                     <nav className="glass-panel sticky top-0 z-40 border-b border-white/10">
                         <div className="max-w-[1600px] mx-auto px-6 md:px-10 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
                             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
@@ -319,7 +579,12 @@ react_html = """
                                                 <img src={course.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                 {course.locked && (
                                                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <div className="bg-black/80 p-4 rounded-full border border-white/20 text-white"><Icon name="Lock" size={28} /></div>
+                                                        <div className="bg-black/80 px-6 py-3 rounded-full border border-white/20 text-white flex items-center gap-2 font-black"><Icon name="Lock" size={20} /> عرض المنهج</div>
+                                                    </div>
+                                                )}
+                                                {!course.locked && (
+                                                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="bg-[#00FF88] px-6 py-3 rounded-full text-black flex items-center gap-2 font-black"><Icon name="PlayCircle" size={20} /> دخول القاعة</div>
                                                     </div>
                                                 )}
                                             </div>
@@ -330,12 +595,13 @@ react_html = """
                                                 <h3 className="text-xl font-black mb-3 line-clamp-2 text-white leading-tight">{course.title}</h3>
                                                 <div className="flex items-center gap-4 text-xs font-bold text-gray-500 mb-6">
                                                     <span className="flex items-center gap-1"><Icon name="Clock" size={14}/> {course.hours} ساعة</span>
+                                                    <span className="flex items-center gap-1"><Icon name="BookOpen" size={14}/> {course.curriculum.reduce((a,b)=>a+b.lessons.length,0)} درس</span>
                                                 </div>
                                                 
                                                 <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
                                                     {course.locked ? (
                                                         <div className="flex justify-between items-center w-full">
-                                                          <span className="text-xs text-gray-500 font-bold uppercase">مغلق</span>
+                                                          <span className="text-[10px] text-gray-500 font-bold uppercase">قيمة الاستثمار</span>
                                                           <span className="text-2xl font-black text-[#00FF88]">${course.price}</span>
                                                         </div>
                                                     ) : (
@@ -364,7 +630,7 @@ react_html = """
                             <div className="animate-fade-in">
                                 <h2 className="text-2xl font-black mb-8 border-b border-white/10 pb-4">مناهجي الدراسية (المفتوحة)</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                   {DB_COURSES.filter(c => !c.locked).map(course => (
+                                   {coursesDB.filter(c => !c.locked).map(course => (
                                         <div key={course.id} onClick={() => setSelectedCourse(course)} className="course-card rounded-[2rem] border border-white/10 overflow-hidden cursor-pointer group flex flex-col h-full relative bg-[#0a0a0a]">
                                             <div className="relative h-40 w-full overflow-hidden">
                                                 <img src={course.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
