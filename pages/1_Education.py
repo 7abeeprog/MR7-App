@@ -25,7 +25,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.4 - التحديث المستقر) ---
+# --- 3. واجهة React المتقدمة (أكاديمية التريليون - الإصدار المستقر نهائياً) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -35,11 +35,12 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- استخدام cdnjs بدلاً من unpkg لضمان استقرار التحميل وتجنب حظر المتصفحات -->
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- تثبيت الإصدارات (Version Pinning) لمنع أي انهيار مستقبلي -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <!-- تم تثبيت إصدار Lucide على 0.292.0 لضمان تطابق أسماء الأيقونات -->
+    <script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"></script>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -92,7 +93,7 @@ react_html = """
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 
-    <!-- درع الأخطاء الصارم (لن تختفي الشاشة إذا وجد خطأ) -->
+    <!-- درع الأخطاء الصارم -->
     <script>
         window.hasGlobalError = false;
         
@@ -113,23 +114,14 @@ react_html = """
         }
 
         window.addEventListener('error', function(e) {
+            // تجاهل رسائل CORS الوهمية إذا حدثت
+            if (e.message && e.message.includes('Script error')) return;
             showErrorScreen("انهيار في النظام (System Crash)", e.message, `${e.filename}:${e.lineno}`);
         });
 
         window.addEventListener('unhandledrejection', function(e) {
             showErrorScreen("فشل في الاتصال (Promise Rejection)", e.reason, "Network or Async Error");
         });
-
-        // إخفاء شاشة التحميل فقط إذا لم يكن هناك أي أخطاء
-        setTimeout(() => {
-            if (!window.hasGlobalError) {
-                const loader = document.getElementById('loading-screen');
-                if (loader && loader.style.display !== 'none') {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }
-            }
-        }, 2000);
     </script>
 </head>
 <body>
@@ -142,7 +134,6 @@ react_html = """
     <script type="text/babel">
         const { useState, useEffect, useMemo, Component } = React;
 
-        // --- درع أخطاء ريأكت الداخلي ---
         class ErrorBoundary extends Component {
             constructor(props) {
                 super(props);
@@ -150,7 +141,7 @@ react_html = """
             }
             componentDidCatch(error, errorInfo) {
                 this.setState({ hasError: true, error: error, errorInfo: errorInfo });
-                window.hasGlobalError = true; // منع اختفاء شاشة التحميل
+                window.hasGlobalError = true;
                 const loader = document.getElementById('loading-screen');
                 if (loader) {
                     loader.innerHTML = `
@@ -175,13 +166,17 @@ react_html = """
                 if (iconRef.current && window.lucide) {
                     iconRef.current.innerHTML = ''; 
                     const i = document.createElement('i'); i.setAttribute('data-lucide', name); if (className) i.setAttribute('class', className);
-                    iconRef.current.appendChild(i); window.lucide.createIcons({ root: iconRef.current });
+                    iconRef.current.appendChild(i); 
+                    try {
+                        window.lucide.createIcons({ root: iconRef.current });
+                    } catch (e) {
+                        console.warn("Icon not found:", name);
+                    }
                 }
             }, [name, size, className]);
             return <span ref={iconRef} className={`inline-flex justify-center items-center ${className}`}></span>;
         };
 
-        // --- المكون 1: مشغل الكورس التفاعلي ---
         const CoursePlayer = ({ course, onBack, theme, showToast }) => {
             const firstLessonId = (course.curriculum && course.curriculum[0] && course.curriculum[0].lessons && course.curriculum[0].lessons[0]) ? course.curriculum[0].lessons[0].id : null;
             const [activeLessonId, setActiveLessonId] = useState(firstLessonId);
@@ -379,7 +374,6 @@ react_html = """
             );
         };
 
-        // --- المكون 2: صفحة الهبوط (Sales Page) ---
         const CourseSalesPage = ({ course, onBack, theme, onBuy, showToast }) => {
             return (
                 <div className="min-h-screen bg-[#050505] animate-fade-in overflow-y-auto no-scrollbar pb-20" dir="rtl">
@@ -512,7 +506,7 @@ react_html = """
                 { 
                     id: 1, phase: 'القيادة والإدارة الاستراتيجية', title: 'القيادة التحويلية في العصر الرقمي', hours: 20, price: 299, 
                     img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800', 
-                    desc: 'دورة مكثفة تهدف إلى تمكين القادة من قيادة التغيير بفعالية في بيئة رقمية سريعة التطور، وتحفيز فرق العمل لتحقيق رؤى طموحة.', 
+                    desc: 'دورة مكثفة تهدف إلى تمكين القادة من قيادة التغيير بفعالية في بيئة رقمية سريعة التطور.', 
                     locked: false, progress: 0,
                     instructor: "د. خالد السيادي", instructor_title: "خبير القيادة المؤسسية",
                     curriculum: [
@@ -523,27 +517,13 @@ react_html = """
                                 { id: 1002, title: "اختبار الفهم الأول", type: "quiz", question: "ما هي الخاصية الأهم للقائد التحويلي؟", options: ["الحفاظ على الوضع الراهن", "التأثير المثالي والتحفيز الملهم", "إدارة الميزانيات بدقة"], correct: "التأثير المثالي والتحفيز الملهم", isPreview: true },
                                 { id: 1003, title: "خصائص القائد التحويلي المتقدمة", type: "text", content: "<p>الرؤية، التأثير، التحفيز الفكري، والاعتبار الفردي...</p>" },
                             ]
-                        },
-                        {
-                            id: 102, title: "بناء الرؤية المشتركة",
-                            lessons: [
-                                { id: 2001, title: "كيفية صياغة رؤية واضحة", type: "video", content: "<p>تعلم صياغة رؤية قابلة للقياس...</p>" },
-                                { id: 2002, title: "تقنيات توصيل الرؤية بفعالية", type: "text", content: "<p>استراتيجيات التواصل مع أصحاب المصلحة...</p>" },
-                                { id: 2003, title: "اختبار القسم الثاني", type: "quiz", question: "ما هو الهدف من توصيل الرؤية؟", options: ["بناء الالتزام وتحويلها لأهداف", "إرضاء الإدارة العليا فقط"], correct: "بناء الالتزام وتحويلها لأهداف" },
-                            ]
-                        },
-                        {
-                            id: 103, title: "التقييم النهائي والاعتماد",
-                            lessons: [
-                                { id: 3001, title: "الاختبار الاستراتيجي الشامل", type: "quiz", question: "كيف نتعامل مع مقاومة التغيير؟", options: ["بالتجاهل", "بالقوة", "ببناء ثقافة الثقة والتعاون"], correct: "ببناء ثقافة الثقة والتعاون" }
-                            ]
                         }
                     ]
                 },
                 { 
                     id: 2, phase: 'الاستثمار والمالية', title: 'تحليل الأسهم وأسواق المال', hours: 25, price: 499, 
                     img: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800', 
-                    desc: 'تعلم قراءة وتحليل القوائم المالية للشركات (الدخل، الميزانية، التدفقات النقدية) واستخدام النسب المالية للتنبؤ المالي واتخاذ القرارات.', 
+                    desc: 'تعلم قراءة وتحليل القوائم المالية للشركات واستخدام النسب المالية للتنبؤ المالي.', 
                     locked: true, progress: 0,
                     instructor: "عمار المالي", instructor_title: "محلل مالي معتمد",
                     curriculum: [
@@ -552,13 +532,6 @@ react_html = """
                             lessons: [
                                 { id: 2001, title: "هيكل سوق الأسهم والبورصات", type: "video", isPreview: true },
                                 { id: 2002, title: "أنواع الأسهم ومفاهيمها", type: "text" },
-                            ]
-                        },
-                        {
-                            id: 202, title: "التحليل الأساسي للأسهم",
-                            lessons: [
-                                { id: 2003, title: "قراءة القوائم المالية", type: "video" },
-                                { id: 2004, title: "نماذج التقييم (خصم الأرباح)", type: "text" },
                             ]
                         }
                     ]
@@ -576,21 +549,7 @@ react_html = """
                     desc: 'نموذج العمل، دراسة الجدوى، والتمويل الأولي.', 
                     locked: true, progress: 0, instructor: 'خبير مجهول', instructor_title: 'مدرب', 
                     curriculum: [] 
-                },
-                { 
-                    id: 5, phase: 'المهارات الشخصية', title: 'الذكاء العاطفي في بيئة العمل', hours: 14, price: 150, 
-                    img: 'https://images.unsplash.com/photo-1552581234-26160f608093?w=800', 
-                    desc: 'الوعي الذاتي، إدارة العلاقات، والتأثير الإيجابي.', 
-                    locked: true, progress: 0, instructor: 'خبير مجهول', instructor_title: 'مدرب', 
-                    curriculum: [] 
-                },
-                { 
-                    id: 6, phase: 'الاقتصاد المستدام', title: 'الاستثمار في الطاقة المتجددة', hours: 16, price: 450, 
-                    img: 'https://images.unsplash.com/photo-1509391366360-fe5bb58583bb?w=800', 
-                    desc: 'السندات الخضراء، طاقة الرياح، والتمويل المستدام.', 
-                    locked: true, progress: 0, instructor: 'خبير مجهول', instructor_title: 'مدرب', 
-                    curriculum: [] 
-                },
+                }
             ];
 
             const categories = ["الكل", ...new Set(coursesDB.map(c => c.phase))];
@@ -608,6 +567,15 @@ react_html = """
                 setCoursesDB(prev => prev.map(c => c.id === course.id ? {...c, locked: false} : c));
                 setSelectedCourse({...course, locked: false}); 
             };
+
+            // إخفاء شاشة التحميل بمجرد أن يقوم React برسم المكون الرئيسي بنجاح
+            useEffect(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
+            }, []);
 
             if (selectedCourse) {
                 if (selectedCourse.locked) {
