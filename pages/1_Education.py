@@ -25,7 +25,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.3 - المستقرة تماماً) ---
+# --- 3. واجهة React المتقدمة (أكاديمية التريليون - V14.4 - التحديث المستقر) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -35,10 +35,10 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- الروابط المستقرة بدون قيود المتصفح (CORS) لتجنب Script error -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- استخدام cdnjs بدلاً من unpkg لضمان استقرار التحميل وتجنب حظر المتصفحات -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <script type="module">
@@ -92,12 +92,12 @@ react_html = """
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 
-    <!-- درع الأخطاء العام (محدث لتجاهل أخطاء CORS) -->
+    <!-- درع الأخطاء الصارم (لن تختفي الشاشة إذا وجد خطأ) -->
     <script>
-        let hasGlobalError = false;
+        window.hasGlobalError = false;
         
         function showErrorScreen(title, message, details) {
-            hasGlobalError = true;
+            window.hasGlobalError = true;
             const loader = document.getElementById('loading-screen');
             if (loader) {
                 loader.innerHTML = `
@@ -113,10 +113,6 @@ react_html = """
         }
 
         window.addEventListener('error', function(e) {
-            if (e.message && e.message.includes('Script error')) {
-                console.warn("تم تجاهل خطأ متصفح CORS غير مؤثر.");
-                return; // لا تغلق الشاشة إذا كان الخطأ مجرد Script error
-            }
             showErrorScreen("انهيار في النظام (System Crash)", e.message, `${e.filename}:${e.lineno}`);
         });
 
@@ -124,9 +120,9 @@ react_html = """
             showErrorScreen("فشل في الاتصال (Promise Rejection)", e.reason, "Network or Async Error");
         });
 
-        // إخفاء شاشة التحميل فقط إذا لم يكن هناك خطأ حرج
+        // إخفاء شاشة التحميل فقط إذا لم يكن هناك أي أخطاء
         setTimeout(() => {
-            if (!hasGlobalError) {
+            if (!window.hasGlobalError) {
                 const loader = document.getElementById('loading-screen');
                 if (loader && loader.style.display !== 'none') {
                     loader.style.opacity = '0';
@@ -146,7 +142,7 @@ react_html = """
     <script type="text/babel">
         const { useState, useEffect, useMemo, Component } = React;
 
-        // --- درع أخطاء ريأكت (React Error Boundary) ---
+        // --- درع أخطاء ريأكت الداخلي ---
         class ErrorBoundary extends Component {
             constructor(props) {
                 super(props);
@@ -154,6 +150,7 @@ react_html = """
             }
             componentDidCatch(error, errorInfo) {
                 this.setState({ hasError: true, error: error, errorInfo: errorInfo });
+                window.hasGlobalError = true; // منع اختفاء شاشة التحميل
                 const loader = document.getElementById('loading-screen');
                 if (loader) {
                     loader.innerHTML = `
