@@ -35,12 +35,11 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- تثبيت الإصدارات (Version Pinning) لمنع أي انهيار مستقبلي -->
-    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
-    <!-- تم تثبيت إصدار Lucide على 0.292.0 لضمان تطابق أسماء الأيقونات -->
-    <script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"></script>
+    <!-- استخدام jsdelivr الأسرع والأكثر استقراراً في الشرق الأوسط لتجنب الحظر -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.292.0/dist/umd/lucide.min.js"></script>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -93,7 +92,7 @@ react_html = """
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 
-    <!-- درع الأخطاء الصارم -->
+    <!-- درع الأخطاء الصارم وتدمير شاشة التحميل -->
     <script>
         window.hasGlobalError = false;
         
@@ -122,6 +121,15 @@ react_html = """
         window.addEventListener('unhandledrejection', function(e) {
             showErrorScreen("فشل في الاتصال (Promise Rejection)", e.reason, "Network or Async Error");
         });
+
+        // صمام أمان نهائي: إخفاء الشاشة السوداء إجبارياً بعد 6 ثوانٍ إن لم يكن هناك خطأ ظاهر
+        setTimeout(() => {
+            const loader = document.getElementById('loading-screen');
+            if (loader && !window.hasGlobalError && !loader.innerHTML.includes('🚨')) {
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; }, 500);
+            }
+        }, 6000);
     </script>
 </head>
 <body>
