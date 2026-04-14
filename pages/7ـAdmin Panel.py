@@ -4,12 +4,12 @@ import json
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
-    page_title="MR7 GOD MODE - Admin Panel", 
+    page_title="MR7 GOD MODE - Unified Admin", 
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. جلب إعدادات السحابة (Firebase) بأمان تام ---
+# --- 2. جلب إعدادات السحابة بأمان تام ---
 fb_config = st.secrets.get("__firebase_config", "{}")
 try:
     if isinstance(fb_config, dict):
@@ -25,7 +25,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (لوحة القيادة العليا V16.2 - محرر المناهج المتطور) ---
+# --- 3. واجهة React المتقدمة (لوحة القيادة الشاملة V17.0 - RBAC Architecture) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -35,7 +35,7 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- CDNs مستقرة -->
+    <!-- CDNs مستقرة ومضادة للحظر -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -52,18 +52,21 @@ react_html = """
         body { font-family: 'Tajawal', sans-serif; margin: 0; overflow-x: hidden; scroll-behavior: smooth; background-color: #020202; color: white; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #FF4B4B; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         .glass-panel { backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .premium-input { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: white; transition: all 0.3s ease; }
-        .premium-input:focus { border-color: var(--accent-color); outline: none; box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.2); }
+        .premium-input:focus { border-color: var(--accent-color); outline: none; box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2); }
         
         .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
         .toast-animate { animation: toastEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes toastEnter { 0% { opacity: 0; transform: translateY(100%) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .stat-card { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 24px; border-radius: 24px; transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--accent-color); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
 
         #loading-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; transition: opacity 0.5s ease; }
     </style>
@@ -81,14 +84,14 @@ react_html = """
 </head>
 <body>
     <div id="loading-screen">
-        <div style="border: 4px solid rgba(255,75,75,0.3); border-top: 4px solid #FF4B4B; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
-        <h2 style="margin-top:20px; color: #FF4B4B; font-weight: 900; letter-spacing: 2px;">MR7 GOD MODE</h2>
-        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Global Command & Live Database Connection...</p>
+        <div style="border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
+        <h2 style="margin-top:20px; color: #FFD700; font-weight: 900; letter-spacing: 2px;">MR7 GOD MODE</h2>
+        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Decentralized Command Architecture...</p>
     </div>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, Component } = React;
+        const { useState, useEffect, useMemo, Component, useRef } = React;
 
         class ErrorBoundary extends Component {
             constructor(props) { super(props); this.state = { hasError: false }; }
@@ -97,7 +100,7 @@ react_html = """
         }
 
         const Icon = ({ name, size = 24, className = "" }) => {
-            const iconRef = React.useRef(null);
+            const iconRef = useRef(null);
             useEffect(() => {
                 if (iconRef.current && window.lucide) {
                     iconRef.current.innerHTML = ''; 
@@ -113,170 +116,254 @@ react_html = """
             // --- Theming ---
             const themes = {
                 "سلطة مطلقة 🔴": { bg: "bg-[#0A0000]", text: "text-[#FFFFFF]", card: "bg-[#140000]/90", borderLight: "border-[#FF4B4B]/20", accent: "text-[#FF4B4B]", btn: "bg-[#FF4B4B]", btnText: "text-white", hex: "#FF4B4B" },
-                "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" }
+                "أسود قيادي 🖤": { bg: "bg-[#030303]", text: "text-white", card: "bg-[rgba(15,15,15,0.8)]", borderLight: "border-[#FFD700]/20", accent: "text-[#FFD700]", btn: "bg-[#FFD700]", btnText: "text-black", hex: "#000000" },
+                "أزرق القيادة 💙": { bg: "bg-[#000814]", text: "text-white", card: "bg-[#00122B]/80", borderLight: "border-[#0074D9]/20", accent: "text-[#0074D9]", btn: "bg-[#0074D9]", btnText: "text-white", hex: "#0074D9" },
+                "أخضر الاستدامة 💚": { bg: "bg-[#00140A]", text: "text-white", card: "bg-[#002B1B]/80", borderLight: "border-[#00FF88]/20", accent: "text-[#00FF88]", btn: "bg-[#00FF88]", btnText: "text-black", hex: "#00FF88" }
             };
             const themeName = window.__current_theme || "سلطة مطلقة 🔴";
             const theme = themes[themeName] || themes["سلطة مطلقة 🔴"];
             useEffect(() => { document.documentElement.style.setProperty('--accent-color', theme.hex); }, [theme]);
 
-            const [activeTab, setActiveTab] = useState('programs');
+            // --- RBAC: Role Based Access Control ---
+            const ROLES = {
+                SUPER_ADMIN: { id: 'super_admin', name: 'الأدمن العام (السيادة المطلقة)', allowedTabs: ['radar', 'academy', 'marketplace', 'crowdfund', 'support', 'network'] },
+                ACADEMY_ADMIN: { id: 'academy_admin', name: 'أدمن الأكاديمية (التعليم)', allowedTabs: ['academy'] },
+                MARKET_ADMIN: { id: 'market_admin', name: 'أدمن المتجر (التجارة)', allowedTabs: ['marketplace'] },
+                SUPPORT_ADMIN: { id: 'support_admin', name: 'أدمن الدعم الفني (العمليات)', allowedTabs: ['support'] },
+            };
+            const [currentRole, setCurrentRole] = useState(ROLES.SUPER_ADMIN);
+            const [activeTab, setActiveTab] = useState('radar');
+            
+            // Auto-switch tab if role changes and current tab is not allowed
+            useEffect(() => {
+                if (!currentRole.allowedTabs.includes(activeTab)) {
+                    setActiveTab(currentRole.allowedTabs[0]);
+                }
+            }, [currentRole]);
+
             const [toasts, setToasts] = useState([]);
-
-            // --- Course Editor State ---
-            const [editingCourse, setEditingCourse] = useState(null);
-            const [editSubTab, setEditSubTab] = useState('curriculum');
-            const [expandedLessonId, setExpandedLessonId] = useState(null); // للتحكم في الدرس المفتوح حالياً للتعديل
-
             const showToast = (msg, type = 'success') => {
                 const id = Date.now();
                 setToasts(prev => [...prev, { id, msg, type }]);
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
             };
 
-            // --- Data States ---
+            // --- Dummy Data Stores for Modules ---
+            // 1. Marketplace Data
+            const [pendingProducts, setPendingProducts] = useState([
+                { id: 'p101', name: 'استراتيجية النفوذ الإقليمي', vendor: 'د. خالد السيادي', price: 150, type: 'رقمي', status: 'pending' },
+                { id: 'p102', name: 'مكتب إداري في مدينة النبت', vendor: 'النبت العقارية', price: 25000, type: 'عقاري', status: 'pending' }
+            ]);
+            // 2. Crowdfunding Data
+            const [pendingPitches, setPendingPitches] = useState([
+                { id: 'cf1', title: 'مزرعة الذهب الأخضر', location: 'السودان', goal: 500000, owner: 'القائد (AX992)', status: 'pending' }
+            ]);
+            // 3. Support Tickets Data
+            const [tickets, setTickets] = useState([
+                { id: 't1', user: 'صالح (ليبيا)', issue: 'تأخر نزول عمولة الجيل الثاني في محفظتي.', aiReply: 'جاري مراجعة سجلات البلوكتشين الداخلية.', status: 'open', adminReply: '' }
+            ]);
+            // 4. Academy Data (Simplified)
             const [courses, setCourses] = useState([
-                { 
-                    id: 1, title: 'القيادة التحويلية في العصر الرقمي', price: 299, students: 1240, status: 'active',
-                    desc: 'دورة مكثفة تهدف إلى تمكين القادة من قيادة التغيير بفعالية.',
-                    img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800',
-                    xp: 1000, badge: 'باني الإمبراطورية',
-                    curriculum: [
-                        { id: 101, title: 'فهم القيادة التحويلية', lessons: [
-                            {id: 1001, title: 'مفهوم القيادة', type: 'video', url: 'https://youtube.com/...', content: 'مقدمة في العقلية', duration: '10:00'}, 
-                            {id: 1002, title: 'اختبار الفهم', type: 'quiz', question: 'ما هو الهدف؟', options: ['النماء', 'التراجع'], correct: 'النماء'}
-                        ] }
-                    ]
-                }
+                { id: 'c1', title: 'القيادة التحويلية', status: 'active', students: 1240 }
             ]);
 
-            const [certificates, setCertificates] = useState([
-                { id: 'C-101', student: 'أحمد محمود', course: 'القيادة التحويلية', progress: 100, status: 'pending', date: '2026-04-14' }
-            ]);
+            // --- Sub-Views (Micro-Frontends based on Roles) ---
 
-            const [marketingStats, setMarketingStats] = useState({
-                totalSales: 1250000, commissionsPaid: 187500, activeAffiliates: 3420,
-                campaigns: [{ name: 'حملة التضاعف العشري (قانون 10)', roi: '+45%', active: true }]
-            });
+            const RadarView = () => (
+                <div className="animate-fade-in space-y-8">
+                    <h2 className="text-3xl font-black flex items-center gap-3 mb-8"><Icon name="Activity" className={theme.accent} size={32}/> الرادار السيادي</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="stat-card border-t-4 border-[#00FF88]"><small className="text-gray-500 font-bold">السيولة المركزية</small><h4 className="text-3xl font-black text-[#00FF88]">$1,250,000</h4></div>
+                        <div className="stat-card border-t-4 border-yellow-500"><small className="text-gray-500 font-bold">قوة الجيش الإجمالي</small><h4 className="text-3xl font-black text-yellow-500">14,250</h4></div>
+                        <div className="stat-card border-t-4 border-blue-500"><small className="text-gray-500 font-bold">مشاريع التمويل النشطة</small><h4 className="text-3xl font-black text-blue-500">3</h4></div>
+                        <div className="stat-card border-t-4 border-red-500"><small className="text-gray-500 font-bold">تذاكر دعم مفتوحة</small><h4 className="text-3xl font-black text-red-500">{tickets.filter(t=>t.status==='open').length}</h4></div>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                        <div className="glass-panel p-8 rounded-[2rem]">
+                            <h3 className="text-xl font-black mb-6 border-b border-white/10 pb-4">الإشعارات الحية للإدارة</h3>
+                            <div className="space-y-4">
+                                <div className="bg-white/5 p-4 rounded-xl flex justify-between items-center"><span className="text-sm font-bold">منتج جديد ينتظر المراجعة في المتجر</span><button onClick={()=>setActiveTab('marketplace')} className="text-xs bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-lg font-black">مراجعة</button></div>
+                                <div className="bg-white/5 p-4 rounded-xl flex justify-between items-center"><span className="text-sm font-bold">طلب تمويل جماعي جديد (السودان)</span><button onClick={()=>setActiveTab('crowdfund')} className="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg font-black">مراجعة</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
 
-            // --- Handlers ---
-            const openCourseEditor = (course) => {
-                const fullCourse = {
-                    ...course,
-                    desc: course.desc || '', img: course.img || '', curriculum: course.curriculum || [], xp: course.xp || 1000, badge: course.badge || 'لم يتم التحديد'
-                };
-                setEditingCourse(JSON.parse(JSON.stringify(fullCourse))); 
-                setEditSubTab('curriculum');
-                setActiveTab('edit_program');
+            const AcademyAdminView = () => (
+                <div className="animate-fade-in space-y-8">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="GraduationCap" className={theme.accent} size={32}/> إدارة الأكاديمية</h2>
+                        <button onClick={()=>showToast('سيتم نقلك لغرفة هندسة المناهج المتقدمة', 'info')} className={`${theme.btn} ${theme.btnText} px-6 py-3 rounded-xl font-black flex items-center gap-2`}><Icon name="Plus" size={18}/> منهج جديد</button>
+                    </div>
+                    <div className="glass-panel p-4 rounded-[2rem] border border-white/5">
+                        <table className="w-full text-right">
+                            <thead><tr className="border-b border-white/10 text-gray-500 text-sm"><th className="p-4">البرنامج</th><th className="p-4">الطلاب</th><th className="p-4">الحالة</th><th className="p-4 text-center">إجراءات</th></tr></thead>
+                            <tbody>
+                                {courses.map(c => (
+                                    <tr key={c.id} className="border-b border-white/5 hover:bg-white/5"><td className="p-4 font-black">{c.title}</td><td className="p-4 font-bold text-yellow-500">{c.students}</td><td className="p-4"><span className="bg-[#00FF88]/20 text-[#00FF88] px-2 py-1 rounded text-xs font-black">نشط</span></td>
+                                    <td className="p-4 text-center"><button onClick={()=>showToast('تم فتح محرر الخارطة الأكاديمية (انظر النسخة السابقة للاستعراض التفصيلي)')} className="bg-white/10 px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/20">تعديل المنهج ✏️</button></td></tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+
+            const MarketplaceAdminView = () => (
+                <div className="animate-fade-in space-y-8">
+                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Store" className="text-[#00FF88]" size={32}/> الرقابة التجارية (المتجر)</h2>
+                    <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5">
+                        <h3 className="text-xl font-black mb-6">منتجات بانتظار الاعتماد السيادي</h3>
+                        {pendingProducts.length === 0 ? <p className="text-gray-500">لا توجد منتجات معلقة.</p> : 
+                            <div className="space-y-4">
+                                {pendingProducts.map(p => (
+                                    <div key={p.id} className="bg-black/50 border border-white/10 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                                        <div>
+                                            <h4 className="text-lg font-black">{p.name}</h4>
+                                            <p className="text-sm text-gray-400 font-bold">التاجر: {p.vendor} | النوع: {p.type}</p>
+                                        </div>
+                                        <div className="flex items-center gap-6">
+                                            <span className="text-2xl font-black text-[#00FF88]">${p.price}</span>
+                                            <div className="flex gap-2">
+                                                <button onClick={()=>{setPendingProducts(pendingProducts.filter(x=>x.id!==p.id)); showToast('تم الاعتماد. المنتج الآن معروض للعامة.', 'success');}} className="bg-[#00FF88] text-black px-6 py-2.5 rounded-xl font-black hover:scale-105 transition-transform shadow-[0_0_15px_rgba(0,255,136,0.3)] flex items-center gap-1"><Icon name="Check" size={16}/> اعتماد</button>
+                                                <button onClick={()=>{setPendingProducts(pendingProducts.filter(x=>x.id!==p.id)); showToast('تم رفض المنتج وإخطار التاجر.', 'error');}} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2.5 rounded-xl font-black transition-colors"><Icon name="X" size={16}/></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        }
+                    </div>
+                </div>
+            );
+
+            const CrowdfundAdminView = () => (
+                <div className="animate-fade-in space-y-8">
+                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Target" className="text-blue-500" size={32}/> رقابة التمويل والمشاريع الكبرى</h2>
+                    <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5">
+                        <h3 className="text-xl font-black mb-6">دراسات جدوى بانتظار الطرح</h3>
+                        {pendingPitches.length === 0 ? <p className="text-gray-500">لا توجد مشاريع معلقة.</p> : 
+                            <div className="grid grid-cols-1 gap-6">
+                                {pendingPitches.map(p => (
+                                    <div key={p.id} className="bg-black/40 border border-white/5 p-6 rounded-2xl">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase mb-2 inline-block">{p.location}</span>
+                                                <h4 className="text-2xl font-black">{p.title}</h4>
+                                                <p className="text-sm text-gray-500 font-bold mt-1">مقدم من: {p.owner}</p>
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="block text-[10px] text-gray-500 font-bold uppercase">التمويل المطلوب</span>
+                                                <span className="text-3xl font-black text-yellow-500">${p.goal.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3 border-t border-white/10 pt-5 mt-4">
+                                            <button onClick={()=>showToast('سيتم فتح الملف بصيغة PDF للمراجعة الدقيقة', 'info')} className="bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl font-black text-sm transition-colors flex items-center gap-2"><Icon name="FileText" size={16}/> مراجعة دراسة الجدوى</button>
+                                            <button onClick={()=>{setPendingPitches(pendingPitches.filter(x=>x.id!==p.id)); showToast('تمت الموافقة! المشروع الآن في ساحة التمويل العامة.', 'success');}} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-black text-sm shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center gap-2"><Icon name="CheckCircle2" size={16}/> إطلاق جولة التمويل</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        }
+                    </div>
+                </div>
+            );
+
+            const SupportAdminView = () => {
+                const [replyText, setReplyText] = useState({});
+                return (
+                    <div className="animate-fade-in space-y-8">
+                        <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="LifeBuoy" className="text-red-500" size={32}/> غرفة العمليات والدعم</h2>
+                        <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5">
+                            <h3 className="text-xl font-black mb-6">برقيات الطوارئ وتذاكر الدعم</h3>
+                            <div className="space-y-6">
+                                {tickets.map(t => (
+                                    <div key={t.id} className="bg-black/50 border-l-4 border-red-500 p-6 rounded-2xl shadow-lg">
+                                        <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
+                                            <span className="font-black flex items-center gap-2"><div className="w-8 h-8 bg-white/10 rounded-full flex justify-center items-center">👤</div> {t.user}</span>
+                                            <span className="bg-red-500/20 text-red-500 px-3 py-1 rounded-md text-xs font-black">قيد المعالجة</span>
+                                        </div>
+                                        <p className="font-bold text-lg leading-relaxed mb-4">"{t.issue}"</p>
+                                        <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-4">
+                                            <span className="text-[10px] text-blue-400 font-black uppercase flex items-center gap-1 mb-2"><Icon name="Bot" size={12}/> رد الوكيل الذكي الأولي</span>
+                                            <p className="text-sm font-bold text-gray-300">{t.aiReply}</p>
+                                        </div>
+                                        {t.status === 'open' ? (
+                                            <div className="flex gap-3 mt-4">
+                                                <input value={replyText[t.id] || ''} onChange={(e)=>setReplyText({...replyText, [t.id]: e.target.value})} placeholder="اكتب رد الإدارة النهائي هنا لإغلاق التذكرة..." className="flex-1 premium-input p-4 rounded-xl text-sm font-bold" />
+                                                <button onClick={()=>{
+                                                    if(!replyText[t.id]) return;
+                                                    setTickets(tickets.map(x=>x.id===t.id?{...x, status:'closed', adminReply: replyText[t.id]}:x));
+                                                    showToast('تم إرسال الرد وإغلاق البرقية.', 'success');
+                                                }} className="bg-white text-black px-8 rounded-xl font-black hover:bg-gray-200 transition-colors">إرسال الرد وإغلاق</button>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-[#00FF88]/10 p-4 rounded-xl mt-4 border border-[#00FF88]/20">
+                                                <span className="text-[10px] text-[#00FF88] font-black uppercase block mb-1">رد الإدارة</span>
+                                                <p className="text-sm font-bold">{t.adminReply}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
             };
 
-            const saveCourseChanges = () => {
-                setCourses(prev => prev.map(c => c.id === editingCourse.id ? editingCourse : c));
-                showToast('تم اعتماد وحفظ كافة التعديلات في السحابة بنجاح! 💾', 'success');
-            };
-            
-            const exitEditor = () => {
-                setEditingCourse(null);
-                setActiveTab('programs');
-            }
+            const NetworkAdminView = () => (
+                <div className="animate-fade-in space-y-8">
+                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Network" className="text-purple-500" size={32}/> الدبلوماسية والتوسع (الإحالة)</h2>
+                    <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5 text-center py-16">
+                        <Icon name="Link" size={60} className="mx-auto text-purple-500 mb-6" />
+                        <h3 className="text-2xl font-black mb-4">مولد الروابط السيادية السري</h3>
+                        <p className="text-gray-400 font-bold mb-8 max-w-lg mx-auto">تجاوز نظام التسجيل العادي وأصدر روابط دعوة مشفرة تمنح صلاحيات VIP فورية للقادة الجدد.</p>
+                        <button onClick={()=>showToast('تم توليد ونسخ الرابط الدبلوماسي: https://mr7.com/invite?vip=X99', 'success')} className="bg-purple-600 hover:bg-purple-500 text-white px-10 py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(147,51,234,0.4)] transition-all hover:scale-105 flex items-center gap-2 mx-auto"><Icon name="Wand2" size={20}/> توليد رابط VIP 👑</button>
+                    </div>
+                </div>
+            );
 
-            // Curriculum Actions
-            const addModule = () => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: [...(prev.curriculum || []), { id: Date.now(), title: 'قسم جديد', lessons: [] }]
-                }));
-            };
+            // --- Menu Mapping based on Role ---
+            const ALL_MENU_ITEMS = [
+                { id: 'radar', icon: 'Activity', label: 'الرادار العام' },
+                { id: 'academy', icon: 'GraduationCap', label: 'شؤون الأكاديمية' },
+                { id: 'marketplace', icon: 'Store', label: 'الرقابة التجارية' },
+                { id: 'crowdfund', icon: 'Target', label: 'التمويل والمشاريع' },
+                { id: 'network', icon: 'Network', label: 'الدعوات والانتشار' },
+                { id: 'support', icon: 'LifeBuoy', label: 'غرفة العمليات' },
+            ];
 
-            const addLesson = (moduleId) => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: prev.curriculum.map(m => m.id === moduleId ? {
-                        ...m, lessons: [...(m.lessons || []), { id: Date.now(), title: 'درس جديد', type: 'video', content: '', options: ['خيار 1', 'خيار 2'] }]
-                    } : m)
-                }));
-                showToast('تمت إضافة إطار الدرس، قم بتوسيعه لتعبئة البيانات.', 'info');
-            };
-
-            const updateModuleTitle = (moduleId, title) => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: prev.curriculum.map(m => m.id === moduleId ? { ...m, title } : m)
-                }));
-            };
-
-            const updateLessonField = (moduleId, lessonId, field, value) => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: prev.curriculum.map(m => m.id === moduleId ? {
-                        ...m, lessons: m.lessons.map(l => l.id === lessonId ? { ...l, [field]: value } : l)
-                    } : m)
-                }));
-            };
-
-            const updateQuizOption = (moduleId, lessonId, optIndex, value) => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: prev.curriculum.map(m => m.id === moduleId ? {
-                        ...m, lessons: m.lessons.map(l => {
-                            if (l.id === lessonId) {
-                                const newOpts = [...(l.options || [])];
-                                newOpts[optIndex] = value;
-                                return { ...l, options: newOpts };
-                            }
-                            return l;
-                        })
-                    } : m)
-                }));
-            };
-
-            const addQuizOption = (moduleId, lessonId) => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: prev.curriculum.map(m => m.id === moduleId ? {
-                        ...m, lessons: m.lessons.map(l => l.id === lessonId ? { ...l, options: [...(l.options||[]), `خيار جديد`] } : l)
-                    } : m)
-                }));
-            };
-
-            const removeQuizOption = (moduleId, lessonId, optIndex) => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: prev.curriculum.map(m => m.id === moduleId ? {
-                        ...m, lessons: m.lessons.map(l => {
-                            if (l.id === lessonId) {
-                                const newOpts = [...(l.options || [])];
-                                newOpts.splice(optIndex, 1);
-                                return { ...l, options: newOpts };
-                            }
-                            return l;
-                        })
-                    } : m)
-                }));
-            };
-
-            const deleteModule = (moduleId) => {
-                setEditingCourse(prev => ({ ...prev, curriculum: prev.curriculum.filter(m => m.id !== moduleId) }));
-            };
-
-            const deleteLesson = (moduleId, lessonId) => {
-                setEditingCourse(prev => ({
-                    ...prev, curriculum: prev.curriculum.map(m => m.id === moduleId ? { ...m, lessons: m.lessons.filter(l => l.id !== lessonId) } : m)
-                }));
-            };
+            const allowedMenuItems = ALL_MENU_ITEMS.filter(item => currentRole.allowedTabs.includes(item.id));
 
             return (
                 <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col md:flex-row overflow-hidden font-['Tajawal']`} dir="rtl">
                     
                     {/* --- Sidebar --- */}
                     <div className={`w-full md:w-72 md:min-h-screen ${theme.card} border-b md:border-b-0 md:border-l ${theme.borderLight} flex flex-col z-10 shadow-2xl shrink-0`}>
-                        <div className="p-8 pb-4 text-center md:text-right">
-                            <div className={`${theme.btn} ${theme.btnText} p-4 rounded-2xl inline-block mb-4 shadow-[0_0_30px_rgba(255,75,75,0.4)]`}><Icon name="ShieldAlert" size={32} /></div>
+                        
+                        <div className="p-8 pb-2 text-center md:text-right relative">
+                            <div className={`${theme.btn} ${theme.btnText} p-3 rounded-2xl inline-block mb-4 shadow-[0_0_30px_rgba(255,75,75,0.3)]`}><Icon name="ShieldAlert" size={32} /></div>
                             <h1 className={`text-2xl font-black uppercase tracking-tighter ${theme.accent}`}>القيادة العليا</h1>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Root Access</p>
+                            
+                            {/* Role Simulator Dropdown */}
+                            <div className="mt-4 bg-black/40 p-3 rounded-xl border border-white/10">
+                                <label className="text-[9px] text-gray-500 uppercase font-black block mb-1">محاكي الصلاحيات (RBAC)</label>
+                                <select 
+                                    className="w-full bg-transparent text-xs font-bold text-white outline-none border-none cursor-pointer"
+                                    value={currentRole.id}
+                                    onChange={(e) => setCurrentRole(Object.values(ROLES).find(r => r.id === e.target.value))}
+                                >
+                                    {Object.values(ROLES).map(r => <option key={r.id} value={r.id} className="bg-black text-white">{r.name}</option>)}
+                                </select>
+                            </div>
                         </div>
-                        <div className="flex flex-row md:flex-col gap-2 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1">
-                            {[
-                                {id: 'radar', icon: 'Activity', label: 'الرادار والتحليلات'},
-                                {id: 'programs', icon: 'BookOpen', label: 'إدارة المناهج'},
-                                {id: 'certificates', icon: 'Award', label: 'اعتماد الشهادات'},
-                                {id: 'marketing', icon: 'TrendingUp', label: 'خطط التسويق'}
-                            ].map(btn => (
+
+                        <div className="flex flex-row md:flex-col gap-2 p-4 md:p-6 overflow-x-auto no-scrollbar md:flex-1 mt-4">
+                            {allowedMenuItems.map(btn => (
                                 <button 
-                                    key={btn.id} onClick={() => { setActiveTab(btn.id); setEditingCourse(null); }} 
-                                    className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id || (activeTab === 'edit_program' && btn.id === 'programs') ? `bg-white/5 border-r-4 ${theme.borderLight.replace('/20','')} ${theme.accent} shadow-md` : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                                    key={btn.id} onClick={() => setActiveTab(btn.id)} 
+                                    className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all whitespace-nowrap ${activeTab === btn.id ? `bg-white/5 border-r-4 ${theme.borderLight.replace('/20','')} ${theme.accent} shadow-md` : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
                                 >
                                     <Icon name={btn.icon} size={18} /> {btn.label}
                                 </button>
@@ -284,262 +371,22 @@ react_html = """
                         </div>
                     </div>
 
-                    {/* --- Main Content --- */}
-                    <div className="flex-1 h-screen overflow-y-auto no-scrollbar relative">
-                        
-                        {/* Tab: Edit Program (محرر المناهج المتطور) */}
-                        {activeTab === 'edit_program' && editingCourse && (
-                            <div className="animate-fade-in pb-20">
-                                {/* شريط الحفظ العائم (Sticky Top Header) لضمان سهولة الحفظ دائماً */}
-                                <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex justify-between items-center shadow-xl">
-                                    <div className="flex items-center gap-4">
-                                        <button onClick={exitEditor} className="p-2.5 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-xl transition-all border border-white/10" title="خروج بدون حفظ"><Icon name="ArrowRight" size={20}/></button>
-                                        <div>
-                                            <h2 className="text-xl font-black">{editingCourse.title}</h2>
-                                            <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold flex items-center gap-1"><Icon name="Settings" size={10}/> وضع هندسة المناهج</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={saveCourseChanges} className={`${theme.btn} ${theme.btnText} px-8 py-3 rounded-xl font-black shadow-[0_10px_30px_rgba(255,75,75,0.3)] flex items-center gap-2 hover:scale-105 transition-transform`}>
-                                        <Icon name="Save" size={18}/> اعتماد وحفظ التعديلات
-                                    </button>
-                                </div>
-
-                                <div className="max-w-6xl mx-auto mt-8 px-6">
-                                    {/* Editor Tabs */}
-                                    <div className="flex gap-3 border-b border-white/10 pb-4 mb-8">
-                                        <button onClick={() => setEditSubTab('curriculum')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all ${editSubTab === 'curriculum' ? `${theme.btn} ${theme.btnText}` : 'bg-white/5 text-gray-400 hover:text-white'}`}>الخارطة الأكاديمية (الدروس)</button>
-                                        <button onClick={() => setEditSubTab('details')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all ${editSubTab === 'details' ? `${theme.btn} ${theme.btnText}` : 'bg-white/5 text-gray-400 hover:text-white'}`}>البيانات الأساسية</button>
-                                        <button onClick={() => setEditSubTab('gamification')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all ${editSubTab === 'gamification' ? `${theme.btn} ${theme.btnText}` : 'bg-white/5 text-gray-400 hover:text-white'}`}>محفزات السيادة (Gamification)</button>
-                                    </div>
-
-                                    {/* Curriculum Editor (القسم الأكثر تطوراً) */}
-                                    {editSubTab === 'curriculum' && (
-                                        <div className="space-y-6">
-                                            <button onClick={addModule} className="w-full py-5 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl text-gray-400 font-black hover:text-white hover:border-yellow-500 transition-all flex items-center justify-center gap-2"><Icon name="PlusCircle" size={20}/> إضافة قسم دراسي جديد (Module)</button>
-                                            
-                                            {(editingCourse.curriculum || []).map((mod, mIdx) => (
-                                                <div key={mod.id} className="glass-panel p-6 rounded-[2rem] border border-white/10 shadow-lg">
-                                                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
-                                                        <div className="flex-1 mr-4 flex items-center gap-3">
-                                                            <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-black text-yellow-500">{mIdx+1}</span>
-                                                            <input value={mod.title} onChange={e => updateModuleTitle(mod.id, e.target.value)} className="bg-transparent border-none outline-none text-2xl font-black w-full focus:ring-0 text-white" placeholder="اسم القسم المرجعي..." />
-                                                        </div>
-                                                        <button onClick={() => deleteModule(mod.id)} className="p-2 text-gray-500 hover:bg-red-500/20 hover:text-red-500 rounded-lg transition-colors"><Icon name="Trash2" size={20}/></button>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-3 mb-6 pl-4 border-r-2 border-white/5">
-                                                        {(mod.lessons || []).length === 0 ? <p className="text-xs text-gray-500 font-bold p-4 bg-black/20 rounded-xl">هذا القسم فارغ، قم بإضافة دروس إليه.</p> : 
-                                                            mod.lessons.map((lesson, lIdx) => (
-                                                                <div key={lesson.id} className={`flex flex-col bg-black/60 rounded-xl border transition-all ${expandedLessonId === lesson.id ? 'border-yellow-500/50 shadow-xl' : 'border-white/5 hover:border-white/20'}`}>
-                                                                    
-                                                                    {/* شريط الدرس المصغر (Collapsed View) */}
-                                                                    <div className="flex items-center gap-3 p-4">
-                                                                        <Icon name="GripVertical" size={16} className="text-gray-600 cursor-grab" />
-                                                                        <select value={lesson.type} onChange={e => updateLessonField(mod.id, lesson.id, 'type', e.target.value)} className="bg-[#111] border border-white/10 rounded-lg p-2 text-xs font-bold text-yellow-500 outline-none">
-                                                                            <option value="video">🎥 فيديو</option>
-                                                                            <option value="quiz">❓ اختبار</option>
-                                                                            <option value="assignment">💼 تكليف</option>
-                                                                            <option value="text">📄 نص/مقال</option>
-                                                                        </select>
-                                                                        <input value={lesson.title} onChange={e => updateLessonField(mod.id, lesson.id, 'title', e.target.value)} className="flex-1 bg-transparent border-none outline-none text-sm font-bold text-white placeholder-gray-600" placeholder="عنوان الدرس هنا..." />
-                                                                        
-                                                                        {/* زر التوسعة للمحرر المتقدم */}
-                                                                        <button onClick={() => setExpandedLessonId(expandedLessonId === lesson.id ? null : lesson.id)} className={`p-2 rounded-lg font-bold text-xs flex items-center gap-1 transition-colors ${expandedLessonId === lesson.id ? 'bg-yellow-500 text-black' : 'bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white'}`}>
-                                                                            {expandedLessonId === lesson.id ? 'طي اللوحة' : 'محرر الدرس'} <Icon name={expandedLessonId === lesson.id ? 'ChevronUp' : 'ChevronDown'} size={14}/>
-                                                                        </button>
-                                                                        <button onClick={() => deleteLesson(mod.id, lesson.id)} className="p-2 text-gray-500 hover:text-red-500 transition-colors"><Icon name="X" size={16}/></button>
-                                                                    </div>
-
-                                                                    {/* المحرر المتقدم للدرس (Expanded Editor) */}
-                                                                    {expandedLessonId === lesson.id && (
-                                                                        <div className="p-5 border-t border-white/10 bg-[#0a0a0a] rounded-b-xl space-y-5 animate-fade-in">
-                                                                            
-                                                                            {/* 1. محرر الفيديو */}
-                                                                            {lesson.type === 'video' && (
-                                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                                    <div className="md:col-span-2">
-                                                                                        <label className="text-[10px] font-black text-gray-500 uppercase block mb-2">رابط المصدر (YouTube / Vimeo URL)</label>
-                                                                                        <input value={lesson.url || ''} onChange={e => updateLessonField(mod.id, lesson.id, 'url', e.target.value)} placeholder="https://..." className="w-full premium-input p-3 rounded-xl text-sm font-bold text-blue-400" dir="ltr" />
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <label className="text-[10px] font-black text-gray-500 uppercase block mb-2">المدة الزمنية التقديرية</label>
-                                                                                        <input value={lesson.duration || ''} onChange={e => updateLessonField(mod.id, lesson.id, 'duration', e.target.value)} placeholder="مثال: 15:30 دقيقة" className="w-full premium-input p-3 rounded-xl text-sm font-bold" />
-                                                                                    </div>
-                                                                                    <div className="md:col-span-3">
-                                                                                        <label className="text-[10px] font-black text-gray-500 uppercase block mb-2">الوصف النصي (سيظهر أسفل المشغل)</label>
-                                                                                        <textarea value={lesson.content || ''} onChange={e => updateLessonField(mod.id, lesson.id, 'content', e.target.value)} placeholder="أضف المراجع أو الملخص هنا..." className="w-full premium-input p-4 rounded-xl text-sm font-bold min-h-[100px]"></textarea>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* 2. محرر الاختبارات */}
-                                                                            {lesson.type === 'quiz' && (
-                                                                                <div className="space-y-4">
-                                                                                    <div>
-                                                                                        <label className="text-[10px] font-black text-gray-500 uppercase block mb-2">السؤال الاستراتيجي</label>
-                                                                                        <input value={lesson.question || ''} onChange={e => updateLessonField(mod.id, lesson.id, 'question', e.target.value)} placeholder="اكتب السؤال بوضوح..." className="w-full premium-input p-4 rounded-xl text-lg font-black text-yellow-500" />
-                                                                                    </div>
-                                                                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                                                                                        <div className="flex justify-between items-center mb-3">
-                                                                                            <label className="text-[10px] font-black text-gray-400 uppercase block">الخيارات المتاحة للرد</label>
-                                                                                            <button onClick={() => addQuizOption(mod.id, lesson.id)} className="text-xs bg-white/10 px-3 py-1 rounded-lg hover:bg-white/20 flex items-center gap-1 font-bold"><Icon name="Plus" size={12}/> إضافة خيار</button>
-                                                                                        </div>
-                                                                                        <div className="space-y-2">
-                                                                                            {(lesson.options || []).map((opt, oIdx) => (
-                                                                                                <div key={oIdx} className="flex items-center gap-2">
-                                                                                                    <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-[10px] font-bold text-gray-500">{oIdx+1}</div>
-                                                                                                    <input value={opt} onChange={e => updateQuizOption(mod.id, lesson.id, oIdx, e.target.value)} className="flex-1 premium-input p-3 rounded-lg text-sm font-bold" placeholder={`خيار ${oIdx+1}`} />
-                                                                                                    <button onClick={() => removeQuizOption(mod.id, lesson.id, oIdx)} className="p-2 text-gray-500 hover:text-red-500"><Icon name="X" size={16}/></button>
-                                                                                                </div>
-                                                                                            ))}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div className="bg-[#00FF88]/10 p-4 rounded-2xl border border-[#00FF88]/30">
-                                                                                        <label className="text-[10px] font-black text-[#00FF88] uppercase block mb-2">تحديد الإجابة الصحيحة للاعتماد الآلي</label>
-                                                                                        <select value={lesson.correct || ''} onChange={e => updateLessonField(mod.id, lesson.id, 'correct', e.target.value)} className="w-full premium-input bg-black p-3 rounded-xl text-sm font-bold text-[#00FF88] outline-none">
-                                                                                            <option value="" disabled>-- اختر الإجابة المعتمدة --</option>
-                                                                                            {(lesson.options || []).map((opt, oIdx) => (
-                                                                                                <option key={oIdx} value={opt}>{opt || `الخيار ${oIdx+1}`}</option>
-                                                                                            ))}
-                                                                                        </select>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {/* 3. محرر التكاليف والنصوص */}
-                                                                            {(lesson.type === 'assignment' || lesson.type === 'text') && (
-                                                                                <div>
-                                                                                    <label className="text-[10px] font-black text-gray-500 uppercase block mb-2">{lesson.type === 'assignment' ? 'تعليمات دراسة الحالة أو التكليف' : 'المحتوى النصي للدرس'}</label>
-                                                                                    <textarea value={lesson.content || ''} onChange={e => updateLessonField(mod.id, lesson.id, 'content', e.target.value)} placeholder="اكتب المحتوى أو تفاصيل المهمة المطلوبة من القائد ليتم تقييمها..." className="w-full premium-input p-4 rounded-xl text-sm font-bold min-h-[150px]"></textarea>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))
-                                                        }
-                                                    </div>
-                                                    <button onClick={() => addLesson(mod.id)} className="bg-white/5 border border-white/10 hover:bg-white/10 px-5 py-3 rounded-xl text-xs font-black text-white flex items-center gap-2 transition-all"><Icon name="Plus" size={16}/> إدراج درس جديد هنا</button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Details Editor */}
-                                    {editSubTab === 'details' && (
-                                        <div className="glass-panel p-8 rounded-[2rem] animate-fade-in">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                                <div>
-                                                    <label className="text-[10px] uppercase font-black text-gray-500 mb-2 block">اسم البرنامج</label>
-                                                    <input value={editingCourse.title} onChange={e => setEditingCourse({...editingCourse, title: e.target.value})} className="w-full premium-input p-4 rounded-xl font-bold text-lg" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] uppercase font-black text-gray-500 mb-2 block">قيمة الاستثمار ($)</label>
-                                                    <input type="number" value={editingCourse.price} onChange={e => setEditingCourse({...editingCourse, price: parseFloat(e.target.value) || 0})} className="w-full premium-input p-4 rounded-xl font-black text-lg text-[#00FF88]" />
-                                                </div>
-                                            </div>
-                                            <div className="mb-6">
-                                                <label className="text-[10px] uppercase font-black text-gray-500 mb-2 block">رابط صورة الغلاف (URL)</label>
-                                                <input value={editingCourse.img} onChange={e => setEditingCourse({...editingCourse, img: e.target.value})} dir="ltr" className="w-full premium-input p-4 rounded-xl font-bold text-left" />
-                                                {editingCourse.img && <div className="mt-4 p-2 bg-white/5 rounded-2xl inline-block border border-white/10"><img src={editingCourse.img} className="w-48 h-28 object-cover rounded-xl" /></div>}
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] uppercase font-black text-gray-500 mb-2 block">الوصف الاستراتيجي الشامل</label>
-                                                <textarea value={editingCourse.desc} onChange={e => setEditingCourse({...editingCourse, desc: e.target.value})} className="w-full premium-input p-4 rounded-xl font-bold min-h-[120px] leading-relaxed"></textarea>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Gamification Editor */}
-                                    {editSubTab === 'gamification' && (
-                                        <div className="glass-panel p-8 rounded-[2rem] animate-fade-in">
-                                            <div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
-                                                <div className="bg-purple-500/10 p-4 rounded-full text-purple-500 border border-purple-500/20"><Icon name="Target" size={32}/></div>
-                                                <div>
-                                                    <h3 className="text-2xl font-black">هندسة التحفيز والاستحقاق</h3>
-                                                    <p className="text-sm text-gray-400 font-bold mt-1">حدد الدوافع السيكولوجية والنقاط التي سيكسبها القائد بعد المعاناة في هذا المنهج.</p>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                <div className="bg-black/50 p-8 rounded-3xl border border-white/5">
-                                                    <label className="text-xs uppercase font-black text-[#00FF88] mb-4 block flex items-center gap-2"><Icon name="Zap" size={16}/> مكافأة الاجتياز (نقاط سيادة XP)</label>
-                                                    <input type="number" value={editingCourse.xp} onChange={e => setEditingCourse({...editingCourse, xp: parseInt(e.target.value) || 0})} className="w-full premium-input p-5 rounded-2xl font-black text-4xl text-center text-[#00FF88]" />
-                                                    <p className="text-[10px] text-gray-500 mt-4 text-center">يتم تحويلها لتقييم الحساب وفتح مزايا إمبراطورية.</p>
-                                                </div>
-                                                
-                                                <div className="bg-black/50 p-8 rounded-3xl border border-white/5">
-                                                    <label className="text-xs uppercase font-black text-yellow-500 mb-4 block flex items-center gap-2"><Icon name="Award" size={16}/> الوسام السيادي الممنوح (Badge)</label>
-                                                    <input value={editingCourse.badge} onChange={e => setEditingCourse({...editingCourse, badge: e.target.value})} className="w-full premium-input p-5 rounded-2xl font-black text-2xl text-center text-yellow-500" placeholder="مثال: مهندس عقول" />
-                                                    <p className="text-[10px] text-gray-500 mt-4 text-center">يتم تعليق هذا الوسام في ملف القائد أمام الجيوش.</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* --- باقي التبويبات (Programs, Radar, etc.) --- */}
-                        {activeTab === 'programs' && (
-                            <div className="animate-fade-in space-y-8 max-w-7xl mx-auto pt-6 px-4">
-                                <div className="flex justify-between items-center mb-8">
-                                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="BookOpen" className={theme.accent} size={32}/> إدارة المناهج الأكاديمية</h2>
-                                </div>
-                                <div className="glass-panel p-2 rounded-[2rem] overflow-x-auto border border-white/5">
-                                    <table className="w-full text-right">
-                                        <thead>
-                                            <tr className="border-b border-white/10 text-gray-400 text-sm">
-                                                <th className="p-6 font-bold">اسم البرنامج</th>
-                                                <th className="p-6 font-bold">السعر</th>
-                                                <th className="p-6 font-bold text-center">الحالة</th>
-                                                <th className="p-6 font-bold text-center">محرر المنهج</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {courses.map(c => (
-                                                <tr key={c.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                    <td className="p-6 font-black">{c.title}</td>
-                                                    <td className="p-6 text-[#00FF88] font-black">${c.price}</td>
-                                                    <td className="p-6 text-center">
-                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${c.status === 'active' ? 'bg-[#00FF88]/20 text-[#00FF88]' : 'bg-gray-500/20 text-gray-400'}`}>
-                                                            {c.status === 'active' ? 'نشط' : 'مسودة'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-6 flex justify-center gap-2">
-                                                        <button onClick={()=>openCourseEditor(c)} className="bg-yellow-500 text-black px-6 py-2.5 rounded-xl font-black text-sm flex items-center gap-2 hover:scale-105 transition-transform"><Icon name="Edit3" size={16}/> تعديل وتطوير</button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* Tab: Radar */}
-                        {activeTab === 'radar' && (
-                            <div className="animate-fade-in space-y-8 max-w-7xl mx-auto pt-6 px-4">
-                                <h2 className="text-3xl font-black flex items-center gap-3 mb-8"><Icon name="Activity" className={theme.accent} size={32}/> رادار الإمبراطورية</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-[#00FF88]">
-                                        <small className="text-gray-500 font-bold uppercase">إجمالي المبيعات (USD)</small>
-                                        <h4 className="text-3xl font-black text-[#00FF88]">${marketingStats.totalSales.toLocaleString()}</h4>
-                                    </div>
-                                    <div className="glass-panel p-6 rounded-[2rem] border-t-4 border-yellow-500">
-                                        <small className="text-gray-500 font-bold uppercase">العمولات الموزعة</small>
-                                        <h4 className="text-3xl font-black text-yellow-500">${marketingStats.commissionsPaid.toLocaleString()}</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                    {/* --- Main Content Area --- */}
+                    <div className="flex-1 h-screen overflow-y-auto no-scrollbar p-6 md:p-10 relative">
+                        {/* Dynamic Rendering based on Active Tab */}
+                        {activeTab === 'radar' && <RadarView />}
+                        {activeTab === 'academy' && <AcademyAdminView />}
+                        {activeTab === 'marketplace' && <MarketplaceAdminView />}
+                        {activeTab === 'crowdfund' && <CrowdfundAdminView />}
+                        {activeTab === 'support' && <SupportAdminView />}
+                        {activeTab === 'network' && <NetworkAdminView />}
                     </div>
 
                     {/* Toasts Container */}
                     <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
                         {toasts.map(t => (
-                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'warning' ? 'bg-black/90 border-yellow-500/40 text-yellow-500' : 'bg-black/90 border-blue-500/40 text-blue-500'}`}>
-                                <Icon name={t.type === 'success' ? 'CheckCircle2' : t.type === 'warning' ? 'AlertCircle' : 'Info'} size={20} />
+                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'error' ? 'bg-black/90 border-red-500/40 text-red-500' : 'bg-black/90 border-blue-500/40 text-blue-500'}`}>
+                                <Icon name={t.type === 'success' ? 'CheckCircle2' : t.type === 'error' ? 'AlertCircle' : 'Info'} size={20} />
                                 <span className="font-bold text-sm text-white">{t.msg}</span>
                             </div>
                         ))}
@@ -561,19 +408,19 @@ react_html = """
 </html>
 """
 
-# --- 4. حقن المتغيرات السحابية بشكل آمن ---
+# --- 4. حقن المتغيرات السحابية ---
 components.html(react_html, height=1000, scrolling=True)
 
-# --- 5. أزرار التنقل السريع الخاصة ببايثون (Streamlit Core) ---
+# --- 5. أزرار التنقل السريع الخاصة ببايثون ---
 st.markdown("---")
-st.markdown("### 🗺️ مسارات التحكم السريعة للقيادة")
+st.markdown("### 🗺️ مسارات الوصول السريعة للواجهات العامة")
 c1, c2, c3 = st.columns(3)
 with c1:
-    if st.button("🎓 معاينة الأكاديمية كمتدرب"):
-        st.switch_page("pages/1_Education.py")
+    if st.button("🛒 معاينة المتجر العام"):
+        st.switch_page("pages/4_Marketplace.py")
 with c2:
-    if st.button("⚙️ استوديو المبدعين (إضافة محتوى)"):
-        st.switch_page("pages/7_Creator_Studio.py")
+    if st.button("🎓 معاينة الأكاديمية"):
+        st.switch_page("pages/1_Education.py")
 with c3:
-    if st.button("🏠 العودة لمركز القيادة الرئيسي"):
+    if st.button("🏠 العودة للرئيسية"):
         st.switch_page("app.py")
