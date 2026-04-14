@@ -4,7 +4,7 @@ import json
 
 # --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(
-    page_title="MR7 GOD MODE - Unified Admin", 
+    page_title="MR7 GOD MODE - Live Admin", 
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
@@ -25,7 +25,7 @@ app_id = st.secrets.get("__app_id", "mr7-empire-v1")
 auth_token = st.secrets.get("__initial_auth_token", "")
 current_theme = st.session_state.get('app_theme', "سلطة مطلقة 🔴")
 
-# --- 3. واجهة React المتقدمة (لوحة القيادة الشاملة V17.0 - RBAC Architecture) ---
+# --- 3. واجهة React المتقدمة (لوحة القيادة الحية V18.0 - Real Cloud Integration) ---
 react_html = """
 <!DOCTYPE html>
 <html dir="rtl">
@@ -35,12 +35,13 @@ react_html = """
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- CDNs مستقرة ومضادة للحظر -->
+    <!-- CDNs مستقرة -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.292.0/dist/umd/lucide.min.js"></script>
     
+    <!-- استدعاء وظائف فايربيس للتعديل الحي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -70,23 +71,12 @@ react_html = """
 
         #loading-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; transition: opacity 0.5s ease; }
     </style>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => {
-                const loader = document.getElementById('loading-screen');
-                if (loader && loader.style.display !== 'none') {
-                    loader.style.opacity = '0';
-                    setTimeout(() => { loader.style.display = 'none'; }, 500);
-                }
-            }, 3000);
-        });
-    </script>
 </head>
 <body>
     <div id="loading-screen">
         <div style="border: 4px solid rgba(255,215,0,0.3); border-top: 4px solid #FFD700; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
-        <h2 style="margin-top:20px; color: #FFD700; font-weight: 900; letter-spacing: 2px;">MR7 GOD MODE</h2>
-        <p style="color: #666; font-size: 12px; margin-top: 10px;">Initializing Decentralized Command Architecture...</p>
+        <h2 style="margin-top:20px; color: #FFD700; font-weight: 900; letter-spacing: 2px;">MR7 LIVE COMMAND</h2>
+        <p style="color: #666; font-size: 12px; margin-top: 10px;">Establishing Real-time Cloud Uplink...</p>
     </div>
     <div id="root"></div>
 
@@ -124,9 +114,14 @@ react_html = """
             const theme = themes[themeName] || themes["سلطة مطلقة 🔴"];
             useEffect(() => { document.documentElement.style.setProperty('--accent-color', theme.hex); }, [theme]);
 
-            // --- RBAC: Role Based Access Control ---
+            // --- Firebase State ---
+            const [user, setUser] = useState(null);
+            const [dbInstance, setDbInstance] = useState(null);
+            const appId = typeof window.__app_id !== 'undefined' ? window.__app_id : 'mr7-empire-v1';
+
+            // --- RBAC ---
             const ROLES = {
-                SUPER_ADMIN: { id: 'super_admin', name: 'الأدمن العام (السيادة المطلقة)', allowedTabs: ['radar', 'academy', 'marketplace', 'crowdfund', 'support', 'network'] },
+                SUPER_ADMIN: { id: 'super_admin', name: 'الأدمن العام (السيادة المطلقة)', allowedTabs: ['radar', 'academy', 'marketplace', 'crowdfund', 'support'] },
                 ACADEMY_ADMIN: { id: 'academy_admin', name: 'أدمن الأكاديمية (التعليم)', allowedTabs: ['academy'] },
                 MARKET_ADMIN: { id: 'market_admin', name: 'أدمن المتجر (التجارة)', allowedTabs: ['marketplace'] },
                 SUPPORT_ADMIN: { id: 'support_admin', name: 'أدمن الدعم الفني (العمليات)', allowedTabs: ['support'] },
@@ -134,12 +129,7 @@ react_html = """
             const [currentRole, setCurrentRole] = useState(ROLES.SUPER_ADMIN);
             const [activeTab, setActiveTab] = useState('radar');
             
-            // Auto-switch tab if role changes and current tab is not allowed
-            useEffect(() => {
-                if (!currentRole.allowedTabs.includes(activeTab)) {
-                    setActiveTab(currentRole.allowedTabs[0]);
-                }
-            }, [currentRole]);
+            useEffect(() => { if (!currentRole.allowedTabs.includes(activeTab)) setActiveTab(currentRole.allowedTabs[0]); }, [currentRole]);
 
             const [toasts, setToasts] = useState([]);
             const showToast = (msg, type = 'success') => {
@@ -148,86 +138,160 @@ react_html = """
                 setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
             };
 
-            // --- Dummy Data Stores for Modules ---
-            // 1. Marketplace Data
-            const [pendingProducts, setPendingProducts] = useState([
-                { id: 'p101', name: 'استراتيجية النفوذ الإقليمي', vendor: 'د. خالد السيادي', price: 150, type: 'رقمي', status: 'pending' },
-                { id: 'p102', name: 'مكتب إداري في مدينة النبت', vendor: 'النبت العقارية', price: 25000, type: 'عقاري', status: 'pending' }
-            ]);
-            // 2. Crowdfunding Data
-            const [pendingPitches, setPendingPitches] = useState([
-                { id: 'cf1', title: 'مزرعة الذهب الأخضر', location: 'السودان', goal: 500000, owner: 'القائد (AX992)', status: 'pending' }
-            ]);
-            // 3. Support Tickets Data
-            const [tickets, setTickets] = useState([
-                { id: 't1', user: 'صالح (ليبيا)', issue: 'تأخر نزول عمولة الجيل الثاني في محفظتي.', aiReply: 'جاري مراجعة سجلات البلوكتشين الداخلية.', status: 'open', adminReply: '' }
-            ]);
-            // 4. Academy Data (Simplified)
-            const [courses, setCourses] = useState([
-                { id: 'c1', title: 'القيادة التحويلية', status: 'active', students: 1240 }
-            ]);
+            // --- Live Data States ---
+            const [courses, setCourses] = useState([]);
+            const [marketplaceProducts, setMarketplaceProducts] = useState([]);
+            const [crowdProjects, setCrowdProjects] = useState([]);
+            const [tickets, setTickets] = useState([]);
+            const [isDbReady, setIsDbReady] = useState(false);
 
-            // --- Sub-Views (Micro-Frontends based on Roles) ---
+            // --- Initialize Firebase ---
+            useEffect(() => {
+                const initFb = async () => {
+                    let attempts = 0;
+                    while (!window.firebaseModules && attempts < 50) { await new Promise(r => setTimeout(r, 100)); attempts++; }
+                    
+                    if (window.firebaseModules) {
+                        const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.firebaseModules;
+                        const configStr = window.__firebase_config || '{}';
+                        const config = JSON.parse(configStr);
+                        
+                        if(Object.keys(config).length > 0) {
+                            const app = initializeApp(config);
+                            const auth = getAuth(app);
+                            setDbInstance(getFirestore(app));
+                            
+                            const token = window.__initial_auth_token;
+                            if (token) await signInWithCustomToken(auth, token).catch(e => console.error("Auth error:", e));
+                            else await signInAnonymously(auth).catch(e => console.error("Anon auth error:", e));
+
+                            onAuthStateChanged(auth, (u) => {
+                                setUser(u);
+                                setIsDbReady(true);
+                                const loader = document.getElementById('loading-screen');
+                                if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }
+                            });
+                        } else {
+                            // Fallback if no config
+                            const loader = document.getElementById('loading-screen');
+                            if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }
+                        }
+                    }
+                };
+                initFb();
+            }, []);
+
+            // --- Real-time Data Fetching (The core of a production app) ---
+            useEffect(() => {
+                if (!isDbReady || !dbInstance || !user) return;
+                const { collection, onSnapshot } = window.firebaseModules;
+
+                // 1. Fetch Courses
+                const unsubCourses = onSnapshot(collection(dbInstance, 'artifacts', appId, 'public', 'data', 'courses'), (snap) => {
+                    setCourses(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                }, (err) => console.error("Courses fetch error", err));
+
+                // 2. Fetch Marketplace Products
+                const unsubMarket = onSnapshot(collection(dbInstance, 'artifacts', appId, 'public', 'data', 'marketplace_products'), (snap) => {
+                    setMarketplaceProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                }, (err) => console.error("Market fetch error", err));
+
+                // 3. Fetch Crowdfunding Projects
+                const unsubCrowd = onSnapshot(collection(dbInstance, 'artifacts', appId, 'public', 'data', 'crowd_projects'), (snap) => {
+                    setCrowdProjects(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                }, (err) => console.error("Crowd fetch error", err));
+
+                // 4. Fetch Support Tickets
+                const unsubTickets = onSnapshot(collection(dbInstance, 'artifacts', appId, 'public', 'data', 'support_tickets'), (snap) => {
+                    setTickets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                }, (err) => console.error("Tickets fetch error", err));
+
+                return () => { unsubCourses(); unsubMarket(); unsubCrowd(); unsubTickets(); };
+            }, [isDbReady, dbInstance, user, appId]);
+
+            // --- Cloud Write Handlers ---
+            const updateDocument = async (collectionName, docId, data, successMsg) => {
+                if (!dbInstance || !user) { showToast('Database disconnected', 'error'); return; }
+                const { doc, updateDoc } = window.firebaseModules;
+                try {
+                    await updateDoc(doc(dbInstance, 'artifacts', appId, 'public', 'data', collectionName, docId), data);
+                    showToast(successMsg, 'success');
+                } catch (error) {
+                    console.error("Update failed:", error);
+                    showToast('فشل التحديث في السحابة', 'error');
+                }
+            };
+
+
+            // --- Sub-Views ---
 
             const RadarView = () => (
                 <div className="animate-fade-in space-y-8">
-                    <h2 className="text-3xl font-black flex items-center gap-3 mb-8"><Icon name="Activity" className={theme.accent} size={32}/> الرادار السيادي</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="stat-card border-t-4 border-[#00FF88]"><small className="text-gray-500 font-bold">السيولة المركزية</small><h4 className="text-3xl font-black text-[#00FF88]">$1,250,000</h4></div>
-                        <div className="stat-card border-t-4 border-yellow-500"><small className="text-gray-500 font-bold">قوة الجيش الإجمالي</small><h4 className="text-3xl font-black text-yellow-500">14,250</h4></div>
-                        <div className="stat-card border-t-4 border-blue-500"><small className="text-gray-500 font-bold">مشاريع التمويل النشطة</small><h4 className="text-3xl font-black text-blue-500">3</h4></div>
-                        <div className="stat-card border-t-4 border-red-500"><small className="text-gray-500 font-bold">تذاكر دعم مفتوحة</small><h4 className="text-3xl font-black text-red-500">{tickets.filter(t=>t.status==='open').length}</h4></div>
-                    </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                        <div className="glass-panel p-8 rounded-[2rem]">
-                            <h3 className="text-xl font-black mb-6 border-b border-white/10 pb-4">الإشعارات الحية للإدارة</h3>
-                            <div className="space-y-4">
-                                <div className="bg-white/5 p-4 rounded-xl flex justify-between items-center"><span className="text-sm font-bold">منتج جديد ينتظر المراجعة في المتجر</span><button onClick={()=>setActiveTab('marketplace')} className="text-xs bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-lg font-black">مراجعة</button></div>
-                                <div className="bg-white/5 p-4 rounded-xl flex justify-between items-center"><span className="text-sm font-bold">طلب تمويل جماعي جديد (السودان)</span><button onClick={()=>setActiveTab('crowdfund')} className="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg font-black">مراجعة</button></div>
-                            </div>
+                    <h2 className="text-3xl font-black flex items-center gap-3 mb-8"><Icon name="Activity" className={theme.accent} size={32}/> الرادار السيادي الحي</h2>
+                    {isDbReady ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="stat-card border-t-4 border-[#00FF88]"><small className="text-gray-500 font-bold">مناهج الأكاديمية</small><h4 className="text-3xl font-black text-[#00FF88]">{courses.length}</h4></div>
+                            <div className="stat-card border-t-4 border-yellow-500"><small className="text-gray-500 font-bold">منتجات المتجر</small><h4 className="text-3xl font-black text-yellow-500">{marketplaceProducts.length}</h4></div>
+                            <div className="stat-card border-t-4 border-blue-500"><small className="text-gray-500 font-bold">مشاريع التمويل</small><h4 className="text-3xl font-black text-blue-500">{crowdProjects.length}</h4></div>
+                            <div className="stat-card border-t-4 border-red-500"><small className="text-gray-500 font-bold">تذاكر الدعم الفني</small><h4 className="text-3xl font-black text-red-500">{tickets.length}</h4></div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="p-10 text-center text-yellow-500 border border-yellow-500/20 rounded-3xl bg-yellow-500/10 animate-pulse">
+                            جاري جلب البيانات الحية من قاعدة بيانات Firebase...
+                        </div>
+                    )}
                 </div>
             );
 
             const AcademyAdminView = () => (
                 <div className="animate-fade-in space-y-8">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="GraduationCap" className={theme.accent} size={32}/> إدارة الأكاديمية</h2>
-                        <button onClick={()=>showToast('سيتم نقلك لغرفة هندسة المناهج المتقدمة', 'info')} className={`${theme.btn} ${theme.btnText} px-6 py-3 rounded-xl font-black flex items-center gap-2`}><Icon name="Plus" size={18}/> منهج جديد</button>
+                        <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="GraduationCap" className={theme.accent} size={32}/> إدارة الأكاديمية الحية</h2>
                     </div>
                     <div className="glass-panel p-4 rounded-[2rem] border border-white/5">
-                        <table className="w-full text-right">
-                            <thead><tr className="border-b border-white/10 text-gray-500 text-sm"><th className="p-4">البرنامج</th><th className="p-4">الطلاب</th><th className="p-4">الحالة</th><th className="p-4 text-center">إجراءات</th></tr></thead>
-                            <tbody>
-                                {courses.map(c => (
-                                    <tr key={c.id} className="border-b border-white/5 hover:bg-white/5"><td className="p-4 font-black">{c.title}</td><td className="p-4 font-bold text-yellow-500">{c.students}</td><td className="p-4"><span className="bg-[#00FF88]/20 text-[#00FF88] px-2 py-1 rounded text-xs font-black">نشط</span></td>
-                                    <td className="p-4 text-center"><button onClick={()=>showToast('تم فتح محرر الخارطة الأكاديمية (انظر النسخة السابقة للاستعراض التفصيلي)')} className="bg-white/10 px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/20">تعديل المنهج ✏️</button></td></tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        {courses.length === 0 ? <p className="text-gray-500 p-4 text-center">لا توجد مناهج مرفوعة حالياً. (قم بإضافة منهج من استوديو المبدعين)</p> : 
+                            <table className="w-full text-right">
+                                <thead><tr className="border-b border-white/10 text-gray-500 text-sm"><th className="p-4">البرنامج</th><th className="p-4">السعر</th><th className="p-4">الحالة سحابياً</th><th className="p-4 text-center">إجراءات حية</th></tr></thead>
+                                <tbody>
+                                    {courses.map(c => (
+                                        <tr key={c.id} className="border-b border-white/5 hover:bg-white/5">
+                                            <td className="p-4 font-black">{c.title || c.name}</td>
+                                            <td className="p-4 font-bold text-yellow-500">${c.price}</td>
+                                            <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-black ${c.status === 'active' ? 'bg-[#00FF88]/20 text-[#00FF88]' : 'bg-gray-500/20 text-gray-400'}`}>{c.status === 'active' ? 'نشط' : 'مسودة'}</span></td>
+                                            <td className="p-4 text-center">
+                                                <button onClick={() => updateDocument('courses', c.id, {status: c.status === 'active' ? 'draft' : 'active'}, `تم تغيير حالة ${c.title || c.name}`)} className="bg-white/10 px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/20 transition-colors">
+                                                    تغيير الحالة 🔄
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        }
                     </div>
                 </div>
             );
 
             const MarketplaceAdminView = () => (
                 <div className="animate-fade-in space-y-8">
-                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Store" className="text-[#00FF88]" size={32}/> الرقابة التجارية (المتجر)</h2>
+                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Store" className="text-[#00FF88]" size={32}/> رقابة المتجر الحية</h2>
                     <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5">
-                        <h3 className="text-xl font-black mb-6">منتجات بانتظار الاعتماد السيادي</h3>
-                        {pendingProducts.length === 0 ? <p className="text-gray-500">لا توجد منتجات معلقة.</p> : 
+                        <h3 className="text-xl font-black mb-6">المنتجات في قاعدة البيانات</h3>
+                        {marketplaceProducts.length === 0 ? <p className="text-gray-500 text-center py-4">لم يقم التجار برفع أي منتجات للسحابة بعد.</p> : 
                             <div className="space-y-4">
-                                {pendingProducts.map(p => (
+                                {marketplaceProducts.map(p => (
                                     <div key={p.id} className="bg-black/50 border border-white/10 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
                                         <div>
                                             <h4 className="text-lg font-black">{p.name}</h4>
-                                            <p className="text-sm text-gray-400 font-bold">التاجر: {p.vendor} | النوع: {p.type}</p>
+                                            <p className="text-sm text-gray-400 font-bold">النوع: {p.type || p.category} | الحالة: {p.status || 'معلق'}</p>
                                         </div>
                                         <div className="flex items-center gap-6">
                                             <span className="text-2xl font-black text-[#00FF88]">${p.price}</span>
                                             <div className="flex gap-2">
-                                                <button onClick={()=>{setPendingProducts(pendingProducts.filter(x=>x.id!==p.id)); showToast('تم الاعتماد. المنتج الآن معروض للعامة.', 'success');}} className="bg-[#00FF88] text-black px-6 py-2.5 rounded-xl font-black hover:scale-105 transition-transform shadow-[0_0_15px_rgba(0,255,136,0.3)] flex items-center gap-1"><Icon name="Check" size={16}/> اعتماد</button>
-                                                <button onClick={()=>{setPendingProducts(pendingProducts.filter(x=>x.id!==p.id)); showToast('تم رفض المنتج وإخطار التاجر.', 'error');}} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2.5 rounded-xl font-black transition-colors"><Icon name="X" size={16}/></button>
+                                                {p.status !== 'approved' && (
+                                                    <button onClick={() => updateDocument('marketplace_products', p.id, {status: 'approved'}, 'تم اعتماد المنتج بنجاح. سيظهر الآن في المتجر العام.')} className="bg-[#00FF88] text-black px-6 py-2.5 rounded-xl font-black hover:scale-105 transition-transform shadow-[0_0_15px_rgba(0,255,136,0.3)] flex items-center gap-1"><Icon name="Check" size={16}/> اعتماد ونشر</button>
+                                                )}
+                                                <button onClick={() => updateDocument('marketplace_products', p.id, {status: 'rejected'}, 'تم رفض المنتج وإخفاؤه')} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2.5 rounded-xl font-black transition-colors"><Icon name="X" size={16}/> إيقاف/رفض</button>
                                             </div>
                                         </div>
                                     </div>
@@ -240,27 +304,31 @@ react_html = """
 
             const CrowdfundAdminView = () => (
                 <div className="animate-fade-in space-y-8">
-                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Target" className="text-blue-500" size={32}/> رقابة التمويل والمشاريع الكبرى</h2>
+                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Target" className="text-blue-500" size={32}/> مشاريع التمويل الحية</h2>
                     <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5">
-                        <h3 className="text-xl font-black mb-6">دراسات جدوى بانتظار الطرح</h3>
-                        {pendingPitches.length === 0 ? <p className="text-gray-500">لا توجد مشاريع معلقة.</p> : 
+                        <h3 className="text-xl font-black mb-6">دراسات الجدوى المرفوعة سحابياً</h3>
+                        {crowdProjects.length === 0 ? <p className="text-gray-500 text-center py-4">لا توجد مشاريع تمويل مسجلة في السحابة حالياً.</p> : 
                             <div className="grid grid-cols-1 gap-6">
-                                {pendingPitches.map(p => (
-                                    <div key={p.id} className="bg-black/40 border border-white/5 p-6 rounded-2xl">
-                                        <div className="flex justify-between items-start mb-4">
+                                {crowdProjects.map(p => (
+                                    <div key={p.id} className="bg-black/40 border border-white/5 p-6 rounded-2xl relative overflow-hidden">
+                                        <div className={`absolute top-0 right-0 w-2 h-full ${p.status === 'approved' ? 'bg-blue-500' : 'bg-yellow-500'}`}></div>
+                                        <div className="flex justify-between items-start mb-4 pl-4">
                                             <div>
-                                                <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase mb-2 inline-block">{p.location}</span>
+                                                <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase mb-2 inline-block">{p.country || 'دولي'}</span>
                                                 <h4 className="text-2xl font-black">{p.title}</h4>
                                                 <p className="text-sm text-gray-500 font-bold mt-1">مقدم من: {p.owner}</p>
                                             </div>
                                             <div className="text-left">
-                                                <span className="block text-[10px] text-gray-500 font-bold uppercase">التمويل المطلوب</span>
-                                                <span className="text-3xl font-black text-yellow-500">${p.goal.toLocaleString()}</span>
+                                                <span className="block text-[10px] text-gray-500 font-bold uppercase">المطلوب</span>
+                                                <span className="text-3xl font-black text-yellow-500">${Number(p.goal || 0).toLocaleString()}</span>
                                             </div>
                                         </div>
+                                        <p className="text-gray-400 mb-4">{p.desc}</p>
                                         <div className="flex gap-3 border-t border-white/10 pt-5 mt-4">
-                                            <button onClick={()=>showToast('سيتم فتح الملف بصيغة PDF للمراجعة الدقيقة', 'info')} className="bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl font-black text-sm transition-colors flex items-center gap-2"><Icon name="FileText" size={16}/> مراجعة دراسة الجدوى</button>
-                                            <button onClick={()=>{setPendingPitches(pendingPitches.filter(x=>x.id!==p.id)); showToast('تمت الموافقة! المشروع الآن في ساحة التمويل العامة.', 'success');}} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-black text-sm shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center gap-2"><Icon name="CheckCircle2" size={16}/> إطلاق جولة التمويل</button>
+                                            {p.status !== 'approved' && (
+                                                <button onClick={()=>updateDocument('crowd_projects', p.id, {status: 'approved'}, 'تمت الموافقة! المشروع الآن في ساحة التمويل العامة.')} className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-black text-sm shadow-[0_0_20px_rgba(37,99,235,0.4)] flex items-center gap-2"><Icon name="CheckCircle2" size={16}/> إطلاق الجولة للعامة</button>
+                                            )}
+                                            {p.status === 'approved' && <span className="text-blue-500 font-bold bg-blue-500/10 px-4 py-2 rounded-lg">المشروع متاح للعامة للتمويل</span>}
                                         </div>
                                     </div>
                                 ))}
@@ -271,66 +339,57 @@ react_html = """
             );
 
             const SupportAdminView = () => {
-                const [replyText, setReplyText] = useState({});
+                const [replyTexts, setReplyTexts] = useState({});
                 return (
                     <div className="animate-fade-in space-y-8">
-                        <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="LifeBuoy" className="text-red-500" size={32}/> غرفة العمليات والدعم</h2>
+                        <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="LifeBuoy" className="text-red-500" size={32}/> غرفة العمليات الحية</h2>
                         <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5">
-                            <h3 className="text-xl font-black mb-6">برقيات الطوارئ وتذاكر الدعم</h3>
-                            <div className="space-y-6">
-                                {tickets.map(t => (
-                                    <div key={t.id} className="bg-black/50 border-l-4 border-red-500 p-6 rounded-2xl shadow-lg">
-                                        <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
-                                            <span className="font-black flex items-center gap-2"><div className="w-8 h-8 bg-white/10 rounded-full flex justify-center items-center">👤</div> {t.user}</span>
-                                            <span className="bg-red-500/20 text-red-500 px-3 py-1 rounded-md text-xs font-black">قيد المعالجة</span>
-                                        </div>
-                                        <p className="font-bold text-lg leading-relaxed mb-4">"{t.issue}"</p>
-                                        <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-4">
-                                            <span className="text-[10px] text-blue-400 font-black uppercase flex items-center gap-1 mb-2"><Icon name="Bot" size={12}/> رد الوكيل الذكي الأولي</span>
-                                            <p className="text-sm font-bold text-gray-300">{t.aiReply}</p>
-                                        </div>
-                                        {t.status === 'open' ? (
-                                            <div className="flex gap-3 mt-4">
-                                                <input value={replyText[t.id] || ''} onChange={(e)=>setReplyText({...replyText, [t.id]: e.target.value})} placeholder="اكتب رد الإدارة النهائي هنا لإغلاق التذكرة..." className="flex-1 premium-input p-4 rounded-xl text-sm font-bold" />
-                                                <button onClick={()=>{
-                                                    if(!replyText[t.id]) return;
-                                                    setTickets(tickets.map(x=>x.id===t.id?{...x, status:'closed', adminReply: replyText[t.id]}:x));
-                                                    showToast('تم إرسال الرد وإغلاق البرقية.', 'success');
-                                                }} className="bg-white text-black px-8 rounded-xl font-black hover:bg-gray-200 transition-colors">إرسال الرد وإغلاق</button>
+                            <h3 className="text-xl font-black mb-6">برقيات الطوارئ وتذاكر الدعم السحابية</h3>
+                            {tickets.length === 0 ? <p className="text-gray-500 text-center py-4">صندوق البريد فارغ. الإمبراطورية مستقرة.</p> :
+                                <div className="space-y-6">
+                                    {tickets.map(t => (
+                                        <div key={t.id} className="bg-black/50 border-l-4 border-red-500 p-6 rounded-2xl shadow-lg">
+                                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
+                                                <span className="font-black flex items-center gap-2 text-sm text-gray-400">معرف العميل: {t.user_id}</span>
+                                                <span className={`px-3 py-1 rounded-md text-xs font-black ${t.status === 'مغلقة' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>{t.status || 'جديدة'}</span>
                                             </div>
-                                        ) : (
-                                            <div className="bg-[#00FF88]/10 p-4 rounded-xl mt-4 border border-[#00FF88]/20">
-                                                <span className="text-[10px] text-[#00FF88] font-black uppercase block mb-1">رد الإدارة</span>
-                                                <p className="text-sm font-bold">{t.adminReply}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                                            <p className="font-bold text-lg leading-relaxed mb-4 text-white">"{t.message}"</p>
+                                            
+                                            {t.ai_first_response && (
+                                                <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-4">
+                                                    <span className="text-[10px] text-blue-400 font-black uppercase flex items-center gap-1 mb-2"><Icon name="Bot" size={12}/> رد الوكيل الذكي الأولي</span>
+                                                    <p className="text-sm font-bold text-gray-300">{t.ai_first_response}</p>
+                                                </div>
+                                            )}
+
+                                            {t.status !== 'مغلقة' ? (
+                                                <div className="flex gap-3 mt-4">
+                                                    <input value={replyTexts[t.id] || ''} onChange={(e)=>setReplyTexts({...replyTexts, [t.id]: e.target.value})} placeholder="اكتب رد الإدارة النهائي هنا..." className="flex-1 premium-input p-4 rounded-xl text-sm font-bold" />
+                                                    <button onClick={()=>{
+                                                        if(!replyTexts[t.id]) return;
+                                                        updateDocument('support_tickets', t.id, {status: 'مغلقة', admin_reply: replyTexts[t.id]}, 'تم توثيق الرد सحابياً وإغلاق التذكرة');
+                                                    }} className="bg-white text-black px-8 rounded-xl font-black hover:bg-gray-200 transition-colors">إرسال وإغلاق</button>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-[#00FF88]/10 p-4 rounded-xl mt-4 border border-[#00FF88]/20">
+                                                    <span className="text-[10px] text-[#00FF88] font-black uppercase block mb-1">رد الإدارة الموثق</span>
+                                                    <p className="text-sm font-bold text-white">{t.admin_reply}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            }
                         </div>
                     </div>
                 );
             };
 
-            const NetworkAdminView = () => (
-                <div className="animate-fade-in space-y-8">
-                    <h2 className="text-3xl font-black flex items-center gap-3"><Icon name="Network" className="text-purple-500" size={32}/> الدبلوماسية والتوسع (الإحالة)</h2>
-                    <div className="glass-panel p-8 rounded-[2.5rem] border border-white/5 text-center py-16">
-                        <Icon name="Link" size={60} className="mx-auto text-purple-500 mb-6" />
-                        <h3 className="text-2xl font-black mb-4">مولد الروابط السيادية السري</h3>
-                        <p className="text-gray-400 font-bold mb-8 max-w-lg mx-auto">تجاوز نظام التسجيل العادي وأصدر روابط دعوة مشفرة تمنح صلاحيات VIP فورية للقادة الجدد.</p>
-                        <button onClick={()=>showToast('تم توليد ونسخ الرابط الدبلوماسي: https://mr7.com/invite?vip=X99', 'success')} className="bg-purple-600 hover:bg-purple-500 text-white px-10 py-5 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(147,51,234,0.4)] transition-all hover:scale-105 flex items-center gap-2 mx-auto"><Icon name="Wand2" size={20}/> توليد رابط VIP 👑</button>
-                    </div>
-                </div>
-            );
-
-            // --- Menu Mapping based on Role ---
             const ALL_MENU_ITEMS = [
                 { id: 'radar', icon: 'Activity', label: 'الرادار العام' },
                 { id: 'academy', icon: 'GraduationCap', label: 'شؤون الأكاديمية' },
                 { id: 'marketplace', icon: 'Store', label: 'الرقابة التجارية' },
                 { id: 'crowdfund', icon: 'Target', label: 'التمويل والمشاريع' },
-                { id: 'network', icon: 'Network', label: 'الدعوات والانتشار' },
                 { id: 'support', icon: 'LifeBuoy', label: 'غرفة العمليات' },
             ];
 
@@ -338,15 +397,11 @@ react_html = """
 
             return (
                 <div className={`min-h-screen ${theme.bg} ${theme.text} flex flex-col md:flex-row overflow-hidden font-['Tajawal']`} dir="rtl">
-                    
-                    {/* --- Sidebar --- */}
                     <div className={`w-full md:w-72 md:min-h-screen ${theme.card} border-b md:border-b-0 md:border-l ${theme.borderLight} flex flex-col z-10 shadow-2xl shrink-0`}>
-                        
                         <div className="p-8 pb-2 text-center md:text-right relative">
                             <div className={`${theme.btn} ${theme.btnText} p-3 rounded-2xl inline-block mb-4 shadow-[0_0_30px_rgba(255,75,75,0.3)]`}><Icon name="ShieldAlert" size={32} /></div>
-                            <h1 className={`text-2xl font-black uppercase tracking-tighter ${theme.accent}`}>القيادة العليا</h1>
+                            <h1 className={`text-2xl font-black uppercase tracking-tighter ${theme.accent}`}>القيادة العليا (Live)</h1>
                             
-                            {/* Role Simulator Dropdown */}
                             <div className="mt-4 bg-black/40 p-3 rounded-xl border border-white/10">
                                 <label className="text-[9px] text-gray-500 uppercase font-black block mb-1">محاكي الصلاحيات (RBAC)</label>
                                 <select 
@@ -371,22 +426,18 @@ react_html = """
                         </div>
                     </div>
 
-                    {/* --- Main Content Area --- */}
                     <div className="flex-1 h-screen overflow-y-auto no-scrollbar p-6 md:p-10 relative">
-                        {/* Dynamic Rendering based on Active Tab */}
                         {activeTab === 'radar' && <RadarView />}
                         {activeTab === 'academy' && <AcademyAdminView />}
                         {activeTab === 'marketplace' && <MarketplaceAdminView />}
                         {activeTab === 'crowdfund' && <CrowdfundAdminView />}
                         {activeTab === 'support' && <SupportAdminView />}
-                        {activeTab === 'network' && <NetworkAdminView />}
                     </div>
 
-                    {/* Toasts Container */}
                     <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-3 pointer-events-none">
                         {toasts.map(t => (
-                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : t.type === 'error' ? 'bg-black/90 border-red-500/40 text-red-500' : 'bg-black/90 border-blue-500/40 text-blue-500'}`}>
-                                <Icon name={t.type === 'success' ? 'CheckCircle2' : t.type === 'error' ? 'AlertCircle' : 'Info'} size={20} />
+                            <div key={t.id} className={`toast-animate flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${t.type === 'success' ? 'bg-black/90 border-[#00FF88]/40 text-[#00FF88]' : 'bg-black/90 border-red-500/40 text-red-500'}`}>
+                                <Icon name={t.type === 'success' ? 'CheckCircle2' : 'AlertCircle'} size={20} />
                                 <span className="font-bold text-sm text-white">{t.msg}</span>
                             </div>
                         ))}
@@ -411,16 +462,19 @@ react_html = """
 # --- 4. حقن المتغيرات السحابية ---
 components.html(react_html, height=1000, scrolling=True)
 
-# --- 5. أزرار التنقل السريع الخاصة ببايثون ---
+# --- 5. أزرار التنقل السريع ---
 st.markdown("---")
-st.markdown("### 🗺️ مسارات الوصول السريعة للواجهات العامة")
-c1, c2, c3 = st.columns(3)
+st.markdown("### 🗺️ مسارات اختبار قواعد البيانات الحية")
+c1, c2, c3, c4 = st.columns(4)
 with c1:
-    if st.button("🛒 معاينة المتجر العام"):
+    if st.button("➕ إضافة منتج (من صفحة التاجر)"):
         st.switch_page("pages/4_Marketplace.py")
 with c2:
-    if st.button("🎓 معاينة الأكاديمية"):
-        st.switch_page("pages/1_Education.py")
+    if st.button("➕ رفع مشروع (من التمويل)"):
+        st.switch_page("pages/9_Crowdfunding.py")
 with c3:
+    if st.button("➕ فتح تذكرة دعم (من العمليات)"):
+        st.switch_page("pages/2_Support.py")
+with c4:
     if st.button("🏠 العودة للرئيسية"):
         st.switch_page("app.py")
